@@ -406,14 +406,37 @@ async function processarLocal() {
   }
 
   function parsearEndereco(str) {
-    if (!str) return { endereco: str, cidade: '', estado: '', cep: '' };
+    if (!str) return { endereco: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', cep: '' };
+    // CEP
     var cepM = str.match(/CEP\s*([\d]{5}-?[\d]{3})/i);
     var cep = cepM ? cepM[1] : '';
-    var cidM = str.match(/([A-Za-zÀ-ú\s]+),\s*([A-Z]{2})\/BR/);
-    var cidade = cidM ? cidM[1].trim() : '';
-    var estado = cidM ? cidM[2] : '';
-    var endLimpo = str.replace(/CEP\s*[\d-]+/i, '').replace(/[A-Za-zÀ-ú\s]+,\s*[A-Z]{2}\/BR/i, '').replace(/-\s*$/, '').trim();
-    return { endereco: endLimpo, cidade: cidade, estado: estado, cep: cep };
+    // Estado
+    var estadoM = str.match(/,\s*([A-Z]{2})\/BR/);
+    var estado = estadoM ? estadoM[1] : '';
+    // Separar partes por " - "
+    var partes = str.replace(/\s*-\s*CEP[\s\d-]+/i, '').split(/\s+-\s+/);
+    var logradouroNum = partes[0] ? partes[0].trim() : '';
+    var bairroCidade = partes[1] ? partes[1].trim() : '';
+    // Separar bairro de cidade
+    var bairro = '', cidade = '';
+    var bcM = bairroCidade.match(/^(.+?)\s+([A-Za-z\u00c0-\u00ff\s]+),\s*[A-Z]{2}\/BR/);
+    if (bcM) { bairro = bcM[1].trim(); cidade = bcM[2].trim(); }
+    else {
+      var cidM = bairroCidade.match(/^(.+?),\s*[A-Z]{2}\/BR/);
+      if (cidM) cidade = cidM[1].trim();
+    }
+    // Separar logradouro, número e complemento
+    var logradouro = '', numero = '', complemento = '';
+    var logM = logradouroNum.match(/^(.+?),\s*(.+)$/);
+    if (logM) {
+      logradouro = logM[1].trim();
+      var numComp = logM[2].trim().split('/');
+      numero = numComp[0].trim();
+      complemento = numComp[1] ? numComp[1].trim() : '';
+    } else {
+      logradouro = logradouroNum;
+    }
+    return { endereco: logradouro, numero: numero, complemento: complemento, bairro: bairro, cidade: cidade, estado: estado, cep: cep };
   }
 
   function parsearWpp(str) {
@@ -559,6 +582,9 @@ async function processarLocal() {
     profissao: campo(texto, 'Ocupação Atual'),
     renda_mensal: parsearRenda(campo(texto, 'Renda mensal')),
     endereco: endObj.endereco,
+    numero: endObj.numero,
+    complemento: endObj.complemento,
+    bairro: endObj.bairro,
     cidade: endObj.cidade,
     estado: endObj.estado,
     cep: endObj.cep,
@@ -569,6 +595,10 @@ async function processarLocal() {
     emergencia2_nome: emerg2.nome,
     emergencia2_telefone: emerg2.telefone,
     emergencia2_parentesco: emerg2.parentesco,
+    sigla_paciente: (function(n) {
+      if (!n) return '';
+      return n.trim().split(/\s+/).map(function(p){ return p[0].toUpperCase(); }).join('.');
+    })(campo(texto, 'Nome completo')),
     como_conheceu: canal,
     status: 'ativo'
   };
