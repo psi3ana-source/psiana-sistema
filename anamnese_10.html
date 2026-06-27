@@ -325,20 +325,33 @@ async function processarLocal() {
     mi++;
   }, 1800);
 
-  // Extrair campo do formato Respondi: "Label Valor" na mesma linha ou próxima
-  function campo(txt, ...labels) {
-    for (var label of labels) {
-      // Tenta pegar o valor na mesma linha após o label
-      var r1 = new RegExp(label + '\\s+([^\\n]{1,150})', 'i');
-      var m1 = txt.match(r1);
-      if (m1 && m1[1]) {
-        var val = m1[1].trim();
-        // Verifica se o valor não começa com outra label conhecida
-        if (val.length > 0 && !val.match(/^(Nome|CPF|Gênero|Idade|Orientação|Data de|Estado civil|Filhos|Quantos|Endereço|WhatsApp|E-mail|Escolaridade|Ocupação|Renda|Contato|Com quem|Como era|Atualmente|Há histórico|Está satisfeita|Como lida|Possui|Quem|Faz uso|Qual o nome|Já teve|Como está|Por qual|O que está|Já fez|Me conte|O que você|Está disposta|Algum)/i)) {
-          return val;
-        }
-      }
-    }
+  // Labels conhecidas do Respondi — usadas como delimitadores
+  var LABELS = [
+    'Nome completo', 'Idade', 'CPF', 'Gênero', 'Orientação sexual',
+    'Data de nascimento', 'Estado civil', 'Filhos', 'Quantos filhos',
+    'Endereço', 'WhatsApp', 'Você autoriza receber', 'E-mail', 'Escolaridade',
+    'Ocupação Atual', 'Renda mensal', 'Contato de emergência 1', 'Contato de emergência 2',
+    'Com quem você cresceu', 'Como era a sua relação com as figuras',
+    'Atualmente, como está a sua relação', 'Há histórico familiar',
+    'Está satisfeita', 'Como lida com prazos', 'Possui rede de apoio',
+    'Quem compõe essa rede', 'Possui alguma condição de saúde',
+    'Faz uso de alguma medicação', 'Qual o nome do medicamento',
+    'Já teve algum diagnóstico', 'Como está seu sono',
+    'Por qual canal você me encontrou', 'O que está difícil de lidar',
+    'Já fez terapia antes', 'Me conte, brevemente',
+    'O que você espera do meu cuidado', 'Está disposta',
+    'Algum comentário ou observação'
+  ];
+
+  // Extrai valor entre label e próxima label conhecida
+  function campo(txt, label) {
+    var escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var delimiters = LABELS.filter(function(l) { return l !== label; })
+      .map(function(l) { return l.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); })
+      .join('|');
+    var regex = new RegExp(escapedLabel + '\\s+(.+?)(?=\\s*(?:' + delimiters + ')|$)', 'is');
+    var m = txt.match(regex);
+    if (m && m[1]) return m[1].trim().replace(/\s+/g, ' ');
     return '';
   }
 
@@ -355,76 +368,68 @@ async function processarLocal() {
 
   function parsearRenda(str) {
     if (!str) return null;
-    var n = parseFloat(str.replace(/[^0-9,]/g,'').replace(',','.'));
+    var m = str.match(/^[\d.,]+/);
+    if (!m) return null;
+    var n = parseFloat(m[0].replace(/\./g,'').replace(',','.'));
     return isNaN(n) ? null : n;
   }
 
-  // Extrair endereço completo
-  function extrairEndereco(txt) {
-    var m = txt.match(/Endereço\s+(.+?)(?=\s*WhatsApp|\s*CEP|$)/i);
-    if (m) {
-      var end = m[1].trim();
-      // Separar CEP
-      var cepM = end.match(/CEP\s*([\d]{5}-?[\d]{3})/i);
-      var cep = cepM ? cepM[1] : '';
-      // Separar cidade/estado
-      var cidM = end.match(/([A-Za-zÀ-ú\s]+),\s*([A-Z]{2})\/BR/);
-      var cidade = cidM ? cidM[1].trim() : '';
-      var estado = cidM ? cidM[2] : '';
-      // Endereço sem CEP e cidade
-      var endLimpo = end.replace(/CEP\s*[\d-]+/i,'').replace(/[A-Za-zÀ-ú\s]+,\s*[A-Z]{2}\/BR/,'').trim().replace(/[-,\s]+$/,'').trim();
-      return { endereco: endLimpo, cidade: cidade, estado: estado, cep: cep };
-    }
-    return { endereco: '', cidade: '', estado: '', cep: '' };
+  function parsearEndereco(str) {
+    if (!str) return { endereco: str, cidade: '', estado: '', cep: '' };
+    var cepM = str.match(/CEP\s*([\d]{5}-?[\d]{3})/i);
+    var cep = cepM ? cepM[1] : '';
+    var cidM = str.match(/([A-Za-zÀ-ú\s]+),\s*([A-Z]{2})\/BR/);
+    var cidade = cidM ? cidM[1].trim() : '';
+    var estado = cidM ? cidM[2] : '';
+    var endLimpo = str
+      .replace(/CEP\s*[\d-]+/i, '')
+      .replace(/[A-Za-zÀ-ú\s]+,\s*[A-Z]{2}\/BR/i, '')
+      .replace(/-\s*$/, '')
+      .trim();
+    return { endereco: endLimpo, cidade: cidade, estado: estado, cep: cep };
   }
 
-  // Extrair contatos de emergência
-  function extrairEmergencia(txt, num) {
-    var r = new RegExp('Contato de emergência ' + num + '\\s+([^\\n]{1,100})', 'i');
-    var m = txt.match(r);
-    if (!m) return { nome: '', telefone: '', parentesco: '' };
-    var val = m[1].trim();
-    // Verificar se tem telefone
-    var telM = val.match(/([\d\s()+-]{8,})/);
-    var tel = telM ? telM[1].trim() : '';
-    var nome = tel ? val.replace(tel, '').trim().replace(/^[-–,\s]+/, '').trim() : val;
-    return { nome: nome, telefone: tel, parentesco: '' };
+  function parsearWpp(str) {
+    if (!str) return '';
+    var m = str.match(/^(\+?[\d\s().+-]{8,20})/);
+    return m ? m[1].trim() : '';
   }
-
-  var end = extrairEndereco(texto);
-  var emerg1 = extrairEmergencia(texto, 1);
-  var emerg2 = extrairEmergencia(texto, 2);
 
   var filhosStr = campo(texto, 'Filhos');
-  var temFilhos = filhosStr.toLowerCase() === 'sim';
+  var temFilhos = filhosStr.toLowerCase().startsWith('sim');
+  var endObj = parsearEndereco(campo(texto, 'Endereço'));
+  var wpp = parsearWpp(campo(texto, 'WhatsApp'));
+  var emerg1 = campo(texto, 'Contato de emergência 1');
+  var emerg2 = campo(texto, 'Contato de emergência 2');
+  var canal = campo(texto, 'Por qual canal você me encontrou');
 
   var dadosPessoais = {
     nome_completo: campo(texto, 'Nome completo'),
     data_nascimento: parsearData(campo(texto, 'Data de nascimento')),
     cpf: campo(texto, 'CPF'),
-    genero: campo(texto, 'Gênero', 'Genero'),
-    orientacao_sexual: campo(texto, 'Orientação sexual', 'Orientacao sexual'),
+    genero: campo(texto, 'Gênero'),
+    orientacao_sexual: campo(texto, 'Orientação sexual'),
     estado_civil: campo(texto, 'Estado civil'),
     tem_filhos: temFilhos,
-    email: campo(texto, 'E-mail', 'Email'),
-    whatsapp: campo(texto, 'WhatsApp', 'Whatsapp'),
-    telefone: campo(texto, 'WhatsApp', 'Whatsapp'),
+    email: campo(texto, 'E-mail'),
+    whatsapp: wpp,
+    telefone: wpp,
     whatsapp_mesmo_telefone: true,
     escolaridade: campo(texto, 'Escolaridade'),
-    profissao: campo(texto, 'Ocupação Atual', 'Ocupacao Atual', 'Profissão'),
+    profissao: campo(texto, 'Ocupação Atual'),
     renda_mensal: parsearRenda(campo(texto, 'Renda mensal')),
-    endereco: end.endereco,
-    cidade: end.cidade,
-    estado: end.estado,
-    cep: end.cep,
+    endereco: endObj.endereco,
+    cidade: endObj.cidade,
+    estado: endObj.estado,
+    cep: endObj.cep,
     pais: 'Brasil',
-    emergencia1_nome: emerg1.nome,
-    emergencia1_telefone: emerg1.telefone,
-    emergencia1_parentesco: emerg1.parentesco,
-    emergencia2_nome: emerg2.nome,
-    emergencia2_telefone: emerg2.telefone,
-    emergencia2_parentesco: emerg2.parentesco,
-    como_conheceu: campo(texto, 'Por qual canal você me encontrou', 'canal'),
+    emergencia1_nome: emerg1,
+    emergencia1_telefone: '',
+    emergencia1_parentesco: '',
+    emergencia2_nome: emerg2,
+    emergencia2_telefone: '',
+    emergencia2_parentesco: '',
+    como_conheceu: canal,
     status: 'ativo'
   };
 
@@ -437,7 +442,7 @@ async function processarLocal() {
     a = a.replace(/(Nome completo\s+)([^\n]{3,60})/i, '$1[NOME OMITIDO]');
     a = a.replace(/(Data de nascimento\s+)([^\n]{3,30})/i, '$1[DATA OMITIDA]');
     a = a.replace(/(CPF\s+)([^\n]{3,20})/i, '$1[CPF OMITIDO]');
-    a = a.replace(/(Endereço\s+)([^\n]{3,150})/i, '$1[ENDEREÇO OMITIDO]');
+    a = a.replace(/(Endereço\s+)(.+?)(?=WhatsApp)/is, '$1[ENDEREÇO OMITIDO] ');
     return a;
   }
 
@@ -515,7 +520,8 @@ async function processarLocal() {
       ['Prazos e cobranças', a.lida_com_prazos],
       ['Rede de apoio', a.quem_compoem_rede],
       ['Terapia anterior', a.experiencia_terapia_anterior],
-      ['Expectativas', a.expectativas]
+      ['Expectativas', a.expectativas],
+      ['Observações', a.observacoes_adicionais || null]
     ];
     camposAnam.forEach(function(c) {
       if (c[1]) htmlPrev += '<div class="preview-campo"><span class="pk">' + c[0] + '</span><span class="pv">' + c[1] + '</span></div>';
