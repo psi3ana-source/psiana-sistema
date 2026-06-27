@@ -177,7 +177,7 @@ function renderPerfil() {
     <div class="avatar-grande">${iniciais(paciente.nome_completo)}</div>
     <div class="perfil-info">
       <h2>${paciente.nome_completo || '—'}</h2>
-      <div class="sub">${paciente.sigla_paciente || ''} ${paciente.sigla_paciente && paciente.data_nascimento ? '·' : ''} ${calcIdade(paciente.data_nascimento)}</div>
+      <div class="sub">${paciente.sigla_paciente || iniciais(paciente.nome_completo)} · ${calcIdade(paciente.data_nascimento)}</div>
       <div class="perfil-badges">
         <span class="badge ${badgeMap[paciente.status] || 'badge-rose'}">${badgeLabel[paciente.status] || paciente.status || '—'}</span>
         ${paciente.abordagem ? `<span class="badge badge-rose">${paciente.abordagem}</span>` : ''}
@@ -200,13 +200,13 @@ function renderDados() {
       <div class="section-title">Dados pessoais</div>
       <div class="grid-info">
         <div class="info-item"><div class="label">Nome completo</div><div class="valor">${fmt(p.nome_completo)}</div></div>
-        <div class="info-item"><div class="label">Sigla</div><div class="valor">${fmt(p.sigla_paciente)}</div></div>
-        <div class="info-item"><div class="label">Data de nascimento</div><div class="valor">${fmtData(p.data_nascimento)} ${p.data_nascimento ? '· ' + calcIdade(p.data_nascimento) : ''}</div></div>
+        <div class="info-item"><div class="label">Sigla</div><div class="valor">${p.sigla_paciente || iniciais(p.nome_completo)}</div></div>
+        <div class="info-item"><div class="label">Data de nascimento</div><div class="valor">${fmtData(p.data_nascimento)}</div></div>
         <div class="info-item"><div class="label">CPF</div><div class="valor">${fmt(p.cpf)}</div></div>
         <div class="info-item"><div class="label">Gênero</div><div class="valor">${fmt(p.genero)}</div></div>
         <div class="info-item"><div class="label">Orientação sexual</div><div class="valor">${fmt(p.orientacao_sexual)}</div></div>
         <div class="info-item"><div class="label">Estado civil</div><div class="valor">${fmt(p.estado_civil)}</div></div>
-        <div class="info-item"><div class="label">Filhos</div><div class="valor">${p.tem_filhos ? p.quantidade_filhos + ' filho(s)' : 'Não'}</div></div>
+        <div class="info-item"><div class="label">Filhos</div><div class="valor">${p.tem_filhos ? (p.quantidade_filhos ? p.quantidade_filhos + ' filho(s)' : 'Sim') : 'Não'}</div></div>
         <div class="info-item"><div class="label">Estrangeiro(a)</div><div class="valor">${p.estrangeiro ? 'Sim' : 'Não'}</div></div>
       </div>
     </div>
@@ -233,7 +233,7 @@ function renderDados() {
         <div class="info-item"><div class="label">Endereço</div><div class="valor">${p.endereco ? p.endereco + (p.numero ? ', ' + p.numero : '') + (p.complemento ? ' — ' + p.complemento : '') : '<span class="vazio">Não informado</span>'}</div></div>
         <div class="info-item"><div class="label">Bairro</div><div class="valor">${fmt(p.bairro)}</div></div>
         <div class="info-item"><div class="label">Cidade / Estado</div><div class="valor">${p.cidade && p.estado ? p.cidade + ' / ' + p.estado : '<span class="vazio">Não informado</span>'}</div></div>
-        <div class="info-item"><div class="label">País</div><div class="valor">${fmt(p.pais)}</div></div>
+        <div class="info-item"><div class="label">País</div><div class="valor">${p.pais || (!p.estrangeiro ? 'Brasil' : '<span class="vazio">Não informado</span>')}</div></div>
       </div>
     </div>
     <div class="section">
