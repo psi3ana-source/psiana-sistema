@@ -260,11 +260,7 @@ function renderDados() {
     </div>
     <div class="section">
       <div class="section-title">Contatos de emergência</div>
-      <div class="grid-info">
-        ${p.emergencia1_nome ? `<div class="info-item"><div class="label">Contato 1 — ${p.emergencia1_parentesco || ''}</div><div class="valor">${p.emergencia1_nome} · ${p.emergencia1_telefone || ''}</div></div>` : ''}
-        ${p.emergencia2_nome ? `<div class="info-item"><div class="label">Contato 2 — ${p.emergencia2_parentesco || ''}</div><div class="valor">${p.emergencia2_nome} · ${p.emergencia2_telefone || ''}</div></div>` : ''}
-        ${!p.emergencia1_nome && !p.emergencia2_nome ? '<div class="info-item"><div class="valor vazio">Nenhum contato de emergência cadastrado</div></div>' : ''}
-      </div>
+      <div class="grid-info" id="emerg-grid"></div>
     </div>
     <div class="section">
       <div class="section-title">Dados do atendimento</div>
