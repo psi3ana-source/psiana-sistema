@@ -431,9 +431,13 @@ async function processarLocal() {
   }
 
   // Extrair campos pessoais
-  var filhosStr = campo(texto, 'Filhos');
-  var temFilhos = filhosStr.toLowerCase().startsWith('sim');
-  var quantosFilhos = temFilhos ? campo(texto, 'Quantos filhos') : '';
+  // Extrair Filhos: pegar só Sim ou Não
+  var filhosM = texto.match(/Filhos\s+(Sim|Não|Nao)\b/i);
+  var filhosStr = filhosM ? filhosM[1] : '';
+  var temFilhos = filhosStr.toLowerCase() === 'sim';
+  // Extrair Quantos filhos: pegar só o número
+  var quantosM = texto.match(/Quantos filhos\s+(\d+)/i);
+  var quantosFilhos = quantosM ? quantosM[1] : '';
   var endObj = parsearEndereco(campo(texto, 'Endereço'));
   var wpp = parsearWpp(campo(texto, 'WhatsApp'));
   function parsearEmergencia(str) {
@@ -453,8 +457,11 @@ async function processarLocal() {
     return { nome: nome, telefone: telefone, parentesco: parentesco };
   }
 
-  var emerg1Raw = campo(texto, 'Contato de emergência 1');
-  var emerg2Raw = campo(texto, 'Contato de emergência 2');
+  // Emergência: pegar só o texto até a próxima label
+  var emerg1M = texto.match(/Contato de emergência 1\s+(.+?)(?=\s*Contato de emergência 2|\s*Com quem)/i);
+  var emerg1Raw = emerg1M ? emerg1M[1].trim() : '';
+  var emerg2M = texto.match(/Contato de emergência 2\s+(.+?)(?=\s*Com quem você cresceu)/i);
+  var emerg2Raw = emerg2M ? emerg2M[1].trim() : '';
   var emerg1 = parsearEmergencia(emerg1Raw);
   var emerg2 = parsearEmergencia(emerg2Raw);
   var canal = campo(texto, 'Por qual canal você me encontrou?');
@@ -470,11 +477,14 @@ async function processarLocal() {
     ? 'Sim — ' + saudeAtualRaw.replace(/^sim[,.]?\s*/i, '')
     : 'Sem condições de saúde atuais relevantes';
 
-  var medicacaoRaw = campo(texto, 'Faz uso de alguma medicação ou suplementação?');
-  var medicacaoNome = campoCompleto(texto, 'Qual o nome do medicamento e a dosagem? Por qual razão está tomando medicamento?');
+  var medicacaoM = texto.match(/Faz uso de alguma medicação ou suplementação\?\s+(Sim|Não|Nao)\b/i);
+  var medicacaoRaw = medicacaoM ? medicacaoM[1] : '';
+  // Pegar nome do medicamento até a próxima pergunta
+  var medicacaoNomeM = texto.match(/Por qual razão está tomando medicamento\?\s+(.+?)(?=\s*Já teve algum diagnóstico)/i);
+  var medicacaoNome = medicacaoNomeM ? medicacaoNomeM[1].trim() : '';
   var medicacoes = '';
   if (medicacaoRaw.toLowerCase() === 'sim') {
-    medicacoes = medicacaoNome ? 'Sim — ' + medicacaoNome : 'Sim — verificar com a paciente';
+    medicacoes = medicacaoNome ? medicacaoNome : 'Sim — verificar com a paciente';
   } else {
     medicacoes = 'Não faz uso de medicação ou suplementação';
   }
@@ -620,7 +630,7 @@ async function processarLocal() {
     var htmlPrev = '<div class="preview-section"><div class="titulo">Dados pessoais extraídos</div>';
     var camposPac = [
       ['Nome completo', p.nome_completo],
-      ['Data de nascimento', p.data_nascimento],
+      ['Data de nascimento', p.data_nascimento ? (function(d){ var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; })(p.data_nascimento) : null],
       ['CPF', p.cpf],
       ['Gênero', p.genero],
       ['Orientação sexual', p.orientacao_sexual],
