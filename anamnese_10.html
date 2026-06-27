@@ -471,10 +471,19 @@ async function processarLocal() {
   var medicacaoM = texto.match(/Faz uso de alguma medica\u00e7\u00e3o ou suplementa\u00e7\u00e3o\?\s+(Sim|N\u00e3o|Nao)\b/i);
   var medicacaoRaw = medicacaoM ? medicacaoM[1] : '';
   var medicacaoNomeM = texto.match(/Por qual raz\u00e3o est\u00e1 tomando medicamento\?\s+(.+?)(?=\s*J\u00e1 teve algum diagn\u00f3stico)/i);
-  var medicacaoNome = medicacaoNomeM ? medicacaoNomeM[1].trim() : '';
+  var medicacaoTextoCompleto = medicacaoNomeM ? medicacaoNomeM[1].trim() : '';
+  // Separar nomes dos medicamentos (antes de dosagens numéricas)
+  var medicacaoNome = '';
+  var medicacaoDosagem = '';
+  if (medicacaoTextoCompleto) {
+    // Pegar só os nomes até encontrar dosagem (número + mg/ml/mcg ou razão)
+    var nomesM = medicacaoTextoCompleto.match(/^([^0-9]+?)(?=\s+\w+\s+\d|\s+\d|$)/i);
+    medicacaoNome = nomesM ? nomesM[1].trim().replace(/,\s*$/, '') : medicacaoTextoCompleto;
+    medicacaoDosagem = medicacaoTextoCompleto.replace(medicacaoNome, '').trim();
+  }
   var medicacoes = '';
   if (medicacaoRaw.toLowerCase() === 'sim') {
-    medicacoes = medicacaoNome ? medicacaoNome : 'Sim \u2014 verificar com a paciente';
+    medicacoes = medicacaoNome || 'Sim \u2014 verificar com a paciente';
   } else {
     medicacoes = 'N\u00e3o faz uso de medica\u00e7\u00e3o ou suplementa\u00e7\u00e3o';
   }
@@ -504,6 +513,10 @@ async function processarLocal() {
   var expectativas = campoCompleto(texto, 'O que você espera do meu cuidado?');
   var disposta = campoCompleto(texto, 'Está disposta(o) a se implicar no processo?');
   var observacoes = campoCompleto(texto, 'Algum comentário ou observação importante que eu deva saber sobre você ou sua história?');
+  // Adicionar dosagem/posologia às observações clínicas
+  if (medicacaoDosagem) {
+    observacoes = (observacoes ? observacoes + '\n\n' : '') + 'Posologia: ' + medicacaoDosagem;
+  }
   var dificil = campoCompleto(texto, 'O que está difícil de lidar nesse momento?');
   var cuidadoras = campoCompleto(texto, 'Como era a sua relação com as figuras');
   var familiaAtual = campoCompleto(texto, 'Atualmente, como está a sua relação');
@@ -608,6 +621,7 @@ async function processarLocal() {
     dadosClinico.satisfacao_trabalho_estudos = trabalho;
     dadosClinico.lida_com_prazos = prazos;
     dadosClinico.quem_compoem_rede = rede;
+    dadosClinico.observacoes_clinicas = observacoes || null;
 
     dadosExtraidos = { paciente: dadosPessoais, anamnese: dadosClinico };
 
