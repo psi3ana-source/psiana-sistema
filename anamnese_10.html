@@ -355,11 +355,18 @@ async function processarLocal() {
 
   function parsearData(str) {
     if (!str) return null;
-    var m = str.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
-    if (m) {
-      var dia = m[1].padStart(2,'0'), mes = m[2].padStart(2,'0');
-      var ano = m[3].length === 2 ? '20' + m[3] : m[3];
+    // Formato YYYY-DD-MM (vindo do PDF)
+    var m1 = str.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+    if (m1) {
+      var ano = m1[1], dia = m1[2].padStart(2,'0'), mes = m1[3].padStart(2,'0');
       return ano + '-' + mes + '-' + dia;
+    }
+    // Formato DD/MM/YYYY
+    var m2 = str.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+    if (m2) {
+      var dia2 = m2[1].padStart(2,'0'), mes2 = m2[2].padStart(2,'0');
+      var ano2 = m2[3].length === 2 ? '20' + m2[3] : m2[3];
+      return ano2 + '-' + mes2 + '-' + dia2;
     }
     return null;
   }
@@ -403,8 +410,27 @@ async function processarLocal() {
   var quantosFilhos = temFilhos ? campo(texto, 'Quantos filhos') : '';
   var endObj = parsearEndereco(campo(texto, 'Endereço'));
   var wpp = parsearWpp(campo(texto, 'WhatsApp'));
-  var emerg1 = campo(texto, 'Contato de emergência 1');
-  var emerg2 = campo(texto, 'Contato de emergência 2');
+  function parsearEmergencia(str) {
+    if (!str) return { nome: '', telefone: '', parentesco: '' };
+    var partes = str.split(/\s*-\s*/);
+    var nome = partes[0] ? partes[0].trim() : '';
+    var telefone = '';
+    var parentesco = '';
+    for (var i = 1; i < partes.length; i++) {
+      var p = partes[i].trim();
+      if (p.match(/[\d\s().+-]{6,}/)) {
+        telefone = p;
+      } else {
+        parentesco = p;
+      }
+    }
+    return { nome: nome, telefone: telefone, parentesco: parentesco };
+  }
+
+  var emerg1Raw = campo(texto, 'Contato de emergência 1');
+  var emerg2Raw = campo(texto, 'Contato de emergência 2');
+  var emerg1 = parsearEmergencia(emerg1Raw);
+  var emerg2 = parsearEmergencia(emerg2Raw);
   var canal = campo(texto, 'Por qual canal você me encontrou');
 
   // Campos com contexto
@@ -438,13 +464,15 @@ async function processarLocal() {
 
   var redeRaw = campo(texto, 'Possui rede de apoio');
   var redeComp = campo(texto, 'Quem compõe essa rede');
-  var rede = redeRaw.toLowerCase().startsWith('sim')
+  var temRede = redeRaw.toLowerCase().includes('sim') || (!redeRaw.toLowerCase().includes('não') && !redeRaw.toLowerCase().includes('nao') && redeRaw.length > 0);
+  var rede = temRede
     ? (redeComp ? redeComp : 'Possui rede de apoio')
     : 'Não possui rede de apoio ou vínculos afetivos próximos';
 
   var terapiaRaw = campo(texto, 'Já fez terapia antes');
   var terapiaExp = campo(texto, 'Me conte, brevemente');
-  var terapiaFez = terapiaRaw.toLowerCase().startsWith('sim') ? 'Sim' : 'Não';
+  var temTerapia = terapiaRaw.toLowerCase().includes('sim') || (!terapiaRaw.toLowerCase().includes('não') && !terapiaRaw.toLowerCase().includes('nao') && terapiaRaw.length > 0);
+  var terapiaFez = temTerapia ? 'Sim' : 'Não';
   var terapiaContexto = terapiaFez === 'Sim' && terapiaExp ? terapiaExp : '';
 
   var expectativas = campo(texto, 'O que você espera do meu cuidado');
@@ -478,12 +506,12 @@ async function processarLocal() {
     estado: endObj.estado,
     cep: endObj.cep,
     pais: 'Brasil',
-    emergencia1_nome: emerg1,
-    emergencia1_telefone: '',
-    emergencia1_parentesco: '',
-    emergencia2_nome: emerg2,
-    emergencia2_telefone: '',
-    emergencia2_parentesco: '',
+    emergencia1_nome: emerg1.nome,
+    emergencia1_telefone: emerg1.telefone,
+    emergencia1_parentesco: emerg1.parentesco,
+    emergencia2_nome: emerg2.nome,
+    emergencia2_telefone: emerg2.telefone,
+    emergencia2_parentesco: emerg2.parentesco,
     como_conheceu: canal,
     status: 'ativo'
   };
@@ -580,8 +608,8 @@ async function processarLocal() {
       ['Endereço', p.endereco],
       ['Cidade/Estado', p.cidade && p.estado ? p.cidade + '/' + p.estado : null],
       ['CEP', p.cep],
-      ['Emergência 1', p.emergencia1_nome || null],
-      ['Emergência 2', p.emergencia2_nome || null],
+      ['Emergência 1', p.emergencia1_nome ? p.emergencia1_nome + (p.emergencia1_telefone ? ' — ' + p.emergencia1_telefone : '') + (p.emergencia1_parentesco ? ' (' + p.emergencia1_parentesco + ')' : '') : null],
+      ['Emergência 2', p.emergencia2_nome ? p.emergencia2_nome + (p.emergencia2_telefone ? ' — ' + p.emergencia2_telefone : '') + (p.emergencia2_parentesco ? ' (' + p.emergencia2_parentesco + ')' : '') : null],
       ['Como conheceu', p.como_conheceu]
     ];
     camposPac.forEach(function(c) {
