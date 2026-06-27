@@ -431,36 +431,27 @@ async function processarLocal() {
   }
 
   // Extrair campos pessoais
-  // Extrair Filhos: pegar só Sim ou Não
-  var filhosM = texto.match(/Filhos\s+(Sim|Não|Nao)\b/i);
+  var filhosM = texto.match(/\bFilhos\s+(Sim|N\u00e3o|Nao)\b/i);
   var filhosStr = filhosM ? filhosM[1] : '';
   var temFilhos = filhosStr.toLowerCase() === 'sim';
-  // Extrair Quantos filhos: pegar só o número
   var quantosM = texto.match(/Quantos filhos\s+(\d+)/i);
   var quantosFilhos = quantosM ? quantosM[1] : '';
   var endObj = parsearEndereco(campo(texto, 'Endereço'));
   var wpp = parsearWpp(campo(texto, 'WhatsApp'));
   function parsearEmergencia(str) {
     if (!str) return { nome: '', telefone: '', parentesco: '' };
-    var partes = str.split(/\s*-\s*/);
-    var nome = partes[0] ? partes[0].trim() : '';
-    var telefone = '';
-    var parentesco = '';
-    for (var i = 1; i < partes.length; i++) {
-      var p = partes[i].trim();
-      if (p.match(/[\d\s().+-]{6,}/)) {
-        telefone = p;
-      } else {
-        parentesco = p;
-      }
-    }
-    return { nome: nome, telefone: telefone, parentesco: parentesco };
+    var telM = str.match(/(\d{8,})/);
+    var telefone = telM ? telM[1] : '';
+    var semTel = str.replace(telefone, '').trim();
+    var partes = semTel.trim().split(/\s+/);
+    var parentesco = partes.length > 1 ? partes[partes.length - 1] : '';
+    var nome = partes.length > 1 ? partes.slice(0, -1).join(' ') : semTel;
+    return { nome: nome.trim(), telefone: telefone, parentesco: parentesco.trim() };
   }
 
-  // Emergência: pegar só o texto até a próxima label
-  var emerg1M = texto.match(/Contato de emergência 1\s+(.+?)(?=\s*Contato de emergência 2|\s*Com quem)/i);
+  var emerg1M = texto.match(/Contato de emerg\u00eancia 1\s+(.+?)(?=\s*Contato de emerg\u00eancia 2)/i);
   var emerg1Raw = emerg1M ? emerg1M[1].trim() : '';
-  var emerg2M = texto.match(/Contato de emergência 2\s+(.+?)(?=\s*Com quem você cresceu)/i);
+  var emerg2M = texto.match(/Contato de emerg\u00eancia 2\s+(.+?)(?=\s*Com quem voc\u00ea cresceu)/i);
   var emerg2Raw = emerg2M ? emerg2M[1].trim() : '';
   var emerg1 = parsearEmergencia(emerg1Raw);
   var emerg2 = parsearEmergencia(emerg2Raw);
@@ -477,16 +468,15 @@ async function processarLocal() {
     ? 'Sim — ' + saudeAtualRaw.replace(/^sim[,.]?\s*/i, '')
     : 'Sem condições de saúde atuais relevantes';
 
-  var medicacaoM = texto.match(/Faz uso de alguma medicação ou suplementação\?\s+(Sim|Não|Nao)\b/i);
+  var medicacaoM = texto.match(/Faz uso de alguma medica\u00e7\u00e3o ou suplementa\u00e7\u00e3o\?\s+(Sim|N\u00e3o|Nao)\b/i);
   var medicacaoRaw = medicacaoM ? medicacaoM[1] : '';
-  // Pegar nome do medicamento até a próxima pergunta
-  var medicacaoNomeM = texto.match(/Por qual razão está tomando medicamento\?\s+(.+?)(?=\s*Já teve algum diagnóstico)/i);
+  var medicacaoNomeM = texto.match(/Por qual raz\u00e3o est\u00e1 tomando medicamento\?\s+(.+?)(?=\s*J\u00e1 teve algum diagn\u00f3stico)/i);
   var medicacaoNome = medicacaoNomeM ? medicacaoNomeM[1].trim() : '';
   var medicacoes = '';
   if (medicacaoRaw.toLowerCase() === 'sim') {
-    medicacoes = medicacaoNome ? medicacaoNome : 'Sim — verificar com a paciente';
+    medicacoes = medicacaoNome ? medicacaoNome : 'Sim \u2014 verificar com a paciente';
   } else {
-    medicacoes = 'Não faz uso de medicação ou suplementação';
+    medicacoes = 'N\u00e3o faz uso de medica\u00e7\u00e3o ou suplementa\u00e7\u00e3o';
   }
 
   var trabalhoRaw = campo(texto, 'Está satisfeita(o) com sua rotina de trabalho/estudos?');
