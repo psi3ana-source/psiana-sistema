@@ -328,18 +328,28 @@ async function processarLocal() {
   var LABELS = [
     'Nome completo', 'Idade', 'CPF', 'Gênero', 'Orientação sexual',
     'Data de nascimento', 'Estado civil', 'Filhos', 'Quantos filhos',
-    'Endereço', 'WhatsApp', 'Você autoriza receber', 'E-mail', 'Escolaridade',
-    'Ocupação Atual', 'Renda mensal', 'Contato de emergência 1', 'Contato de emergência 2',
-    'Com quem você cresceu', 'Como era a sua relação com as figuras',
-    'Atualmente, como está a sua relação', 'Há histórico familiar',
-    'Está satisfeita', 'Como lida com prazos', 'Possui rede de apoio',
-    'Quem compõe essa rede', 'Possui alguma condição de saúde',
-    'Faz uso de alguma medicação', 'Qual o nome do medicamento',
-    'Já teve algum diagnóstico', 'Como está seu sono',
-    'Por qual canal você me encontrou', 'O que está difícil de lidar',
-    'Já fez terapia antes', 'Me conte, brevemente',
-    'O que você espera do meu cuidado', 'Está disposta',
-    'Algum comentário ou observação'
+    'Endereço', 'WhatsApp', 'Você autoriza receber mensagens',
+    'E-mail', 'Escolaridade', 'Ocupação Atual', 'Renda mensal',
+    'Contato de emergência 1', 'Contato de emergência 2',
+    'Com quem você cresceu?', 'Como era a sua relação com as figuras cuidadoras?',
+    'Atualmente, como está a sua relação com a família de origem?',
+    'Há histórico familiar de transtornos mentais, violência ou abuso?',
+    'Está satisfeita(o) com sua rotina de trabalho/estudos?',
+    'Como lida com prazos, cobranças e produtividade?',
+    'Possui rede de apoio ou vínculos afetivos próximos?',
+    'Quem compõe essa rede?',
+    'Possui alguma condição de saúde atual?',
+    'Faz uso de alguma medicação ou suplementação?',
+    'Qual o nome do medicamento e a dosagem? Por qual razão está tomando medicamento?',
+    'Já teve algum diagnóstico médico ou psiquiátrico relevante?',
+    'Como está seu sono, alimentação e nível de energia?',
+    'Por qual canal você me encontrou?',
+    'O que está difícil de lidar nesse momento?',
+    'Já fez terapia antes?',
+    'Me conte, brevemente, como foi essa experiência e por qual motivo você parou.',
+    'O que você espera do meu cuidado?',
+    'Está disposta(o) a se implicar no processo?',
+    'Algum comentário ou observação importante que eu deva saber sobre você ou sua história?'
   ];
 
   function campo(txt, label) {
@@ -447,21 +457,21 @@ async function processarLocal() {
   var emerg2Raw = campo(texto, 'Contato de emergência 2');
   var emerg1 = parsearEmergencia(emerg1Raw);
   var emerg2 = parsearEmergencia(emerg2Raw);
-  var canal = campo(texto, 'Por qual canal você me encontrou');
+  var canal = campo(texto, 'Por qual canal você me encontrou?');
 
   // Campos com contexto
-  var historicoFamiliarRaw = campo(texto, 'Há histórico familiar');
+  var historicoFamiliarRaw = campo(texto, 'Há histórico familiar de transtornos mentais, violência ou abuso?');
   var historicoFamiliar = historicoFamiliarRaw.toLowerCase().startsWith('sim')
     ? 'Sim — ' + historicoFamiliarRaw.replace(/^sim[,.]?\s*/i, '')
     : 'Sem histórico familiar de transtornos mentais, violência ou abuso';
 
-  var saudeAtualRaw = campo(texto, 'Possui alguma condição de saúde');
+  var saudeAtualRaw = campo(texto, 'Possui alguma condição de saúde atual?');
   var saudeAtual = saudeAtualRaw.toLowerCase().startsWith('sim')
     ? 'Sim — ' + saudeAtualRaw.replace(/^sim[,.]?\s*/i, '')
     : 'Sem condições de saúde atuais relevantes';
 
-  var medicacaoRaw = campo(texto, 'Faz uso de alguma medicação');
-  var medicacaoNome = campoCompleto(texto, 'Qual o nome do medicamento');
+  var medicacaoRaw = campo(texto, 'Faz uso de alguma medicação ou suplementação?');
+  var medicacaoNome = campoCompleto(texto, 'Qual o nome do medicamento e a dosagem? Por qual razão está tomando medicamento?');
   var medicacoes = '';
   if (medicacaoRaw.toLowerCase() === 'sim') {
     medicacoes = medicacaoNome ? 'Sim — ' + medicacaoNome : 'Sim — verificar com a paciente';
@@ -469,37 +479,37 @@ async function processarLocal() {
     medicacoes = 'Não faz uso de medicação ou suplementação';
   }
 
-  var trabalhoRaw = campo(texto, 'Está satisfeita');
+  var trabalhoRaw = campo(texto, 'Está satisfeita(o) com sua rotina de trabalho/estudos?');
   var trabalho = trabalhoRaw.toLowerCase().startsWith('sim')
     ? 'Satisfeita com a rotina de trabalho/estudos'
     : trabalhoRaw.toLowerCase().startsWith('não') || trabalhoRaw.toLowerCase().startsWith('nao')
       ? 'Não está satisfeita com a rotina de trabalho/estudos'
       : trabalhoRaw;
 
-  var prazos = campoCompleto(texto, 'Como lida com prazos');
+  var prazos = campoCompleto(texto, 'Como lida com prazos, cobranças e produtividade?');
 
-  var redeRaw = campo(texto, 'Possui rede de apoio');
-  var redeComp = campoCompleto(texto, 'Quem compõe essa rede');
+  var redeRaw = campo(texto, 'Possui rede de apoio ou vínculos afetivos próximos?');
+  var redeComp = campoCompleto(texto, 'Quem compõe essa rede?');
   var temRede = redeRaw.toLowerCase() === 'sim';
   var rede = temRede
     ? (redeComp ? redeComp : 'Possui rede de apoio')
     : 'Não possui rede de apoio ou vínculos afetivos próximos';
 
-  var terapiaRaw = campo(texto, 'Já fez terapia antes');
-  var terapiaExp = campoCompleto(texto, 'Me conte, brevemente');
+  var terapiaRaw = campo(texto, 'Já fez terapia antes?');
+  var terapiaExp = campoCompleto(texto, 'Me conte, brevemente, como foi essa experiência e por qual motivo você parou.');
   var temTerapia = terapiaRaw.toLowerCase() === 'sim';
   var terapiaFez = temTerapia ? 'Sim' : 'Não';
   var terapiaContexto = terapiaFez === 'Sim' && terapiaExp ? terapiaExp : '';
 
-  var expectativas = campoCompleto(texto, 'O que você espera do meu cuidado');
-  var disposta = campoCompleto(texto, 'Está disposta');
-  var observacoes = campoCompleto(texto, 'Algum comentário ou observação');
-  var dificil = campoCompleto(texto, 'O que está difícil de lidar');
+  var expectativas = campoCompleto(texto, 'O que você espera do meu cuidado?');
+  var disposta = campoCompleto(texto, 'Está disposta(o) a se implicar no processo?');
+  var observacoes = campoCompleto(texto, 'Algum comentário ou observação importante que eu deva saber sobre você ou sua história?');
+  var dificil = campoCompleto(texto, 'O que está difícil de lidar nesse momento?');
   var cuidadoras = campoCompleto(texto, 'Como era a sua relação com as figuras');
   var familiaAtual = campoCompleto(texto, 'Atualmente, como está a sua relação');
   var comQuemCresceu = campoCompleto(texto, 'Com quem você cresceu');
-  var diagnosticos = campo(texto, 'Já teve algum diagnóstico');
-  var sono = campoCompleto(texto, 'Como está seu sono');
+  var diagnosticos = campoCompleto(texto, 'Já teve algum diagnóstico médico ou psiquiátrico relevante?');
+  var sono = campoCompleto(texto, 'Como está seu sono, alimentação e nível de energia?');
 
   var dadosPessoais = {
     nome_completo: campo(texto, 'Nome completo'),
