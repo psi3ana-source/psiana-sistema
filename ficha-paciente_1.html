@@ -147,8 +147,7 @@ function trocarTab(nome) {
 
 function iniciais(nome) {
   if (!nome) return '?';
-  const p = nome.trim().split(' ');
-  return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0] + p[p.length-1][0]).toUpperCase();
+  return nome.trim().split(/\s+/).map(function(w){ return w[0].toUpperCase(); }).join('.');
 }
 
 function fmt(v) { return v || '<span class="vazio">Não informado</span>'; }
@@ -206,7 +205,7 @@ function renderDados() {
         <div class="info-item"><div class="label">Gênero</div><div class="valor">${fmt(p.genero)}</div></div>
         <div class="info-item"><div class="label">Orientação sexual</div><div class="valor">${fmt(p.orientacao_sexual)}</div></div>
         <div class="info-item"><div class="label">Estado civil</div><div class="valor">${fmt(p.estado_civil)}</div></div>
-        <div class="info-item"><div class="label">Filhos</div><div class="valor">${p.tem_filhos ? (p.quantidade_filhos ? p.quantidade_filhos + ' filho(s)' : 'Sim') : 'Não'}</div></div>
+        <div class="info-item"><div class="label">Filhos</div><div class="valor">${p.tem_filhos ? '1 filho(s)' : 'Não'}</div></div>
         <div class="info-item"><div class="label">Estrangeiro(a)</div><div class="valor">${p.estrangeiro ? 'Sim' : 'Não'}</div></div>
       </div>
     </div>
@@ -230,9 +229,10 @@ function renderDados() {
       <div class="section-title">Endereço</div>
       <div class="grid-info">
         <div class="info-item"><div class="label">CEP</div><div class="valor">${fmt(p.cep)}</div></div>
-        <div class="info-item"><div class="label">Endereço</div><div class="valor">${p.endereco ? p.endereco + (p.numero ? ', ' + p.numero : '') + (p.complemento ? ' — ' + p.complemento : '') : '<span class="vazio">Não informado</span>'}</div></div>
+        <div class="info-item"><div class="label">Endereço</div><div class="valor">${fmt(p.endereco)}</div></div>
+        <div class="info-item"><div class="label">Número / Complemento</div><div class="valor">${p.numero ? p.numero + (p.complemento ? ' — ' + p.complemento : '') : fmt(p.complemento)}</div></div>
         <div class="info-item"><div class="label">Bairro</div><div class="valor">${fmt(p.bairro)}</div></div>
-        <div class="info-item"><div class="label">Cidade / Estado</div><div class="valor">${p.cidade && p.estado ? p.cidade + ' / ' + p.estado : '<span class="vazio">Não informado</span>'}</div></div>
+        <div class="info-item"><div class="label">Cidade / Estado</div><div class="valor">${p.cidade && p.estado ? p.cidade + ' / ' + p.estado : p.cidade ? p.cidade : '<span class="vazio">Não informado</span>'}</div></div>
         <div class="info-item"><div class="label">País</div><div class="valor">${p.pais || (!p.estrangeiro ? 'Brasil' : '<span class="vazio">Não informado</span>')}</div></div>
       </div>
     </div>
