@@ -325,14 +325,19 @@ async function processarLocal() {
     mi++;
   }, 1800);
 
-  // Extrair dados pessoais localmente (sem enviar para API)
-  function extrairSimples(txt, ...chaves) {
-    for (var chave of chaves) {
-      try {
-        var regex = new RegExp(chave + '[^\n]{0,10}?[:\s]+([^\n]{1,200})', 'i');
-        var match = txt.match(regex);
-        if (match && match[1] && match[1].trim().length > 0) return match[1].trim();
-      } catch(e) {}
+  // Extrair campo do formato Respondi: "Label Valor" na mesma linha ou próxima
+  function campo(txt, ...labels) {
+    for (var label of labels) {
+      // Tenta pegar o valor na mesma linha após o label
+      var r1 = new RegExp(label + '\\s+([^\\n]{1,150})', 'i');
+      var m1 = txt.match(r1);
+      if (m1 && m1[1]) {
+        var val = m1[1].trim();
+        // Verifica se o valor não começa com outra label conhecida
+        if (val.length > 0 && !val.match(/^(Nome|CPF|Gênero|Idade|Orientação|Data de|Estado civil|Filhos|Quantos|Endereço|WhatsApp|E-mail|Escolaridade|Ocupação|Renda|Contato|Com quem|Como era|Atualmente|Há histórico|Está satisfeita|Como lida|Possui|Quem|Faz uso|Qual o nome|Já teve|Como está|Por qual|O que está|Já fez|Me conte|O que você|Está disposta|Algum)/i)) {
+          return val;
+        }
+      }
     }
     return '';
   }
@@ -348,39 +353,78 @@ async function processarLocal() {
     return null;
   }
 
+  function parsearRenda(str) {
+    if (!str) return null;
+    var n = parseFloat(str.replace(/[^0-9,]/g,'').replace(',','.'));
+    return isNaN(n) ? null : n;
+  }
+
+  // Extrair endereço completo
+  function extrairEndereco(txt) {
+    var m = txt.match(/Endereço\s+(.+?)(?=\s*WhatsApp|\s*CEP|$)/i);
+    if (m) {
+      var end = m[1].trim();
+      // Separar CEP
+      var cepM = end.match(/CEP\s*([\d]{5}-?[\d]{3})/i);
+      var cep = cepM ? cepM[1] : '';
+      // Separar cidade/estado
+      var cidM = end.match(/([A-Za-zÀ-ú\s]+),\s*([A-Z]{2})\/BR/);
+      var cidade = cidM ? cidM[1].trim() : '';
+      var estado = cidM ? cidM[2] : '';
+      // Endereço sem CEP e cidade
+      var endLimpo = end.replace(/CEP\s*[\d-]+/i,'').replace(/[A-Za-zÀ-ú\s]+,\s*[A-Z]{2}\/BR/,'').trim().replace(/[-,\s]+$/,'').trim();
+      return { endereco: endLimpo, cidade: cidade, estado: estado, cep: cep };
+    }
+    return { endereco: '', cidade: '', estado: '', cep: '' };
+  }
+
+  // Extrair contatos de emergência
+  function extrairEmergencia(txt, num) {
+    var r = new RegExp('Contato de emergência ' + num + '\\s+([^\\n]{1,100})', 'i');
+    var m = txt.match(r);
+    if (!m) return { nome: '', telefone: '', parentesco: '' };
+    var val = m[1].trim();
+    // Verificar se tem telefone
+    var telM = val.match(/([\d\s()+-]{8,})/);
+    var tel = telM ? telM[1].trim() : '';
+    var nome = tel ? val.replace(tel, '').trim().replace(/^[-–,\s]+/, '').trim() : val;
+    return { nome: nome, telefone: tel, parentesco: '' };
+  }
+
+  var end = extrairEndereco(texto);
+  var emerg1 = extrairEmergencia(texto, 1);
+  var emerg2 = extrairEmergencia(texto, 2);
+
+  var filhosStr = campo(texto, 'Filhos');
+  var temFilhos = filhosStr.toLowerCase() === 'sim';
+
   var dadosPessoais = {
-    nome_completo: extrairSimples(texto, 'Nome completo', 'Nome'),
-    data_nascimento: parsearData(extrairSimples(texto, 'Data de nascimento', 'Nascimento')),
-    cpf: extrairSimples(texto, 'CPF'),
-    genero: extrairSimples(texto, 'Gênero', 'Genero', 'Sexo'),
-    orientacao_sexual: extrairSimples(texto, 'Orientação sexual', 'Orientacao sexual'),
-    estado_civil: extrairSimples(texto, 'Estado civil'),
-    tem_filhos: (function() {
-      var f = extrairSimples(texto, 'Filhos', 'Tem filhos');
-      return f ? (!f.toLowerCase().includes('não') && !f.toLowerCase().includes('nao')) : false;
-    })(),
-    email: extrairSimples(texto, 'E-mail', 'Email'),
-    whatsapp: extrairSimples(texto, 'WhatsApp', 'Whatsapp', 'Celular'),
-    telefone: extrairSimples(texto, 'WhatsApp', 'Whatsapp', 'Celular', 'Telefone'),
+    nome_completo: campo(texto, 'Nome completo'),
+    data_nascimento: parsearData(campo(texto, 'Data de nascimento')),
+    cpf: campo(texto, 'CPF'),
+    genero: campo(texto, 'Gênero', 'Genero'),
+    orientacao_sexual: campo(texto, 'Orientação sexual', 'Orientacao sexual'),
+    estado_civil: campo(texto, 'Estado civil'),
+    tem_filhos: temFilhos,
+    email: campo(texto, 'E-mail', 'Email'),
+    whatsapp: campo(texto, 'WhatsApp', 'Whatsapp'),
+    telefone: campo(texto, 'WhatsApp', 'Whatsapp'),
     whatsapp_mesmo_telefone: true,
-    escolaridade: extrairSimples(texto, 'Escolaridade'),
-    profissao: extrairSimples(texto, 'Ocupação', 'Profissão', 'Ocupacao Atual'),
-    renda_mensal: (function() {
-      var r = extrairSimples(texto, 'Renda mensal', 'Renda');
-      return r ? (parseFloat(r.replace(/[^0-9,]/g,'').replace(',','.')) || null) : null;
-    })(),
-    cep: extrairSimples(texto, 'CEP'),
-    endereco: extrairSimples(texto, 'Endereço', 'Endereco', 'Rua'),
-    cidade: extrairSimples(texto, 'Cidade'),
-    estado: extrairSimples(texto, 'Estado', 'UF'),
+    escolaridade: campo(texto, 'Escolaridade'),
+    profissao: campo(texto, 'Ocupação Atual', 'Ocupacao Atual', 'Profissão'),
+    renda_mensal: parsearRenda(campo(texto, 'Renda mensal')),
+    endereco: end.endereco,
+    cidade: end.cidade,
+    estado: end.estado,
+    cep: end.cep,
     pais: 'Brasil',
-    emergencia1_nome: extrairSimples(texto, 'Contato de emergência 1', 'Emergência 1').split(/[-–,]/)[0].trim(),
-    emergencia1_telefone: '',
-    emergencia1_parentesco: '',
-    emergencia2_nome: extrairSimples(texto, 'Contato de emergência 2', 'Emergência 2').split(/[-–,]/)[0].trim(),
-    emergencia2_telefone: '',
-    emergencia2_parentesco: '',
-    como_conheceu: extrairSimples(texto, 'canal', 'encontrou', 'conheceu'),
+    emergencia1_nome: emerg1.nome,
+    emergencia1_telefone: emerg1.telefone,
+    emergencia1_parentesco: emerg1.parentesco,
+    emergencia2_nome: emerg2.nome,
+    emergencia2_telefone: emerg2.telefone,
+    emergencia2_parentesco: emerg2.parentesco,
+    como_conheceu: campo(texto, 'Por qual canal você me encontrou', 'canal'),
     status: 'ativo'
   };
 
@@ -390,9 +434,10 @@ async function processarLocal() {
     a = a.replace(/\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2}/g, '[CPF OMITIDO]');
     a = a.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL OMITIDO]');
     a = a.replace(/(\+?\d{1,3}[\s-]?)?(\(?\d{2}\)?[\s-]?)\d{4,5}[\s-]?\d{4}/g, '[TELEFONE OMITIDO]');
-    a = a.replace(/(Nome completo[:\s]+)([^\n]{3,60})/i, '$1[NOME OMITIDO]');
-    a = a.replace(/(Data de nascimento[:\s]+)([^\n]{3,30})/i, '$1[DATA OMITIDA]');
-    a = a.replace(/(CPF[:\s]+)([^\n]{3,20})/i, '$1[CPF OMITIDO]');
+    a = a.replace(/(Nome completo\s+)([^\n]{3,60})/i, '$1[NOME OMITIDO]');
+    a = a.replace(/(Data de nascimento\s+)([^\n]{3,30})/i, '$1[DATA OMITIDA]');
+    a = a.replace(/(CPF\s+)([^\n]{3,20})/i, '$1[CPF OMITIDO]');
+    a = a.replace(/(Endereço\s+)([^\n]{3,150})/i, '$1[ENDEREÇO OMITIDO]');
     return a;
   }
 
@@ -443,6 +488,12 @@ async function processarLocal() {
       ['WhatsApp', p.whatsapp],
       ['Escolaridade', p.escolaridade],
       ['Profissão', p.profissao],
+      ['Renda mensal', p.renda_mensal ? 'R$ ' + p.renda_mensal : null],
+      ['Endereço', p.endereco],
+      ['Cidade/Estado', p.cidade && p.estado ? p.cidade + '/' + p.estado : null],
+      ['CEP', p.cep],
+      ['Emergência 1', p.emergencia1_nome || null],
+      ['Emergência 2', p.emergencia2_nome || null],
       ['Como conheceu', p.como_conheceu]
     ];
     camposPac.forEach(function(c) {
@@ -452,18 +503,19 @@ async function processarLocal() {
     htmlPrev += '</div><div class="preview-section"><div class="titulo">Conteúdo clínico extraído</div>';
     var camposAnam = [
       ['Queixa principal', a.o_que_esta_dificil ? a.o_que_esta_dificil.substring(0,200) : null],
-      ['Com quem cresceu', a.com_quem_cresceu ? a.com_quem_cresceu.substring(0,150) : null],
-      ['Figuras cuidadoras', a.relacao_figuras_cuidadoras ? a.relacao_figuras_cuidadoras.substring(0,150) : null],
-      ['Família atual', a.relacao_familia_atual ? a.relacao_familia_atual.substring(0,150) : null],
-      ['Histórico familiar', a.historico_familiar_detalhes ? a.historico_familiar_detalhes.substring(0,150) : null],
+      ['Com quem cresceu', a.com_quem_cresceu],
+      ['Figuras cuidadoras', a.relacao_figuras_cuidadoras],
+      ['Família atual', a.relacao_familia_atual],
+      ['Histórico familiar', a.historico_familiar_detalhes || (a.historico_familiar_transtornos ? 'Sim' : 'Não')],
       ['Saúde atual', a.condicao_saude_atual],
       ['Diagnósticos', a.diagnosticos_anteriores],
       ['Medicações', a.medicacoes],
       ['Sono/energia', a.sono_alimentacao_energia],
-      ['Trabalho e estudos', a.satisfacao_trabalho_estudos ? a.satisfacao_trabalho_estudos.substring(0,150) : null],
-      ['Rede de apoio', a.quem_compoem_rede ? a.quem_compoem_rede.substring(0,150) : null],
+      ['Trabalho e estudos', a.satisfacao_trabalho_estudos],
+      ['Prazos e cobranças', a.lida_com_prazos],
+      ['Rede de apoio', a.quem_compoem_rede],
       ['Terapia anterior', a.experiencia_terapia_anterior],
-      ['Expectativas', a.expectativas ? a.expectativas.substring(0,150) : null]
+      ['Expectativas', a.expectativas]
     ];
     camposAnam.forEach(function(c) {
       if (c[1]) htmlPrev += '<div class="preview-campo"><span class="pk">' + c[0] + '</span><span class="pv">' + c[1] + '</span></div>';
