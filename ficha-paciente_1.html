@@ -153,6 +153,13 @@ function iniciais(nome) {
 }
 
 function fmt(v) { return v || '<span class="vazio">Não informado</span>'; }
+function fmtTel(v) {
+  if (!v) return '<span class="vazio">Não informado</span>';
+  var d = v.replace(/\D/g, '');
+  if (d.length === 11) return '(' + d.slice(0,2) + ') ' + d.slice(2,7) + '-' + d.slice(7);
+  if (d.length === 10) return '(' + d.slice(0,2) + ') ' + d.slice(2,6) + '-' + d.slice(6);
+  return v;
+}
 function fmtData(d) {
   if (!d) return '<span class="vazio">—</span>';
   const [y,m,dia] = d.split('-');
@@ -200,18 +207,25 @@ function renderDados() {
     var grid = document.getElementById('emerg-grid');
     if (!grid) return;
     var h = '';
-    if (p.emergencia1_nome) {
-      h += '<div class="info-item"><div class="label">Nome</div><div class="valor">' + p.emergencia1_nome + '</div></div>';
-      h += '<div class="info-item"><div class="label">Telefone</div><div class="valor">' + (p.emergencia1_telefone || '<span class="vazio">Não informado</span>') + '</div></div>';
-      h += '<div class="info-item"><div class="label">Parentesco</div><div class="valor">' + (p.emergencia1_parentesco || '<span class="vazio">Não informado</span>') + '</div></div>';
-    }
-    if (p.emergencia2_nome) {
-      h += '<div class="info-item"><div class="label">Nome</div><div class="valor">' + p.emergencia2_nome + '</div></div>';
-      h += '<div class="info-item"><div class="label">Telefone</div><div class="valor">' + (p.emergencia2_telefone || '<span class="vazio">Não informado</span>') + '</div></div>';
-      h += '<div class="info-item"><div class="label">Parentesco</div><div class="valor">' + (p.emergencia2_parentesco || '<span class="vazio">Não informado</span>') + '</div></div>';
-    }
     if (!p.emergencia1_nome && !p.emergencia2_nome) {
       h += '<div class="info-item"><div class="valor vazio">Nenhum contato de emergência cadastrado</div></div>';
+    } else {
+      // Linha de cabeçalho
+      h += '<div class="info-item"><div class="label">Nome</div></div>';
+      h += '<div class="info-item"><div class="label">Telefone</div></div>';
+      h += '<div class="info-item"><div class="label">Parentesco</div></div>';
+      // Contato 1
+      if (p.emergencia1_nome) {
+        h += '<div class="info-item"><div class="valor">' + p.emergencia1_nome + '</div></div>';
+        h += '<div class="info-item"><div class="valor">' + fmtTel(p.emergencia1_telefone) + '</div></div>';
+        h += '<div class="info-item"><div class="valor">' + (p.emergencia1_parentesco || '<span class="vazio">—</span>') + '</div></div>';
+      }
+      // Contato 2
+      if (p.emergencia2_nome) {
+        h += '<div class="info-item"><div class="valor">' + p.emergencia2_nome + '</div></div>';
+        h += '<div class="info-item"><div class="valor">' + fmtTel(p.emergencia2_telefone) + '</div></div>';
+        h += '<div class="info-item"><div class="valor">' + (p.emergencia2_parentesco || '<span class="vazio">—</span>') + '</div></div>';
+      }
     }
     grid.innerHTML = h;
   }
@@ -235,8 +249,8 @@ function renderDados() {
       <div class="section-title">Contato</div>
       <div class="grid-info">
         <div class="info-item"><div class="label">E-mail</div><div class="valor">${fmt(p.email)}</div></div>
-        <div class="info-item"><div class="label">Telefone</div><div class="valor">${fmt(p.telefone)}</div></div>
-        <div class="info-item"><div class="label">WhatsApp</div><div class="valor">${p.whatsapp_mesmo_telefone ? p.telefone : fmt(p.whatsapp)}</div></div>
+        <div class="info-item"><div class="label">Telefone</div><div class="valor">${fmtTel(p.telefone)}</div></div>
+        <div class="info-item"><div class="label">WhatsApp</div><div class="valor">${p.whatsapp_mesmo_telefone ? fmtTel(p.telefone) : fmtTel(p.whatsapp)}</div></div>
       </div>
     </div>
     <div class="section">
