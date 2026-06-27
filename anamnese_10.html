@@ -325,7 +325,6 @@ async function processarLocal() {
     mi++;
   }, 1800);
 
-  // Labels conhecidas do Respondi — usadas como delimitadores
   var LABELS = [
     'Nome completo', 'Idade', 'CPF', 'Gênero', 'Orientação sexual',
     'Data de nascimento', 'Estado civil', 'Filhos', 'Quantos filhos',
@@ -343,7 +342,6 @@ async function processarLocal() {
     'Algum comentário ou observação'
   ];
 
-  // Extrai valor entre label e próxima label conhecida
   function campo(txt, label) {
     var escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     var delimiters = LABELS.filter(function(l) { return l !== label; })
@@ -381,11 +379,7 @@ async function processarLocal() {
     var cidM = str.match(/([A-Za-zÀ-ú\s]+),\s*([A-Z]{2})\/BR/);
     var cidade = cidM ? cidM[1].trim() : '';
     var estado = cidM ? cidM[2] : '';
-    var endLimpo = str
-      .replace(/CEP\s*[\d-]+/i, '')
-      .replace(/[A-Za-zÀ-ú\s]+,\s*[A-Z]{2}\/BR/i, '')
-      .replace(/-\s*$/, '')
-      .trim();
+    var endLimpo = str.replace(/CEP\s*[\d-]+/i, '').replace(/[A-Za-zÀ-ú\s]+,\s*[A-Z]{2}\/BR/i, '').replace(/-\s*$/, '').trim();
     return { endereco: endLimpo, cidade: cidade, estado: estado, cep: cep };
   }
 
@@ -395,13 +389,73 @@ async function processarLocal() {
     return m ? m[1].trim() : '';
   }
 
+  function contextualizar(resposta, contextoSim, contextoNao) {
+    if (!resposta) return '';
+    var r = resposta.trim().toLowerCase();
+    if (r === 'sim') return contextoSim;
+    if (r === 'não' || r === 'nao') return contextoNao;
+    return resposta;
+  }
+
+  // Extrair campos pessoais
   var filhosStr = campo(texto, 'Filhos');
   var temFilhos = filhosStr.toLowerCase().startsWith('sim');
+  var quantosFilhos = temFilhos ? campo(texto, 'Quantos filhos') : '';
   var endObj = parsearEndereco(campo(texto, 'Endereço'));
   var wpp = parsearWpp(campo(texto, 'WhatsApp'));
   var emerg1 = campo(texto, 'Contato de emergência 1');
   var emerg2 = campo(texto, 'Contato de emergência 2');
   var canal = campo(texto, 'Por qual canal você me encontrou');
+
+  // Campos com contexto
+  var historicoFamiliarRaw = campo(texto, 'Há histórico familiar');
+  var historicoFamiliar = historicoFamiliarRaw.toLowerCase().startsWith('sim')
+    ? 'Sim — ' + historicoFamiliarRaw.replace(/^sim[,.]?\s*/i, '')
+    : 'Sem histórico familiar de transtornos mentais, violência ou abuso';
+
+  var saudeAtualRaw = campo(texto, 'Possui alguma condição de saúde');
+  var saudeAtual = saudeAtualRaw.toLowerCase().startsWith('sim')
+    ? 'Sim — ' + saudeAtualRaw.replace(/^sim[,.]?\s*/i, '')
+    : 'Sem condições de saúde atuais relevantes';
+
+  var medicacaoRaw = campo(texto, 'Faz uso de alguma medicação');
+  var medicacaoNome = campo(texto, 'Qual o nome do medicamento');
+  var medicacoes = '';
+  if (medicacaoRaw.toLowerCase().startsWith('sim')) {
+    medicacoes = medicacaoNome || 'Sim — verificar com a paciente';
+  } else {
+    medicacoes = 'Não faz uso de medicação ou suplementação';
+  }
+
+  var trabalhoRaw = campo(texto, 'Está satisfeita');
+  var trabalho = trabalhoRaw.toLowerCase().startsWith('sim')
+    ? 'Satisfeita com a rotina de trabalho/estudos'
+    : trabalhoRaw.toLowerCase().startsWith('não') || trabalhoRaw.toLowerCase().startsWith('nao')
+      ? 'Não está satisfeita com a rotina de trabalho/estudos'
+      : trabalhoRaw;
+
+  var prazos = campo(texto, 'Como lida com prazos');
+
+  var redeRaw = campo(texto, 'Possui rede de apoio');
+  var redeComp = campo(texto, 'Quem compõe essa rede');
+  var rede = redeRaw.toLowerCase().startsWith('sim')
+    ? (redeComp ? redeComp : 'Possui rede de apoio')
+    : 'Não possui rede de apoio ou vínculos afetivos próximos';
+
+  var terapiaRaw = campo(texto, 'Já fez terapia antes');
+  var terapiaExp = campo(texto, 'Me conte, brevemente');
+  var terapiaFez = terapiaRaw.toLowerCase().startsWith('sim') ? 'Sim' : 'Não';
+  var terapiaContexto = terapiaFez === 'Sim' && terapiaExp ? terapiaExp : '';
+
+  var expectativas = campo(texto, 'O que você espera do meu cuidado');
+  var disposta = campo(texto, 'Está disposta');
+  var observacoes = campo(texto, 'Algum comentário ou observação');
+  var dificil = campo(texto, 'O que está difícil de lidar');
+  var cuidadoras = campo(texto, 'Como era a sua relação com as figuras');
+  var familiaAtual = campo(texto, 'Atualmente, como está a sua relação');
+  var comQuemCresceu = campo(texto, 'Com quem você cresceu');
+  var diagnosticos = campo(texto, 'Já teve algum diagnóstico');
+  var sono = campo(texto, 'Como está seu sono');
 
   var dadosPessoais = {
     nome_completo: campo(texto, 'Nome completo'),
@@ -411,6 +465,7 @@ async function processarLocal() {
     orientacao_sexual: campo(texto, 'Orientação sexual'),
     estado_civil: campo(texto, 'Estado civil'),
     tem_filhos: temFilhos,
+    quantidade_filhos: quantosFilhos,
     email: campo(texto, 'E-mail'),
     whatsapp: wpp,
     telefone: wpp,
@@ -431,6 +486,26 @@ async function processarLocal() {
     emergencia2_parentesco: '',
     como_conheceu: canal,
     status: 'ativo'
+  };
+
+  var dadosClinico_preview = {
+    com_quem_cresceu: comQuemCresceu,
+    relacao_figuras_cuidadoras: cuidadoras,
+    relacao_familia_atual: familiaAtual,
+    historico_familiar: historicoFamiliar,
+    saude_atual: saudeAtual,
+    diagnosticos_anteriores: diagnosticos,
+    medicacoes: medicacoes,
+    sono_alimentacao_energia: sono,
+    trabalho_estudos: trabalho,
+    prazos_cobrancas: prazos,
+    rede_apoio: rede,
+    fez_terapia: terapiaFez,
+    experiencia_terapia: terapiaContexto,
+    o_que_esta_dificil: dificil,
+    expectativas: expectativas,
+    disposta_implicar: disposta,
+    observacoes: observacoes
   };
 
   // Anonimizar antes de enviar para a API
@@ -472,6 +547,14 @@ async function processarLocal() {
       return;
     }
 
+    // Enriquecer dados clínicos com os campos contextualizados
+    dadosClinico.condicao_saude_atual = saudeAtual;
+    dadosClinico.historico_familiar_detalhes = historicoFamiliar;
+    dadosClinico.medicacoes = medicacoes;
+    dadosClinico.satisfacao_trabalho_estudos = trabalho;
+    dadosClinico.lida_com_prazos = prazos;
+    dadosClinico.quem_compoem_rede = rede;
+
     dadosExtraidos = { paciente: dadosPessoais, anamnese: dadosClinico };
 
     document.getElementById('progress-fill').style.width = '100%';
@@ -488,7 +571,7 @@ async function processarLocal() {
       ['Gênero', p.genero],
       ['Orientação sexual', p.orientacao_sexual],
       ['Estado civil', p.estado_civil],
-      ['Tem filhos', p.tem_filhos ? 'Sim' : 'Não'],
+      ['Filhos', p.tem_filhos ? 'Sim — ' + (p.quantidade_filhos ? p.quantidade_filhos + ' filho(s)' : '') : 'Não'],
       ['E-mail', p.email],
       ['WhatsApp', p.whatsapp],
       ['Escolaridade', p.escolaridade],
@@ -507,21 +590,23 @@ async function processarLocal() {
 
     htmlPrev += '</div><div class="preview-section"><div class="titulo">Conteúdo clínico extraído</div>';
     var camposAnam = [
-      ['Queixa principal', a.o_que_esta_dificil ? a.o_que_esta_dificil.substring(0,200) : null],
+      ['O que está difícil', a.o_que_esta_dificil ? a.o_que_esta_dificil.substring(0,250) : null],
       ['Com quem cresceu', a.com_quem_cresceu],
-      ['Figuras cuidadoras', a.relacao_figuras_cuidadoras],
-      ['Família atual', a.relacao_familia_atual],
-      ['Histórico familiar', a.historico_familiar_detalhes || (a.historico_familiar_transtornos ? 'Sim' : 'Não')],
-      ['Saúde atual', a.condicao_saude_atual],
-      ['Diagnósticos', a.diagnosticos_anteriores],
+      ['Relação com figuras cuidadoras', a.relacao_figuras_cuidadoras],
+      ['Relação com família atual', a.relacao_familia_atual],
+      ['Histórico familiar', a.historico_familiar_detalhes],
+      ['Condição de saúde atual', a.condicao_saude_atual],
+      ['Diagnósticos anteriores', a.diagnosticos_anteriores],
       ['Medicações', a.medicacoes],
-      ['Sono/energia', a.sono_alimentacao_energia],
+      ['Sono, alimentação e energia', a.sono_alimentacao_energia],
       ['Trabalho e estudos', a.satisfacao_trabalho_estudos],
       ['Prazos e cobranças', a.lida_com_prazos],
       ['Rede de apoio', a.quem_compoem_rede],
-      ['Terapia anterior', a.experiencia_terapia_anterior],
-      ['Expectativas', a.expectativas],
-      ['Observações', a.observacoes_adicionais || null]
+      ['Fez terapia antes', terapiaFez],
+      ['Experiência em terapia', terapiaContexto || null],
+      ['Expectativas', expectativas],
+      ['Disposta a se implicar', disposta],
+      ['Observações adicionais', observacoes || null]
     ];
     camposAnam.forEach(function(c) {
       if (c[1]) htmlPrev += '<div class="preview-campo"><span class="pk">' + c[0] + '</span><span class="pv">' + c[1] + '</span></div>';
