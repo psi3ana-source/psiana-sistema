@@ -349,6 +349,22 @@ async function processarLocal() {
       .join('|');
     var regex = new RegExp(escapedLabel + '\\s+(.+?)(?=\\s*(?:' + delimiters + ')|$)', 'is');
     var m = txt.match(regex);
+    if (!m || !m[1]) return '';
+    var val = m[1].trim().replace(/\s+/g, ' ');
+    // Se o valor começa com Sim ou Não, pega só essa palavra como resposta curta
+    var simNao = val.match(/^(Sim|Não|Nao)\b/i);
+    if (simNao) return simNao[1];
+    return val;
+  }
+
+  // Versão que pega a resposta completa mesmo começando com Sim/Não
+  function campoCompleto(txt, label) {
+    var escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var delimiters = LABELS.filter(function(l) { return l !== label; })
+      .map(function(l) { return l.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); })
+      .join('|');
+    var regex = new RegExp(escapedLabel + '\\s+(.+?)(?=\\s*(?:' + delimiters + ')|$)', 'is');
+    var m = txt.match(regex);
     if (m && m[1]) return m[1].trim().replace(/\s+/g, ' ');
     return '';
   }
@@ -445,10 +461,10 @@ async function processarLocal() {
     : 'Sem condições de saúde atuais relevantes';
 
   var medicacaoRaw = campo(texto, 'Faz uso de alguma medicação');
-  var medicacaoNome = campo(texto, 'Qual o nome do medicamento');
+  var medicacaoNome = campoCompleto(texto, 'Qual o nome do medicamento');
   var medicacoes = '';
-  if (medicacaoRaw.toLowerCase().startsWith('sim')) {
-    medicacoes = medicacaoNome || 'Sim — verificar com a paciente';
+  if (medicacaoRaw.toLowerCase() === 'sim') {
+    medicacoes = medicacaoNome ? 'Sim — ' + medicacaoNome : 'Sim — verificar com a paciente';
   } else {
     medicacoes = 'Não faz uso de medicação ou suplementação';
   }
@@ -460,30 +476,30 @@ async function processarLocal() {
       ? 'Não está satisfeita com a rotina de trabalho/estudos'
       : trabalhoRaw;
 
-  var prazos = campo(texto, 'Como lida com prazos');
+  var prazos = campoCompleto(texto, 'Como lida com prazos');
 
   var redeRaw = campo(texto, 'Possui rede de apoio');
-  var redeComp = campo(texto, 'Quem compõe essa rede');
-  var temRede = redeRaw.toLowerCase().includes('sim') || (!redeRaw.toLowerCase().includes('não') && !redeRaw.toLowerCase().includes('nao') && redeRaw.length > 0);
+  var redeComp = campoCompleto(texto, 'Quem compõe essa rede');
+  var temRede = redeRaw.toLowerCase() === 'sim';
   var rede = temRede
     ? (redeComp ? redeComp : 'Possui rede de apoio')
     : 'Não possui rede de apoio ou vínculos afetivos próximos';
 
   var terapiaRaw = campo(texto, 'Já fez terapia antes');
-  var terapiaExp = campo(texto, 'Me conte, brevemente');
-  var temTerapia = terapiaRaw.toLowerCase().includes('sim') || (!terapiaRaw.toLowerCase().includes('não') && !terapiaRaw.toLowerCase().includes('nao') && terapiaRaw.length > 0);
+  var terapiaExp = campoCompleto(texto, 'Me conte, brevemente');
+  var temTerapia = terapiaRaw.toLowerCase() === 'sim';
   var terapiaFez = temTerapia ? 'Sim' : 'Não';
   var terapiaContexto = terapiaFez === 'Sim' && terapiaExp ? terapiaExp : '';
 
-  var expectativas = campo(texto, 'O que você espera do meu cuidado');
-  var disposta = campo(texto, 'Está disposta');
-  var observacoes = campo(texto, 'Algum comentário ou observação');
-  var dificil = campo(texto, 'O que está difícil de lidar');
-  var cuidadoras = campo(texto, 'Como era a sua relação com as figuras');
-  var familiaAtual = campo(texto, 'Atualmente, como está a sua relação');
-  var comQuemCresceu = campo(texto, 'Com quem você cresceu');
+  var expectativas = campoCompleto(texto, 'O que você espera do meu cuidado');
+  var disposta = campoCompleto(texto, 'Está disposta');
+  var observacoes = campoCompleto(texto, 'Algum comentário ou observação');
+  var dificil = campoCompleto(texto, 'O que está difícil de lidar');
+  var cuidadoras = campoCompleto(texto, 'Como era a sua relação com as figuras');
+  var familiaAtual = campoCompleto(texto, 'Atualmente, como está a sua relação');
+  var comQuemCresceu = campoCompleto(texto, 'Com quem você cresceu');
   var diagnosticos = campo(texto, 'Já teve algum diagnóstico');
-  var sono = campo(texto, 'Como está seu sono');
+  var sono = campoCompleto(texto, 'Como está seu sono');
 
   var dadosPessoais = {
     nome_completo: campo(texto, 'Nome completo'),
