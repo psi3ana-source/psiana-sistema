@@ -512,10 +512,30 @@ async function processarLocal() {
 
   var expectativas = campoCompleto(texto, 'O que você espera do meu cuidado?');
   var disposta = campoCompleto(texto, 'Está disposta(o) a se implicar no processo?');
-  var historiaVida = campoCompleto(texto, 'Algum comentário ou observação importante que eu deva saber sobre você ou sua história?');
+  var historiaVidaAdicional = campoCompleto(texto, 'Algum comentário ou observação importante que eu deva saber sobre você ou sua história?');
+  // Separar posologia e motivo do uso
+  var posologia = '';
+  var motivoUso = '';
+  if (medicacaoDosagem) {
+    // Tentar separar por padrão: posologia tem números+unidade, motivo é textual
+    var partesDosagem = medicacaoDosagem.split(/(?<=\d)\s+(?=[a-zA-Zà-ü]{4,}(?:\s|$)(?!\d))/);
+    if (partesDosagem.length > 1) {
+      // Última parte sem números é o motivo
+      var ultimaParte = partesDosagem[partesDosagem.length - 1];
+      if (!ultimaParte.match(/\d/)) {
+        motivoUso = ultimaParte.trim();
+        posologia = partesDosagem.slice(0, -1).join(' ').trim();
+      } else {
+        posologia = medicacaoDosagem;
+      }
+    } else {
+      posologia = medicacaoDosagem;
+    }
+  }
   var observacoes = '';
-  if (historiaVida) observacoes += '[História de vida]\n' + historiaVida;
-  if (medicacaoDosagem) observacoes += (observacoes ? '\n\n' : '') + '[Posologia e motivo do uso]\n' + medicacaoDosagem;
+  if (historiaVidaAdicional) observacoes += '[História de vida adicional]\n' + historiaVidaAdicional;
+  if (posologia) observacoes += (observacoes ? '\n\n' : '') + '[Posologia]\n' + posologia;
+  if (motivoUso) observacoes += (observacoes ? '\n\n' : '') + '[Motivo do uso]\n' + motivoUso;
   var dificil = campoCompleto(texto, 'O que está difícil de lidar nesse momento?');
   var cuidadoras = campoCompleto(texto, 'Como era a sua relação com as figuras');
   var familiaAtual = campoCompleto(texto, 'Atualmente, como está a sua relação');
@@ -531,7 +551,6 @@ async function processarLocal() {
     orientacao_sexual: campo(texto, 'Orientação sexual'),
     estado_civil: campo(texto, 'Estado civil'),
     tem_filhos: temFilhos,
-    quantidade_filhos: quantosFilhos,
     email: campo(texto, 'E-mail'),
     whatsapp: wpp,
     telefone: wpp,
@@ -673,8 +692,9 @@ async function processarLocal() {
       ['Experiência em terapia', terapiaContexto || null],
       ['Expectativas', expectativas],
       ['Disposta a se implicar', disposta],
-      ['História de vida', historiaVida || null],
-      ['Posologia e motivo do uso', medicacaoDosagem || null]
+      ['História de vida adicional', historiaVidaAdicional || null],
+      ['Posologia', posologia || null],
+      ['Motivo do uso', motivoUso || null]
     ];
     camposAnam.forEach(function(c) {
       if (c[1]) htmlPrev += '<div class="preview-campo"><span class="pk">' + c[0] + '</span><span class="pv">' + c[1] + '</span></div>';
