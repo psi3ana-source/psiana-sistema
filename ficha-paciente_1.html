@@ -274,6 +274,7 @@ function renderDados() {
     </div>
     ${p.anotacoes ? `<div class="section"><div class="section-title">Anotações</div><p style="font-size:14px;line-height:1.7;color:#2C2C2C">${p.anotacoes}</p></div>` : ''}
   `;
+  renderEmergencias(paciente);
 }
 
 function renderSessoes() {
