@@ -147,7 +147,9 @@ function trocarTab(nome) {
 
 function iniciais(nome) {
   if (!nome) return '?';
-  return nome.trim().split(/\s+/).map(function(w){ return w[0].toUpperCase(); }).join('.');
+  var p = nome.trim().split(/\s+/);
+  if (p.length === 1) return p[0][0].toUpperCase();
+  return (p[0][0] + p[p.length-1][0]).toUpperCase();
 }
 
 function fmt(v) { return v || '<span class="vazio">Não informado</span>'; }
@@ -176,7 +178,7 @@ function renderPerfil() {
     <div class="avatar-grande">${iniciais(paciente.nome_completo)}</div>
     <div class="perfil-info">
       <h2>${paciente.nome_completo || '—'}</h2>
-      <div class="sub">${paciente.sigla_paciente || iniciais(paciente.nome_completo)} · ${calcIdade(paciente.data_nascimento)}</div>
+      <div class="sub">${calcIdade(paciente.data_nascimento)}</div>
       <div class="perfil-badges">
         <span class="badge ${badgeMap[paciente.status] || 'badge-rose'}">${badgeLabel[paciente.status] || paciente.status || '—'}</span>
         ${paciente.abordagem ? `<span class="badge badge-rose">${paciente.abordagem}</span>` : ''}
@@ -194,6 +196,26 @@ function renderPerfil() {
 
 function renderDados() {
   const p = paciente;
+  function renderEmergencias(p) {
+    var grid = document.getElementById('emerg-grid');
+    if (!grid) return;
+    var h = '';
+    if (p.emergencia1_nome) {
+      h += '<div class="info-item"><div class="label">Nome</div><div class="valor">' + p.emergencia1_nome + '</div></div>';
+      h += '<div class="info-item"><div class="label">Telefone</div><div class="valor">' + (p.emergencia1_telefone || '<span class="vazio">Não informado</span>') + '</div></div>';
+      h += '<div class="info-item"><div class="label">Parentesco</div><div class="valor">' + (p.emergencia1_parentesco || '<span class="vazio">Não informado</span>') + '</div></div>';
+    }
+    if (p.emergencia2_nome) {
+      h += '<div class="info-item"><div class="label">Nome</div><div class="valor">' + p.emergencia2_nome + '</div></div>';
+      h += '<div class="info-item"><div class="label">Telefone</div><div class="valor">' + (p.emergencia2_telefone || '<span class="vazio">Não informado</span>') + '</div></div>';
+      h += '<div class="info-item"><div class="label">Parentesco</div><div class="valor">' + (p.emergencia2_parentesco || '<span class="vazio">Não informado</span>') + '</div></div>';
+    }
+    if (!p.emergencia1_nome && !p.emergencia2_nome) {
+      h += '<div class="info-item"><div class="valor vazio">Nenhum contato de emergência cadastrado</div></div>';
+    }
+    grid.innerHTML = h;
+  }
+
   document.getElementById('dados-content').innerHTML = `
     <div class="section">
       <div class="section-title">Dados pessoais</div>
