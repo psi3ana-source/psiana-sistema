@@ -684,6 +684,8 @@ async function processarLocal() {
       ['Condição de saúde atual', a.condicao_saude_atual],
       ['Diagnósticos anteriores', a.diagnosticos_anteriores],
       ['Medicações', a.medicacoes],
+      ['Posologia medicações', posologia || null],
+      ['Motivo do uso', motivoUso || null],
       ['Sono, alimentação e energia', a.sono_alimentacao_energia],
       ['Trabalho e estudos', a.satisfacao_trabalho_estudos],
       ['Prazos e cobranças', a.lida_com_prazos],
@@ -692,9 +694,7 @@ async function processarLocal() {
       ['Experiência em terapia', terapiaContexto || null],
       ['Expectativas', expectativas],
       ['Disposta a se implicar', disposta],
-      ['História de vida adicional', historiaVidaAdicional || null],
-      ['Posologia medicações', posologia || null],
-      ['Motivo do uso', motivoUso || null]
+      ['História de vida adicional', historiaVidaAdicional || null]
     ];
     camposAnam.forEach(function(c) {
       if (c[1]) htmlPrev += '<div class="preview-campo"><span class="pk">' + c[0] + '</span><span class="pv">' + c[1] + '</span></div>';
