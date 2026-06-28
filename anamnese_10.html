@@ -1103,7 +1103,6 @@ async function salvarAtendimento() {
   const precoSel = document.getElementById('m-preco');
   const precoId = precoSel.value ? parseInt(precoSel.value) : null;
   const precoOpt = precoSel.options[precoSel.selectedIndex];
-  const valor = precoId ? parseFloat(precoOpt.dataset.valor) : null;
 
   const abordagem = document.getElementById('m-abordagem').value;
   let abordagemFinal = abordagem;
@@ -1116,7 +1115,6 @@ async function salvarAtendimento() {
 
   const dados = {
     preco_id: precoId,
-    valor: valor,
     abordagem: abordagemFinal || null,
     abordagens_mistas: abordagensMistas,
     frequencia: document.getElementById('m-frequencia').value || null,
