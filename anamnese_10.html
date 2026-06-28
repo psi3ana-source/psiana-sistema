@@ -196,31 +196,7 @@
       <div class="preco-info" id="preco-info"></div>
     </div>
 
-    <div class="modal-section">
-      <label>Abordagem</label>
-      <select id="m-abordagem" onchange="toggleMista()">
-        <option value="">Selecione</option>
-        <option value="TCC">TCC — Terapia Cognitivo-Comportamental</option>
-        <option value="TFC">TFC — Terapia Focada na Compaixão</option>
-        <option value="DBT">DBT — Terapia Comportamental Dialética</option>
-        <option value="ACT">ACT — Terapia de Aceitação e Compromisso</option>
-        <option value="EMDR">EMDR</option>
-        <option value="Psicanálise">Psicanálise</option>
-        <option value="Humanista">Humanista</option>
-        <option value="Existencial">Existencial</option>
-        <option value="Mista">Mista (combinar abordagens)</option>
-      </select>
-      <div class="abordagens-check" id="abordagens-mistas">
-        <label><input type="checkbox" value="TCC"> TCC</label>
-        <label><input type="checkbox" value="TFC"> TFC</label>
-        <label><input type="checkbox" value="DBT"> DBT</label>
-        <label><input type="checkbox" value="ACT"> ACT</label>
-        <label><input type="checkbox" value="EMDR"> EMDR</label>
-        <label><input type="checkbox" value="Psicanálise"> Psicanálise</label>
-        <label><input type="checkbox" value="Humanista"> Humanista</label>
-        <label><input type="checkbox" value="Existencial"> Existencial</label>
-      </div>
-    </div>
+
 
     <div class="modal-section">
       <label>Frequência</label>
@@ -1044,7 +1020,7 @@ async function salvarTudo() {
     document.getElementById('preview-box').style.display = 'none';
     const nomePac = p.nome_completo || 'Paciente';
     document.getElementById('sucesso-msg').textContent =
-      `${nomePac} foi cadastrada e sua anamnese foi salva. Acesse a ficha para complementar: abordagem, valor da sessão e modalidade financeira.`;
+      `${nomePac} foi cadastrada e sua anamnese foi salva. Acesse a ficha para complementar informações adicionais.`;
     document.getElementById('sucesso-box').style.display = 'block';
     mostrarToast('Paciente e anamnese salvas com sucesso!', 'sucesso');
 
@@ -1086,12 +1062,6 @@ function mostrarInfoPreco() {
   info.textContent = `${tipo} · R$ ${parseFloat(opt.dataset.valor).toFixed(2).replace('.',',')} por sessão`;
 }
 
-function toggleMista() {
-  const val = document.getElementById('m-abordagem').value;
-  const div = document.getElementById('abordagens-mistas');
-  if (val === 'Mista') div.classList.add('visivel');
-  else div.classList.remove('visivel');
-}
 
 function abrirNovoMeet() {
   window.open('https://meet.google.com/new', '_blank');
@@ -1104,28 +1074,12 @@ async function salvarAtendimento() {
   }
 
   const precoSel = document.getElementById('m-preco');
-  const debugInfo = `pacienteCriadaId: ${pacienteCriadaId}
-preco_id: ${precoSel.value}
-abordagem: ${document.getElementById('m-abordagem').value}
-frequencia: ${document.getElementById('m-frequencia').value}
-pagamento: ${document.getElementById('m-pagamento').value}`;
-  alert('DEBUG:\n' + debugInfo);
+
   const precoId = precoSel.value ? parseInt(precoSel.value) : null;
   const precoOpt = precoSel.options[precoSel.selectedIndex];
 
-  const abordagem = document.getElementById('m-abordagem').value;
-  let abordagemFinal = abordagem;
-  let abordagensMistas = null;
-  if (abordagem === 'Mista') {
-    const checks = document.querySelectorAll('#abordagens-mistas input:checked');
-    abordagensMistas = Array.from(checks).map(c => c.value);
-    abordagemFinal = 'Mista';
-  }
-
   const dados = {
     preco_id: precoId,
-    abordagem: abordagemFinal || null,
-    abordagens_mistas: abordagensMistas,
     frequencia: document.getElementById('m-frequencia').value || null,
     forma_pagamento: document.getElementById('m-pagamento').value || null,
     link_meet: document.getElementById('m-meet').value || null
@@ -1134,7 +1088,6 @@ pagamento: ${document.getElementById('m-pagamento').value}`;
   // Remover nulls
   Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
 
-  alert('BODY enviado:\n' + JSON.stringify(dados, null, 2));
 
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${parseInt(pacienteCriadaId)}`, {
@@ -1147,13 +1100,12 @@ pagamento: ${document.getElementById('m-pagamento').value}`;
       body: JSON.stringify(dados)
     });
 
-    const respText = await r.text();
-    alert('RESPOSTA Supabase:\nStatus: ' + r.status + '\n' + respText);
     if (r.ok) {
       mostrarToast('Dados do atendimento salvos!', 'sucesso');
       setTimeout(() => irParaFicha(), 800);
     } else {
-      mostrarToast('Erro ao salvar: ' + respText, 'erro');
+      const err = await r.json();
+      mostrarToast('Erro ao salvar: ' + (err.message || JSON.stringify(err)), 'erro');
     }
   } catch(e) {
     mostrarToast('Erro: ' + e.message, 'erro');
