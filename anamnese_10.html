@@ -68,6 +68,32 @@
   .sucesso-box h3 { color: #2E7D32; font-size: 16px; margin-bottom: 8px; }
   .sucesso-box p { color: #444; font-size: 14px; margin-bottom: 1rem; line-height: 1.6; }
   .sucesso-box .btn-ficha { padding: 10px 24px; background: #785D56; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+  /* Modal de dados do atendimento */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.ativo { display: flex; }
+  .modal-box { background: #fff; border-radius: 16px; padding: 2rem; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-box h2 { font-size: 18px; font-weight: 700; color: #785D56; margin-bottom: 4px; }
+  .modal-box .subtitulo { font-size: 13px; color: #999; margin-bottom: 1.5rem; }
+  .modal-section { margin-bottom: 1.25rem; }
+  .modal-section label { font-size: 12px; color: #666; font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .modal-section select, .modal-section input { font-size: 14px; padding: 10px 12px; border: 1px solid #DDD; border-radius: 8px; background: #FAFAFA; color: #2C2C2C; width: 100%; }
+  .modal-section select:focus, .modal-section input:focus { outline: none; border-color: #C89F9D; }
+  .abordagens-check { display: none; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .abordagens-check.visivel { display: flex; }
+  .abordagens-check label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #444; font-weight: 400; background: #FAF6F5; border: 1px solid #EDE4E3; border-radius: 20px; padding: 4px 12px; cursor: pointer; }
+  .abordagens-check label:hover { border-color: #C89F9D; }
+  .abordagens-check input[type=checkbox] { accent-color: #785D56; }
+  .meet-row { display: flex; gap: 8px; }
+  .meet-row input { flex: 1; }
+  .btn-meet { padding: 10px 14px; background: #FAF6F5; border: 1px solid #DDD; border-radius: 8px; font-size: 13px; color: #785D56; cursor: pointer; white-space: nowrap; }
+  .btn-meet:hover { background: #F0E8E7; }
+  .modal-footer { display: flex; gap: 10px; margin-top: 1.5rem; }
+  .btn-modal-salvar { flex: 1; padding: 12px; background: #785D56; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-modal-salvar:hover { background: #C89F9D; }
+  .btn-modal-pular { padding: 12px 20px; background: #fff; border: 1px solid #DDD; border-radius: 8px; font-size: 14px; color: #999; cursor: pointer; }
+  .btn-modal-pular:hover { background: #FAF6F5; }
+  .preco-info { font-size: 12px; color: #C89F9D; margin-top: 4px; font-style: italic; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
@@ -152,9 +178,84 @@
       <div class="sucesso-box" id="sucesso-box">
         <h3>✅ Paciente e anamnese criadas com sucesso!</h3>
         <p id="sucesso-msg"></p>
-        <button class="btn-ficha" onclick="irParaFicha()">Abrir ficha da paciente →</button>
+        <button class="btn-ficha" onclick="abrirModalAtendimento()">Configurar atendimento →</button>
       </div>
     </div>
+
+<!-- Modal de dados do atendimento -->
+<div class="modal-overlay" id="modal-atendimento">
+  <div class="modal-box">
+    <h2>🎯 Dados do atendimento</h2>
+    <p class="subtitulo">Preencha antes de abrir a ficha. Você pode alterar depois.</p>
+
+    <div class="modal-section">
+      <label>Modalidade financeira</label>
+      <select id="m-preco" onchange="mostrarInfoPreco()">
+        <option value="">Carregando...</option>
+      </select>
+      <div class="preco-info" id="preco-info"></div>
+    </div>
+
+    <div class="modal-section">
+      <label>Abordagem</label>
+      <select id="m-abordagem" onchange="toggleMista()">
+        <option value="">Selecione</option>
+        <option value="TCC">TCC — Terapia Cognitivo-Comportamental</option>
+        <option value="TFC">TFC — Terapia Focada na Compaixão</option>
+        <option value="DBT">DBT — Terapia Comportamental Dialética</option>
+        <option value="ACT">ACT — Terapia de Aceitação e Compromisso</option>
+        <option value="EMDR">EMDR</option>
+        <option value="Psicanálise">Psicanálise</option>
+        <option value="Humanista">Humanista</option>
+        <option value="Existencial">Existencial</option>
+        <option value="Mista">Mista (combinar abordagens)</option>
+      </select>
+      <div class="abordagens-check" id="abordagens-mistas">
+        <label><input type="checkbox" value="TCC"> TCC</label>
+        <label><input type="checkbox" value="TFC"> TFC</label>
+        <label><input type="checkbox" value="DBT"> DBT</label>
+        <label><input type="checkbox" value="ACT"> ACT</label>
+        <label><input type="checkbox" value="EMDR"> EMDR</label>
+        <label><input type="checkbox" value="Psicanálise"> Psicanálise</label>
+        <label><input type="checkbox" value="Humanista"> Humanista</label>
+        <label><input type="checkbox" value="Existencial"> Existencial</label>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <label>Frequência</label>
+      <select id="m-frequencia">
+        <option value="">Selecione</option>
+        <option value="semanal">Semanal</option>
+        <option value="quinzenal">Quinzenal</option>
+        <option value="mensal">Mensal</option>
+      </select>
+    </div>
+
+    <div class="modal-section">
+      <label>Forma de pagamento</label>
+      <select id="m-pagamento">
+        <option value="">Selecione</option>
+        <option value="PIX">PIX</option>
+        <option value="transferencia">Transferência bancária</option>
+        <option value="link_pagamento">Link de pagamento (débito/crédito)</option>
+      </select>
+    </div>
+
+    <div class="modal-section">
+      <label>Link do Google Meet</label>
+      <div class="meet-row">
+        <input type="url" id="m-meet" placeholder="https://meet.google.com/xxx-xxxx-xxx">
+        <button class="btn-meet" onclick="abrirNovoMeet()">🎥 Gerar novo</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-modal-pular" onclick="irParaFicha()">Pular por agora</button>
+      <button class="btn-modal-salvar" onclick="salvarAtendimento()">Salvar e abrir ficha →</button>
+    </div>
+  </div>
+</div>
   </div>
 
   <!-- EDITAR -->
@@ -950,6 +1051,100 @@ async function salvarTudo() {
     // Recarregar lista de pacientes
     await carregarPacientes();
 
+  } catch(e) {
+    mostrarToast('Erro: ' + e.message, 'erro');
+  }
+}
+
+async function abrirModalAtendimento() {
+  // Carregar tabela_precos
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/tabela_precos?ativo=eq.true&order=modalidade,tipo`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  const precos = await r.json();
+  const sel = document.getElementById('m-preco');
+  sel.innerHTML = '<option value="">Selecione a modalidade</option>';
+  precos.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.dataset.nome = p.nome;
+    opt.dataset.valor = p.valor_unitario;
+    opt.dataset.tipo = p.tipo;
+    opt.dataset.qtd = p.quantidade_sessoes;
+    opt.textContent = p.nome;
+    sel.appendChild(opt);
+  });
+  document.getElementById('modal-atendimento').classList.add('ativo');
+}
+
+function mostrarInfoPreco() {
+  const sel = document.getElementById('m-preco');
+  const opt = sel.options[sel.selectedIndex];
+  const info = document.getElementById('preco-info');
+  if (!opt || !opt.value) { info.textContent = ''; return; }
+  const tipo = opt.dataset.tipo === 'plano' ? `Plano ${opt.dataset.qtd} sessões` : 'Avulso';
+  info.textContent = `${tipo} · R$ ${parseFloat(opt.dataset.valor).toFixed(2).replace('.',',')} por sessão`;
+}
+
+function toggleMista() {
+  const val = document.getElementById('m-abordagem').value;
+  const div = document.getElementById('abordagens-mistas');
+  if (val === 'Mista') div.classList.add('visivel');
+  else div.classList.remove('visivel');
+}
+
+function abrirNovoMeet() {
+  window.open('https://meet.google.com/new', '_blank');
+}
+
+async function salvarAtendimento() {
+  if (!pacienteCriadaId) return;
+
+  const precoSel = document.getElementById('m-preco');
+  const precoId = precoSel.value ? parseInt(precoSel.value) : null;
+  const precoOpt = precoSel.options[precoSel.selectedIndex];
+  const valor = precoId ? parseFloat(precoOpt.dataset.valor) : null;
+
+  const abordagem = document.getElementById('m-abordagem').value;
+  let abordagemFinal = abordagem;
+  let abordagensMistas = null;
+  if (abordagem === 'Mista') {
+    const checks = document.querySelectorAll('#abordagens-mistas input:checked');
+    abordagensMistas = Array.from(checks).map(c => c.value);
+    abordagemFinal = 'Mista';
+  }
+
+  const dados = {
+    preco_id: precoId,
+    valor: valor,
+    abordagem: abordagemFinal || null,
+    abordagens_mistas: abordagensMistas,
+    frequencia: document.getElementById('m-frequencia').value || null,
+    forma_pagamento: document.getElementById('m-pagamento').value || null,
+    link_meet: document.getElementById('m-meet').value || null
+  };
+
+  // Remover nulls
+  Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${pacienteCriadaId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`
+      },
+      body: JSON.stringify(dados)
+    });
+
+    if (r.ok) {
+      mostrarToast('Dados do atendimento salvos!', 'sucesso');
+      setTimeout(() => irParaFicha(), 800);
+    } else {
+      const err = await r.json();
+      mostrarToast('Erro ao salvar: ' + (err.message || JSON.stringify(err)), 'erro');
+    }
   } catch(e) {
     mostrarToast('Erro: ' + e.message, 'erro');
   }
