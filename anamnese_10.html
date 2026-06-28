@@ -1098,9 +1098,17 @@ function abrirNovoMeet() {
 }
 
 async function salvarAtendimento() {
-  if (!pacienteCriadaId) return;
+  if (!pacienteCriadaId) {
+    mostrarToast('Erro: ID da paciente não encontrado', 'erro');
+    return;
+  }
 
   const precoSel = document.getElementById('m-preco');
+  console.log('DEBUG pacienteCriadaId:', pacienteCriadaId);
+  console.log('DEBUG preco_id:', precoSel.value);
+  console.log('DEBUG abordagem:', document.getElementById('m-abordagem').value);
+  console.log('DEBUG frequencia:', document.getElementById('m-frequencia').value);
+  console.log('DEBUG pagamento:', document.getElementById('m-pagamento').value);
   const precoId = precoSel.value ? parseInt(precoSel.value) : null;
   const precoOpt = precoSel.options[precoSel.selectedIndex];
 
