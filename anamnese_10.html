@@ -1134,8 +1134,10 @@ pagamento: ${document.getElementById('m-pagamento').value}`;
   // Remover nulls
   Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
 
+  alert('BODY enviado:\n' + JSON.stringify(dados, null, 2));
+
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${pacienteCriadaId}`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${parseInt(pacienteCriadaId)}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
