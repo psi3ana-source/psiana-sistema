@@ -1145,12 +1145,13 @@ pagamento: ${document.getElementById('m-pagamento').value}`;
       body: JSON.stringify(dados)
     });
 
+    const respText = await r.text();
+    alert('RESPOSTA Supabase:\nStatus: ' + r.status + '\n' + respText);
     if (r.ok) {
       mostrarToast('Dados do atendimento salvos!', 'sucesso');
       setTimeout(() => irParaFicha(), 800);
     } else {
-      const err = await r.json();
-      mostrarToast('Erro ao salvar: ' + (err.message || JSON.stringify(err)), 'erro');
+      mostrarToast('Erro ao salvar: ' + respText, 'erro');
     }
   } catch(e) {
     mostrarToast('Erro: ' + e.message, 'erro');
