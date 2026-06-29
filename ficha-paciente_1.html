@@ -621,12 +621,7 @@ async function visualizarDoc(nome) {
       body: JSON.stringify({ expiresIn: 300 }) // 5 minutos
     });
     const data = await r.json();
-    if (data.signedURL) {
-      const fullUrl = data.signedURL.startsWith('http') ? data.signedURL : SUPABASE_URL + data.signedURL;
-      window.open(fullUrl, '_blank');
-    } else {
-      alert('Erro ao gerar link de visualização.');
-    }
+    alert('Resposta: ' + JSON.stringify(data));
   } catch(e) {
     alert('Erro: ' + e.message);
   }
