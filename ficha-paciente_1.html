@@ -291,7 +291,7 @@ async function renderDados() {
       <div class="section-title">Dados do atendimento</div>
       <div class="grid-info">
         <div class="info-item"><div class="label">Primeira sessão</div><div class="valor">${fmtData(p.primeira_sessao)}</div></div>
-        <div class="info-item"><div class="label">Frequência</div><div class="valor">${fmt(p.frequencia)}</div></div>
+        <div class="info-item"><div class="label">Frequência</div><div class="valor">${p.frequencia ? p.frequencia.charAt(0).toUpperCase() + p.frequencia.slice(1) : 'Não informado'}</div></div>
         <div class="info-item"><div class="label">Modalidade financeira</div><div class="valor">${nomePreco || 'Não informado'}</div></div>
         <div class="info-item"><div class="label">Forma de pagamento</div><div class="valor">${fmt(p.forma_pagamento)}</div></div>
         <div class="info-item"><div class="label">Como conheceu</div><div class="valor">${fmt(p.como_conheceu)}</div></div>
@@ -323,10 +323,10 @@ function renderSessoes() {
     const horario = hi ? (hf ? `${hi} – ${hf}` : hi) : 'Horário não definido';
     const linkMeet = s.link_videochamada || paciente.link_meet;
     const iniciarBtn = linkMeet
-      ? `<a href="${linkMeet}" target="_blank" class="btn-sessao-meet" onclick="event.stopPropagation()">🎥 Iniciar sessão</a>`
+      ? `<a href="${linkMeet}" target="_blank" class="btn-sessao-meet" onclick="event.stopPropagation()">Iniciar sessão</a>`
       : '';
     const soapBtn = s.status === 'realizada'
-      ? `<button class="btn-sessao-acao btn-soap" onclick="event.stopPropagation();abrirTranscricao(${s.id})">📝 Prontuário</button>`
+      ? `<button class="btn-sessao-acao btn-soap" onclick="event.stopPropagation();abrirTranscricao(${s.id})">Prontuário</button>`
       : '';
     return `<div class="sessao-card">
       <div class="sessao-data">
@@ -334,16 +334,16 @@ function renderSessoes() {
         <div class="mes">${d ? meses[d.getMonth()] : '—'}</div>
       </div>
       <div class="sessao-info">
-        <div class="tipo">${s.tipo_atendimento || 'Sessão regular'}</div>
+        <div class="tipo">${s.tipo_atendimento ? s.tipo_atendimento.charAt(0).toUpperCase() + s.tipo_atendimento.slice(1) : 'Sessão regular'}</div>
         <div class="detalhe">${horario}</div>
       </div>
       <span class="sessao-status ${statusMap[s.status] || 's-agendada'}">${statusLabel[s.status] || s.status || '—'}</span>
       <div class="sessao-acoes">
         ${iniciarBtn}
         ${soapBtn}
-        <button class="btn-sessao-acao" onclick="event.stopPropagation();editarSessao(${s.id})">✏️ Editar</button>
-        <button class="btn-sessao-acao btn-cancel" onclick="event.stopPropagation();cancelarSessao(${s.id})">✕ Cancelar</button>
-        <button class="btn-sessao-acao" onclick="event.stopPropagation();remarcarSessao(${s.id})">🔄 Remarcar</button>
+        <button class="btn-sessao-acao" onclick="event.stopPropagation();editarSessao(${s.id})">Editar</button>
+        <button class="btn-sessao-acao btn-cancel" onclick="event.stopPropagation();cancelarSessao(${s.id})">Cancelar</button>
+        <button class="btn-sessao-acao" onclick="event.stopPropagation();remarcarSessao(${s.id})">Remarcar</button>
       </div>
     </div>`;
   }).join('');
