@@ -71,6 +71,15 @@
   .fin-card .label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
   .fin-card .value { font-size: 20px; font-weight: 600; color: #785D56; }
   .fin-card.alerta .value { color: #C62828; }
+  .pgto-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .pgto-table th { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.04em; padding: 6px 10px; text-align: left; border-bottom: 1px solid #EDE4E3; }
+  .pgto-table td { font-size: 13px; color: #2C2C2C; padding: 8px 10px; border-bottom: 1px solid #F5F0EF; }
+  .pgto-table tr:last-child td { border-bottom: none; }
+  .badge-recibo { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-recibo.pendente { background: #FFF3E0; color: #E65100; }
+  .badge-recibo.emitido { background: #E8F5E9; color: #2E7D32; }
+  .badge-pgto.pago { color: #2E7D32; font-weight: 600; }
+  .badge-pgto.pendente { color: #E65100; font-weight: 600; }
   .loading { text-align: center; padding: 2rem; color: #C89F9D; font-size: 14px; font-style: italic; }
   .soap-box { background: #FAF6F5; border-left: 3px solid #C89F9D; border-radius: 0 8px 8px 0; padding: 0.875rem 1rem; margin-bottom: 0.75rem; }
   .soap-box .soap-label { font-size: 11px; font-weight: 700; color: #C89F9D; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
@@ -370,6 +379,23 @@ function renderFinanceiro() {
         </div>
       </div>`).join('');
 
+  // Histórico de pagamentos por sessão
+  const sessoesPgto = sessoes.filter(s => s.valor_cobrado).sort((a,b) => new Date(b.data_sessao) - new Date(a.data_sessao));
+  const pgtoHtml = sessoesPgto.length === 0
+    ? '<div class="empty-state">Nenhum pagamento registrado</div>'
+    : `<table class="pgto-table">
+        <thead><tr><th>Data</th><th>Valor</th><th>Status</th><th>Forma</th><th>Recibo</th></tr></thead>
+        <tbody>${sessoesPgto.map(s => `
+          <tr>
+            <td>${fmtData(s.data_sessao)}</td>
+            <td>${fmtMoeda(parseFloat(s.valor_cobrado))}</td>
+            <td><span class="badge-pgto ${s.status_pagamento}">${s.status_pagamento === 'pago' ? 'Pago' : s.status_pagamento === 'pendente' ? 'Pendente' : 'Isento'}</span></td>
+            <td>${s.forma_pagamento || '—'}</td>
+            <td><span class="badge-recibo ${s.recibo_emitido ? 'emitido' : 'pendente'}">${s.recibo_emitido ? 'Emitido' : 'Pendente'}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+
   document.getElementById('financeiro-content').innerHTML = `
     <div class="resumo-financeiro">
       <div class="fin-card"><div class="label">Total recebido</div><div class="value">${fmtMoeda(totalPago)}</div></div>
@@ -381,9 +407,13 @@ function renderFinanceiro() {
       <div class="section-title">Dados financeiros</div>
       <div class="grid-info">
         <div class="info-item"><div class="label">Forma de pagamento</div><div class="valor">${fmt(paciente.forma_pagamento)}</div></div>
-        <div class="info-item"><div class="label">Data de pagamento</div><div class="valor">${fmt(paciente.data_pagamento)}</div></div>
+        <div class="info-item"><div class="label">Data de pagamento</div><div class="valor">${fmt(paciente.data_pagamento) || 'Não informado'}</div></div>
         <div class="info-item"><div class="label">Responsável financeiro</div><div class="valor">${paciente.responsavel_financeiro === 'outra_pessoa' ? (paciente.responsavel_nome || 'Não informado') + (paciente.responsavel_cpf ? ' · CPF: ' + paciente.responsavel_cpf : '') : 'A própria paciente'}</div></div>
       </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Histórico de pagamentos</div>
+      ${pgtoHtml}
     </div>
     <div class="section">
       <div class="section-title">Histórico de modalidades</div>
