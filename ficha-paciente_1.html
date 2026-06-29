@@ -365,7 +365,7 @@ function renderFinanceiro() {
       <div class="grid-info">
         <div class="info-item"><div class="label">Forma de pagamento</div><div class="valor">${fmt(paciente.forma_pagamento)}</div></div>
         <div class="info-item"><div class="label">Data de pagamento</div><div class="valor">${fmt(paciente.data_pagamento)}</div></div>
-        <div class="info-item"><div class="label">Responsável financeiro</div><div class="valor">${fmt(paciente.responsavel_financeiro)}</div></div>
+        <div class="info-item"><div class="label">Responsável financeiro</div><div class="valor">${paciente.responsavel_financeiro === 'outra_pessoa' ? (paciente.responsavel_nome || 'Não informado') + (paciente.responsavel_cpf ? ' · CPF: ' + paciente.responsavel_cpf : '') : 'A própria paciente'}</div></div>
       </div>
     </div>
     <div class="section">
