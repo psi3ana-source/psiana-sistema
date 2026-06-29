@@ -103,6 +103,27 @@
   .s-soap:hover { background: #C89F9D !important; border-color: #C89F9D !important; }
   .s-meet { padding: 7px 14px !important; border-radius: 8px !important; background: #785D56 !important; color: #fff !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; text-decoration: none !important; white-space: nowrap !important; border: none !important; display: inline-block !important; }
   .s-meet:hover { background: #C89F9D !important; }
+  .subtabs { display: flex; gap: 4px; margin-bottom: 1.25rem; border-bottom: 2px solid #EDE4E3; padding-bottom: 0; }
+  .subtab { padding: 8px 16px; font-size: 13px; font-weight: 500; color: #999; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .subtab.ativa { color: #785D56; border-bottom-color: #C89F9D; }
+  .subtab:hover { color: #785D56; }
+  .subpainel { display: none; }
+  .subpainel.ativo { display: block; }
+  .anamnese-item { margin-bottom: 1rem; }
+  .anamnese-item .a-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .anamnese-item .a-valor { font-size: 14px; color: #2C2C2C; line-height: 1.5; }
+  .anamnese-item .a-valor.vazio { color: #CCC; font-style: italic; }
+  .doc-upload { border: 2px dashed #C89F9D; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; background: #FAF6F5; margin-bottom: 1rem; }
+  .doc-upload:hover { background: #F0E8E7; }
+  .doc-upload input { display: none; }
+  .doc-upload p { color: #C89F9D; font-size: 14px; margin-top: 8px; }
+  .doc-lista { display: flex; flex-direction: column; gap: 8px; }
+  .doc-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #fff; border: 1px solid #EDE4E3; border-radius: 8px; }
+  .doc-item .doc-nome { flex: 1; font-size: 14px; color: #2C2C2C; }
+  .doc-item .doc-data { font-size: 12px; color: #999; }
+  .doc-item .doc-baixar { padding: 5px 12px; border: 1px solid #DDD; border-radius: 6px; background: #fff; color: #785D56; font-size: 12px; cursor: pointer; text-decoration: none; }
+  .doc-item .doc-baixar:hover { background: #FAF6F5; }
+  .doc-item .doc-del { padding: 5px 10px; border: 1px solid #DDD; border-radius: 6px; background: #fff; color: #C62828; font-size: 12px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -146,7 +167,20 @@
   </div>
 
   <div id="painel-prontuario" class="painel">
-    <div id="prontuario-content" class="loading">Carregando...</div>
+    <div class="subtabs">
+      <button class="subtab ativa" onclick="mudarSubtab('anamnese-inicial')">Anamnese Inicial</button>
+      <button class="subtab" onclick="mudarSubtab('evolucao-clinica')">Evolução Clínica</button>
+      <button class="subtab" onclick="mudarSubtab('documentos')">Documentos</button>
+    </div>
+    <div id="subpainel-anamnese-inicial" class="subpainel ativo">
+      <div id="anamnese-content" class="loading">Carregando...</div>
+    </div>
+    <div id="subpainel-evolucao-clinica" class="subpainel">
+      <div id="evolucao-content"></div>
+    </div>
+    <div id="subpainel-documentos" class="subpainel">
+      <div id="documentos-content"></div>
+    </div>
   </div>
 </div>
 
@@ -162,6 +196,7 @@ const PACIENTE_ID = params.get('id');
 let paciente = null;
 let sessoes = [];
 let modalidades = [];
+let anamnese = null;
 
 function trocarTab(nome) {
   document.querySelectorAll('.tab').forEach((t,i) => {
@@ -440,13 +475,64 @@ function renderFinanceiro() {
   `;
 }
 
+function mudarSubtab(nome) {
+  document.querySelectorAll('.subtab').forEach(t => t.classList.remove('ativa'));
+  document.querySelectorAll('.subpainel').forEach(p => p.classList.remove('ativo'));
+  event.target.classList.add('ativa');
+  document.getElementById('subpainel-' + nome).classList.add('ativo');
+  if (nome === 'documentos' && !documentosCarregados) carregarDocumentos();
+}
+
 function renderProntuario() {
-  const realizadas = sessoes.filter(s => s.status === 'realizada' && (s.soap_subjetivo || s.soap_objetivo || s.soap_analise || s.soap_plano));
-  if (realizadas.length === 0) {
-    document.getElementById('prontuario-content').innerHTML = '<div class="section"><div class="empty-state">Nenhum prontuário preenchido ainda</div></div>';
+  renderAnamnese();
+  renderEvolucao();
+}
+
+function renderAnamnese() {
+  if (!anamnese) {
+    document.getElementById('anamnese-content').innerHTML = '<div class="section"><div class="empty-state">Nenhuma anamnese importada ainda</div></div>';
     return;
   }
-  document.getElementById('prontuario-content').innerHTML = realizadas.map(s => {
+  const a = anamnese;
+  const campos = [
+    { label: 'Com quem cresceu', valor: a.com_quem_cresceu },
+    { label: 'Relação com figuras cuidadoras', valor: a.relacao_figuras_cuidadoras },
+    { label: 'Relação com família atual', valor: a.relacao_familia_atual },
+    { label: 'Histórico familiar de transtornos', valor: a.historico_familiar_transtornos === true ? 'Sim' : a.historico_familiar_transtornos === false ? 'Não' : a.historico_familiar_transtornos },
+    { label: 'Detalhes histórico familiar', valor: a.historico_familiar_detalhes },
+    { label: 'Satisfação com trabalho/estudos', valor: a.satisfacao_trabalho_estudos },
+    { label: 'Lida com prazos', valor: a.lida_com_prazos },
+    { label: 'Rede de apoio', valor: a.rede_apoio === true ? 'Sim' : a.rede_apoio === false ? 'Não' : a.rede_apoio },
+    { label: 'Quem compõe a rede', valor: a.quem_compoem_rede },
+    { label: 'Condição de saúde atual', valor: a.condicao_saude_atual },
+    { label: 'Diagnósticos anteriores', valor: a.diagnosticos_anteriores },
+    { label: 'Medicações', valor: a.medicacoes },
+    { label: 'Sono, alimentação e energia', valor: a.sono_alimentacao_energia },
+    { label: 'O que está difícil', valor: a.o_que_esta_dificil },
+    { label: 'Experiência em terapia anterior', valor: a.experiencia_terapia_anterior },
+    { label: 'Expectativas', valor: a.expectativas },
+    { label: 'Disposta a se implicar', valor: a.disposta_implicar },
+    { label: 'Observações clínicas', valor: a.observacoes_clinicas },
+  ];
+  document.getElementById('anamnese-content').innerHTML = `
+    <div class="section">
+      <div class="section-title">Anamnese Inicial · ${a.data_preenchimento ? new Date(a.data_preenchimento).toLocaleDateString('pt-BR') : 'Data não informada'}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        ${campos.map(c => `<div class="anamnese-item">
+          <div class="a-label">${c.label}</div>
+          <div class="a-valor ${c.valor ? '' : 'vazio'}">${c.valor || 'Não informado'}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderEvolucao() {
+  const realizadas = sessoes.filter(s => s.status === 'realizada');
+  if (realizadas.length === 0) {
+    document.getElementById('evolucao-content').innerHTML = '<div class="section"><div class="empty-state">Nenhuma sessão realizada ainda</div></div>';
+    return;
+  }
+  document.getElementById('evolucao-content').innerHTML = realizadas.map(s => {
     const d = s.data_sessao ? new Date(s.data_sessao + 'T12:00:00') : null;
     const dataFmt = d ? d.toLocaleDateString('pt-BR') : '—';
     return `<div class="section">
@@ -457,8 +543,78 @@ function renderProntuario() {
       <div class="soap-box"><div class="soap-label">P — Plano</div><div class="soap-text ${s.soap_plano ? '' : 'vazio'}">${s.soap_plano || 'Não preenchido'}</div></div>
       ${s.tecnicas_utilizadas ? `<div class="soap-box"><div class="soap-label">Técnicas utilizadas</div><div class="soap-text">${s.tecnicas_utilizadas}</div></div>` : ''}
       ${s.tarefas_enviadas ? `<div class="soap-box"><div class="soap-label">Tarefas enviadas</div><div class="soap-text">${s.tarefas_enviadas}</div></div>` : ''}
+      ${s.alertas ? `<div class="soap-box" style="border-left:3px solid #C62828"><div class="soap-label" style="color:#C62828">⚠ Alertas</div><div class="soap-text">${s.alertas}</div></div>` : ''}
     </div>`;
   }).join('');
+}
+
+let documentosCarregados = false;
+async function carregarDocumentos() {
+  documentosCarregados = true;
+  const el = document.getElementById('documentos-content');
+  el.innerHTML = '<div class="loading">Carregando documentos...</div>';
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/list/documentos-pacientes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ prefix: `paciente-${PACIENTE_ID}/`, limit: 100 })
+    });
+    const arquivos = await r.json();
+    renderDocumentos(arquivos || []);
+  } catch(e) {
+    renderDocumentos([]);
+  }
+}
+
+function renderDocumentos(arquivos) {
+  const el = document.getElementById('documentos-content');
+  const listaHtml = arquivos.length === 0
+    ? '<div class="empty-state">Nenhum documento enviado ainda</div>'
+    : `<div class="doc-lista">${arquivos.map(f => {
+        const url = `${SUPABASE_URL}/storage/v1/object/documentos-pacientes/paciente-${PACIENTE_ID}/${f.name}`;
+        const data = f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '';
+        return `<div class="doc-item">
+          <div class="doc-nome">${f.name}</div>
+          <div class="doc-data">${data}</div>
+          <a href="${url}?download=true" class="doc-baixar" target="_blank">Baixar</a>
+          <button class="doc-del" onclick="deletarDoc('${f.name}')">✕</button>
+        </div>`;
+      }).join('')}</div>`;
+  el.innerHTML = `<div class="section">
+    <div class="doc-upload" onclick="document.getElementById('upload-input').click()">
+      <div style="font-size:32px">📎</div>
+      <p>Clique para enviar um documento</p>
+      <p style="font-size:12px;color:#999">PDF, imagem, Word, etc.</p>
+      <input id="upload-input" type="file" onchange="uploadDoc(this.files[0])">
+    </div>
+    ${listaHtml}
+  </div>`;
+}
+
+async function uploadDoc(file) {
+  if (!file) return;
+  const path = `paciente-${PACIENTE_ID}/${Date.now()}_${file.name}`;
+  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/documentos-pacientes/${path}`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': file.type },
+    body: file
+  });
+  if (r.ok) {
+    documentosCarregados = false;
+    carregarDocumentos();
+  } else {
+    alert('Erro ao enviar documento.');
+  }
+}
+
+async function deletarDoc(nome) {
+  if (!confirm('Remover este documento?')) return;
+  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/documentos-pacientes`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({ prefixes: [`paciente-${PACIENTE_ID}/${nome}`] })
+  });
+  if (r.ok) { documentosCarregados = false; carregarDocumentos(); }
 }
 
 async function gerarRecorrencia() {
@@ -601,12 +757,15 @@ async function carregar() {
     return;
   }
   try {
-    const [rPac, rSes, rMod] = await Promise.all([
+    const [rPac, rAnam, rSes, rMod] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }),
-      fetch(`${SUPABASE_URL}/rest/v1/sessoes?paciente_id=eq.${PACIENTE_ID}&order=data_sessao.desc`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/anamnese?paciente_id=eq.${PACIENTE_ID}&order=created_at.desc&limit=1`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/sessoes?paciente_id=eq.${PACIENTE_ID}&order=data_sessao.asc`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }),
       fetch(`${SUPABASE_URL}/rest/v1/modalidades_financeiras?paciente_id=eq.${PACIENTE_ID}&order=data_inicio.desc`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } })
     ]);
     const pacs = await rPac.json();
+    const anams = await rAnam.json();
+    anamnese = anams.length ? anams[0] : null;
     sessoes = await rSes.json();
     modalidades = await rMod.json();
     if (!pacs.length) {
