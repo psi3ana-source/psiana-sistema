@@ -109,13 +109,13 @@
   .subtab:hover { color: #785D56; }
   .subpainel { display: none; }
   .subpainel.ativo { display: block; }
-  .anam-secao { margin-bottom: 1.5rem; }
-  .anam-secao-titulo { font-size: 11px; font-weight: 700; color: #C89F9D; text-transform: uppercase; letter-spacing: 0.07em; padding-bottom: 6px; border-bottom: 1px solid #EDE4E3; margin-bottom: 12px; }
-  .anamnese-item { margin-bottom: 12px; padding: 10px 14px; background: #FAF6F5; border-radius: 8px; border-left: 3px solid #EDE4E3; }
-  .anamnese-item .a-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-  .anamnese-item .a-valor { font-size: 14px; color: #2C2C2C; line-height: 1.6; }
-  .anamnese-item .a-valor.vazio { color: #CCC; font-style: italic; }
-  .anamnese-item.destaque { border-left-color: #C89F9D; }
+  .anam-section { margin-bottom: 1rem; }
+  .anam-section .titulo { font-size: 11px; font-weight: 600; color: #C89F9D; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .anam-campo { display: flex; gap: 8px; margin-bottom: 4px; font-size: 13px; padding: 3px 0; border-bottom: 1px solid #F5F0EF; }
+  .anam-campo:last-child { border-bottom: none; }
+  .anam-campo .ak { color: #999; min-width: 200px; flex-shrink: 0; }
+  .anam-campo .av { color: #2C2C2C; line-height: 1.5; }
+  .anam-campo .av.vazio { color: #CCC; font-style: italic; }
   .doc-upload { border: 2px dashed #C89F9D; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; background: #FAF6F5; margin-bottom: 1rem; }
   .doc-upload:hover { background: #F0E8E7; }
   .doc-upload input { display: none; }
@@ -492,12 +492,9 @@ function renderProntuario() {
 }
 
 function fmtBool(v) { return v === true ? 'Sim' : v === false ? 'Não' : v; }
-function anamItem(label, valor, destaque) {
-  const vazio = !valor;
-  return `<div class="anamnese-item${destaque ? ' destaque' : ''}">
-    <div class="a-label">${label}</div>
-    <div class="a-valor${vazio ? ' vazio' : ''}">${valor || 'Não informado'}</div>
-  </div>`;
+function aC(label, valor) {
+  const v = valor || '';
+  return `<div class="anam-campo"><span class="ak">${label}</span><span class="av${v ? '' : ' vazio'}">${v || 'Não informado'}</span></div>`;
 }
 
 function renderAnamnese() {
@@ -510,46 +507,46 @@ function renderAnamnese() {
     <div class="section">
       <div class="section-title">Anamnese Inicial · ${a.data_preenchimento ? new Date(a.data_preenchimento).toLocaleDateString('pt-BR') : 'Data não informada'}</div>
 
-      <div class="anam-secao">
-        <div class="anam-secao-titulo">Contexto familiar</div>
-        ${anamItem('Com quem cresceu', a.com_quem_cresceu)}
-        ${anamItem('Relação com figuras cuidadoras', a.relacao_figuras_cuidadoras)}
-        ${anamItem('Relação com família atual', a.relacao_familia_atual)}
-        ${anamItem('Histórico familiar de transtornos mentais', fmtBool(a.historico_familiar_transtornos))}
-        ${a.historico_familiar_detalhes ? anamItem('Detalhes', a.historico_familiar_detalhes) : ''}
+      <div class="anam-section">
+        <div class="titulo">Contexto familiar</div>
+        ${aC('Com quem cresceu', a.com_quem_cresceu)}
+        ${aC('Relação com figuras cuidadoras', a.relacao_figuras_cuidadoras)}
+        ${aC('Relação com família atual', a.relacao_familia_atual)}
+        ${aC('Histórico familiar de transtornos', fmtBool(a.historico_familiar_transtornos))}
+        ${a.historico_familiar_detalhes ? aC('Detalhes', a.historico_familiar_detalhes) : ''}
       </div>
 
-      <div class="anam-secao">
-        <div class="anam-secao-titulo">Trabalho e rotina</div>
-        ${anamItem('Satisfação com trabalho/estudos', a.satisfacao_trabalho_estudos)}
-        ${anamItem('Lida com prazos', a.lida_com_prazos)}
-        ${anamItem('Sono, alimentação e energia', a.sono_alimentacao_energia)}
+      <div class="anam-section">
+        <div class="titulo">Trabalho e rotina</div>
+        ${aC('Satisfação com trabalho/estudos', a.satisfacao_trabalho_estudos)}
+        ${aC('Lida com prazos', a.lida_com_prazos)}
+        ${aC('Sono, alimentação e energia', a.sono_alimentacao_energia)}
       </div>
 
-      <div class="anam-secao">
-        <div class="anam-secao-titulo">Rede de apoio</div>
-        ${anamItem('Possui rede de apoio', fmtBool(a.rede_apoio))}
-        ${a.quem_compoem_rede ? anamItem('Quem compõe a rede', a.quem_compoem_rede) : ''}
+      <div class="anam-section">
+        <div class="titulo">Rede de apoio</div>
+        ${aC('Possui rede de apoio', fmtBool(a.rede_apoio))}
+        ${a.quem_compoem_rede ? aC('Quem compõe a rede', a.quem_compoem_rede) : ''}
       </div>
 
-      <div class="anam-secao">
-        <div class="anam-secao-titulo">Saúde</div>
-        ${anamItem('Condição de saúde atual', a.condicao_saude_atual)}
-        ${anamItem('Diagnósticos anteriores', a.diagnosticos_anteriores)}
-        ${anamItem('Medicações em uso', a.medicacoes)}
+      <div class="anam-section">
+        <div class="titulo">Saúde</div>
+        ${aC('Condição de saúde atual', a.condicao_saude_atual)}
+        ${aC('Diagnósticos anteriores', a.diagnosticos_anteriores)}
+        ${aC('Medicações em uso', a.medicacoes)}
       </div>
 
-      <div class="anam-secao">
-        <div class="anam-secao-titulo">Demanda clínica</div>
-        ${anamItem('O que está difícil', a.o_que_esta_dificil, true)}
-        ${anamItem('Experiência em terapia anterior', a.experiencia_terapia_anterior)}
-        ${anamItem('Expectativas com a terapia', a.expectativas, true)}
-        ${anamItem('Disposta a se implicar', a.disposta_implicar)}
+      <div class="anam-section">
+        <div class="titulo">Demanda clínica</div>
+        ${aC('O que está difícil', a.o_que_esta_dificil)}
+        ${aC('Experiência em terapia anterior', a.experiencia_terapia_anterior)}
+        ${aC('Expectativas com a terapia', a.expectativas)}
+        ${aC('Disposta a se implicar', a.disposta_implicar)}
       </div>
 
-      ${a.observacoes_clinicas ? `<div class="anam-secao">
-        <div class="anam-secao-titulo">Observações clínicas</div>
-        ${anamItem('', a.observacoes_clinicas, true)}
+      ${a.observacoes_clinicas ? `<div class="anam-section">
+        <div class="titulo">Observações clínicas</div>
+        ${aC('', a.observacoes_clinicas)}
       </div>` : ''}
     </div>`;
 }
