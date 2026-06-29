@@ -69,6 +69,12 @@ function toast(msg, tipo) {
 function v(id) { return document.getElementById(id)?.value || ''; }
 function set(id, val) { const el = document.getElementById(id); if (el && val !== null && val !== undefined) el.value = val; }
 
+function toggleResp() {
+  const val = document.getElementById('f_resp_tipo').value;
+  const campos = document.getElementById('resp-campos');
+  campos.style.display = val === 'outra_pessoa' ? 'block' : 'none';
+}
+
 async function carregar() {
   if (!PACIENTE_ID) {
     document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">ID não informado.</div>';
@@ -180,6 +186,29 @@ function renderForm(p) {
         <div class="field" style="grid-column:1/-1"><label>Link Google Meet</label><input id="f_meet" type="url" placeholder="https://meet.google.com/..."></div>
       </div>
     </div>
+
+    <div class="section">
+      <div class="section-title">Financeiro</div>
+      <div class="grid-2">
+        <div class="field" style="grid-column:1/-1">
+          <label>Data de pagamento</label>
+          <input id="f_data_pgto" type="text" placeholder="Ex: todo dia 5, após a sessão...">
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Responsável financeiro</label>
+          <select id="f_resp_tipo" onchange="toggleResp()">
+            <option value="propria">A própria paciente</option>
+            <option value="outra_pessoa">Outra pessoa</option>
+          </select>
+        </div>
+        <div id="resp-campos" style="display:none; grid-column:1/-1; display:none">
+          <div class="grid-2">
+            <div class="field"><label>Nome do responsável</label><input id="f_resp_nome" type="text"></div>
+            <div class="field"><label>CPF do responsável</label><input id="f_resp_cpf" type="text" placeholder="000.000.000-00"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 
   // Preencher valores
@@ -206,6 +235,13 @@ function renderForm(p) {
   set('f_freq', p.frequencia);
   set('f_pgto', p.forma_pagamento);
   set('f_meet', p.link_meet);
+  set('f_data_pgto', p.data_pagamento);
+  if (p.responsavel_financeiro === 'outra_pessoa') {
+    document.getElementById('f_resp_tipo').value = 'outra_pessoa';
+    document.getElementById('resp-campos').style.display = 'block';
+    set('f_resp_nome', p.responsavel_nome);
+    set('f_resp_cpf', p.responsavel_cpf);
+  }
 }
 
 async function salvar() {
@@ -234,6 +270,10 @@ async function salvar() {
     frequencia: v('f_freq') || null,
     forma_pagamento: v('f_pgto') || null,
     link_meet: v('f_meet') || null,
+    data_pagamento: v('f_data_pgto') || null,
+    responsavel_financeiro: v('f_resp_tipo') === 'outra_pessoa' ? 'outra_pessoa' : 'propria',
+    responsavel_nome: v('f_resp_tipo') === 'outra_pessoa' ? (v('f_resp_nome') || null) : null,
+    responsavel_cpf: v('f_resp_tipo') === 'outra_pessoa' ? (v('f_resp_cpf') || null) : null,
   };
 
   // remover nulls
