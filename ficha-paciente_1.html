@@ -622,7 +622,8 @@ async function visualizarDoc(nome) {
     });
     const data = await r.json();
     if (data.signedURL) {
-      window.open(SUPABASE_URL + data.signedURL, '_blank');
+      const fullUrl = data.signedURL.startsWith('http') ? data.signedURL : SUPABASE_URL + data.signedURL;
+      window.open(fullUrl, '_blank');
     } else {
       alert('Erro ao gerar link de visualização.');
     }
