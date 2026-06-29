@@ -71,9 +71,14 @@
   .fin-card .label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
   .fin-card .value { font-size: 20px; font-weight: 600; color: #785D56; }
   .fin-card.alerta .value { color: #C62828; }
-  .pgto-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .pgto-table { width: 100%; border-collapse: collapse; margin-top: 4px; table-layout: fixed; }
   .pgto-table th { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; text-align: left; border-bottom: 1px solid #EDE4E3; }
-  .pgto-table td { font-size: 13px; color: #2C2C2C; padding: 10px 12px; border-bottom: 1px solid #F5F0EF; vertical-align: middle; }
+  .pgto-table td { font-size: 13px; color: #2C2C2C; padding: 10px 12px; border-bottom: 1px solid #F5F0EF; vertical-align: middle; text-align: left; }
+  .pgto-table th:nth-child(1), .pgto-table td:nth-child(1) { width: 20%; }
+  .pgto-table th:nth-child(2), .pgto-table td:nth-child(2) { width: 20%; }
+  .pgto-table th:nth-child(3), .pgto-table td:nth-child(3) { width: 20%; }
+  .pgto-table th:nth-child(4), .pgto-table td:nth-child(4) { width: 20%; }
+  .pgto-table th:nth-child(5), .pgto-table td:nth-child(5) { width: 20%; }
   .pgto-table tr:last-child td { border-bottom: none; }
   .badge-recibo { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
   .badge-recibo.pendente { background: #FFF3E0; color: #E65100; }
@@ -129,7 +134,10 @@
   </div>
 
   <div id="painel-sessoes" class="painel">
-    <button class="btn-add-sessao" onclick="agendarSessao()">+ Agendar nova sessão</button>
+    <div style="display:flex;gap:8px;margin-bottom:1rem;">
+      <button class="btn-add-sessao" style="margin-bottom:0;flex:1" onclick="agendarSessao()">+ Agendar nova sessão</button>
+      <button class="btn-add-sessao" style="margin-bottom:0;flex:1" onclick="gerarRecorrencia()">↻ Gerar recorrência</button>
+    </div>
     <div id="sessoes-content" class="loading">Carregando...</div>
   </div>
 
@@ -451,6 +459,107 @@ function renderProntuario() {
       ${s.tarefas_enviadas ? `<div class="soap-box"><div class="soap-label">Tarefas enviadas</div><div class="soap-text">${s.tarefas_enviadas}</div></div>` : ''}
     </div>`;
   }).join('');
+}
+
+async function gerarRecorrencia() {
+  if (sessoes.length === 0) {
+    alert('Nenhuma sessão cadastrada para usar como base.');
+    return;
+  }
+
+  // Pegar última sessão cadastrada
+  const ultima = sessoes[sessoes.length - 1];
+  const baseData = new Date(ultima.data_sessao + 'T12:00:00');
+  const diaSemana = baseData.getDay(); // 0=dom, 1=seg...
+
+  // Horário base
+  const hi = ultima.horario_inicio ? new Date(ultima.horario_inicio) : null;
+  const hf = ultima.horario_fim ? new Date(ultima.horario_fim) : null;
+  const horasInicio = hi ? hi.getHours() : 14;
+  const minutosInicio = hi ? hi.getMinutes() : 0;
+  const horasFim = hf ? hf.getHours() : horasInicio + 1;
+  const minutosFim = hf ? hf.getMinutes() : minutosInicio;
+
+  // Calcular próximo mês
+  const proximoMes = new Date(baseData.getFullYear(), baseData.getMonth() + 1, 1);
+  const ultimoDiaProxMes = new Date(baseData.getFullYear(), baseData.getMonth() + 2, 0).getDate();
+
+  // Gerar todas as datas do mesmo dia da semana no próximo mês
+  const datas = [];
+  const d = new Date(proximoMes);
+  // Avançar até o primeiro dia da semana correto
+  while (d.getDay() !== diaSemana) d.setDate(d.getDate() + 1);
+  while (d.getMonth() === proximoMes.getMonth()) {
+    datas.push(new Date(d));
+    d.setDate(d.getDate() + 7);
+  }
+
+  if (datas.length === 0) {
+    alert('Não foi possível calcular as datas.');
+    return;
+  }
+
+  const diasSemana = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const confirmMsg = `Gerar ${datas.length} sessões em ${meses[proximoMes.getMonth()]}?\n\n` +
+    datas.map(dt => `${dt.getDate()}/${dt.getMonth()+1} (${diasSemana[dt.getDay()]})`).join('\n');
+
+  if (!confirm(confirmMsg)) return;
+
+  // Buscar valor da sessão
+  let valorCobrado = null;
+  if (paciente.preco_id) {
+    try {
+      const rp = await fetch(`${SUPABASE_URL}/rest/v1/tabela_precos?id=eq.${paciente.preco_id}&select=valor_unitario`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      const dp = await rp.json();
+      if (dp.length) valorCobrado = parseFloat(dp[0].valor_unitario);
+    } catch(e) {}
+  }
+
+  const linkMeet = paciente.link_meet || null;
+  let erros = 0;
+
+  for (const dt of datas) {
+    const dataStr = dt.toISOString().split('T')[0];
+    const hiStr = `${dataStr}T${String(horasInicio).padStart(2,'0')}:${String(minutosInicio).padStart(2,'0')}:00-03:00`;
+    const hfStr = `${dataStr}T${String(horasFim).padStart(2,'0')}:${String(minutosFim).padStart(2,'0')}:00-03:00`;
+
+    const dados = {
+      paciente_id: parseInt(PACIENTE_ID),
+      data_sessao: dataStr,
+      horario_inicio: hiStr,
+      horario_fim: hfStr,
+      status: 'agendada',
+      tipo_atendimento: ultima.tipo_atendimento || 'sessão regular',
+      link_videochamada: linkMeet,
+      forma_pagamento: paciente.forma_pagamento || null,
+    };
+    if (valorCobrado) dados.valor_cobrado = valorCobrado;
+
+    Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
+
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(dados)
+    });
+    if (!r.ok) erros++;
+  }
+
+  if (erros === 0) {
+    alert(`${datas.length} sessões geradas com sucesso!`);
+    location.reload();
+  } else {
+    alert(`${datas.length - erros} sessões geradas. ${erros} erro(s).`);
+    location.reload();
+  }
 }
 
 function agendarSessao() {
