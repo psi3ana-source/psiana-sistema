@@ -608,18 +608,42 @@ async function carregarDocumentos() {
   }
 }
 
+function nomeExibicao(nome) {
+  // Remove timestamp do início (ex: 1782765575049_arquivo.pdf → arquivo.pdf)
+  return nome.replace(/^\d+_/, '');
+}
+
+async function visualizarDoc(nome) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/documentos-pacientes/paciente-${PACIENTE_ID}/${nome}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ expiresIn: 300 }) // 5 minutos
+    });
+    const data = await r.json();
+    if (data.signedURL) {
+      window.open(SUPABASE_URL + data.signedURL, '_blank');
+    } else {
+      alert('Erro ao gerar link de visualização.');
+    }
+  } catch(e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
 function renderDocumentos(arquivos) {
   const el = document.getElementById('documentos-content');
   const listaHtml = arquivos.length === 0
     ? '<div class="empty-state">Nenhum documento enviado ainda</div>'
     : `<div class="doc-lista">${arquivos.map(f => {
-        const url = `${SUPABASE_URL}/storage/v1/object/documentos-pacientes/paciente-${PACIENTE_ID}/${f.name}`;
+        const nomeOriginal = f.name;
+        const nomeClean = nomeExibicao(f.name);
         const data = f.created_at ? new Date(f.created_at).toLocaleDateString('pt-BR') : '';
         return `<div class="doc-item">
-          <div class="doc-nome">${f.name}</div>
+          <div class="doc-nome">${nomeClean}</div>
           <div class="doc-data">${data}</div>
-          <a href="${url}?download=true" class="doc-baixar" target="_blank">Baixar</a>
-          <button class="doc-del" onclick="deletarDoc('${f.name}')">✕</button>
+          <button class="doc-baixar" onclick="visualizarDoc('${nomeOriginal}')">Visualizar</button>
+          <button class="doc-del" onclick="deletarDoc('${nomeOriginal}')">✕</button>
         </div>`;
       }).join('')}</div>`;
   el.innerHTML = `<div class="section">
