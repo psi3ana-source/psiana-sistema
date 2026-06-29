@@ -1001,6 +1001,7 @@ async function salvarTudo() {
 
     const pacResult = await rPac.json();
     pacienteCriadaId = pacResult[0].id;
+    sessionStorage.setItem('pacienteCriadaId', pacienteCriadaId);
 
     // 2. Salvar anamnese
     await fetch(`${SUPABASE_URL}/rest/v1/anamnese`, {
@@ -1113,8 +1114,10 @@ async function salvarAtendimento() {
 }
 
 function irParaFicha() {
-  if (pacienteCriadaId) {
-    window.location.href = `ficha-paciente_1.html?id=${pacienteCriadaId}`;
+  const id = pacienteCriadaId || sessionStorage.getItem('pacienteCriadaId');
+  if (id) {
+    sessionStorage.removeItem('pacienteCriadaId');
+    window.location.href = `ficha-paciente_1.html?id=${id}`;
   }
 }
 
