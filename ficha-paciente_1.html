@@ -72,8 +72,8 @@
   .fin-card .value { font-size: 20px; font-weight: 600; color: #785D56; }
   .fin-card.alerta .value { color: #C62828; }
   .pgto-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-  .pgto-table th { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.04em; padding: 6px 10px; text-align: left; border-bottom: 1px solid #EDE4E3; }
-  .pgto-table td { font-size: 13px; color: #2C2C2C; padding: 8px 10px; border-bottom: 1px solid #F5F0EF; }
+  .pgto-table th { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; text-align: left; border-bottom: 1px solid #EDE4E3; }
+  .pgto-table td { font-size: 13px; color: #2C2C2C; padding: 10px 12px; border-bottom: 1px solid #F5F0EF; vertical-align: middle; }
   .pgto-table tr:last-child td { border-bottom: none; }
   .badge-recibo { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
   .badge-recibo.pendente { background: #FFF3E0; color: #E65100; }
@@ -332,10 +332,10 @@ function renderSessoes() {
     const horario = hi ? (hf ? `${hi} – ${hf}` : hi) : 'Horário não definido';
     const linkMeet = s.link_videochamada || paciente.link_meet;
     const iniciarBtn = linkMeet
-      ? `<a href="${linkMeet}" target="_blank" class="btn-sessao-meet" onclick="event.stopPropagation()">Iniciar sessão</a>`
+      ? `<a href="${linkMeet}" target="_blank" class="s-meet" onclick="event.stopPropagation()">Iniciar sessão</a>`
       : '';
     const soapBtn = s.status === 'realizada'
-      ? `<button class="btn-sessao-acao btn-soap" onclick="event.stopPropagation();abrirTranscricao(${s.id})">Prontuário</button>`
+      ? `<button class="s-acao s-soap" onclick="event.stopPropagation();abrirTranscricao(${s.id})">Prontuário</button>`
       : '';
     return `<div class="sessao-card">
       <div class="sessao-data">
@@ -350,9 +350,9 @@ function renderSessoes() {
       <div class="sessao-acoes">
         ${iniciarBtn}
         ${soapBtn}
-        <button class="btn-sessao-acao" onclick="event.stopPropagation();editarSessao(${s.id})">Editar</button>
-        <button class="btn-sessao-acao btn-cancel" onclick="event.stopPropagation();cancelarSessao(${s.id})">Cancelar</button>
-        <button class="btn-sessao-acao" onclick="event.stopPropagation();remarcarSessao(${s.id})">Remarcar</button>
+        <button class="s-acao" onclick="event.stopPropagation();editarSessao(${s.id})">Editar</button>
+        <button class="s-acao s-cancel" onclick="event.stopPropagation();cancelarSessao(${s.id})">Cancelar</button>
+        <button class="s-acao" onclick="event.stopPropagation();remarcarSessao(${s.id})">Remarcar</button>
       </div>
     </div>`;
   }).join('');
