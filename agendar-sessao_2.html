@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PsiAna — Agendar Sessão</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #FAF6F5; color: #2C2C2C; }
+  .header { background: #fff; border-bottom: 1px solid #EDE4E3; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+  .header h1 { font-size: 17px; font-weight: 700; color: #785D56; }
+  .header .paciente-nome { font-size: 13px; color: #999; margin-left: 4px; }
+  .btn-voltar { padding: 7px 14px; border: 1px solid #DDD; border-radius: 8px; background: #fff; color: #785D56; font-size: 13px; cursor: pointer; }
+  .btn-voltar:hover { background: #F0E8E7; }
+  .container { max-width: 620px; margin: 0 auto; padding: 24px 16px 100px; }
+  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #EDE4E3; }
+  .section-title { font-size: 13px; font-weight: 700; color: #C89F9D; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .field input, .field select, .field textarea { font-size: 14px; padding: 10px 12px; border: 1px solid #DDD; border-radius: 8px; background: #FAFAFA; color: #2C2C2C; width: 100%; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #C89F9D; }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .meet-row { display: flex; gap: 8px; }
+  .meet-row input { flex: 1; }
+  .btn-meet { padding: 10px 14px; background: #FAF6F5; border: 1px solid #DDD; border-radius: 8px; font-size: 13px; color: #785D56; cursor: pointer; white-space: nowrap; }
+  .btn-meet:hover { background: #F0E8E7; }
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #EDE4E3; padding: 14px 24px; display: flex; justify-content: flex-end; gap: 10px; }
+  .btn-salvar { padding: 12px 28px; background: #785D56; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-salvar:hover { background: #C89F9D; }
+  .btn-cancelar { padding: 12px 20px; background: #fff; border: 1px solid #DDD; border-radius: 8px; font-size: 14px; color: #999; cursor: pointer; }
+  .toast { position: fixed; bottom: 80px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 999; display: none; }
+  .toast.ok { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+  .toast.erro { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
+  .hint { font-size: 12px; color: #999; margin-top: 3px; font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="btn-voltar" id="btn-voltar">← Voltar</button>
+  <h1>Agendar sessão</h1>
+  <span class="paciente-nome" id="paciente-nome"></span>
+</div>
+
+<div class="container">
+
+  <div class="section">
+    <div class="section-title">Data e horário</div>
+    <div class="grid-2">
+      <div class="field" style="grid-column:1/-1">
+        <label>Data da sessão *</label>
+        <input type="date" id="f_data">
+      </div>
+      <div class="field">
+        <label>Horário de início</label>
+        <input type="time" id="f_inicio">
+      </div>
+      <div class="field">
+        <label>Horário de fim</label>
+        <input type="time" id="f_fim">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Sessão</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Status</label>
+        <select id="f_status">
+          <option value="agendada">Agendada</option>
+          <option value="confirmada">Confirmada</option>
+          <option value="realizada">Realizada</option>
+          <option value="faltou">Paciente faltou</option>
+          <option value="cancelada">Cancelada</option>
+          <option value="remarcada">Remarcada</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tipo</label>
+        <select id="f_tipo">
+          <option value="sessão regular">Sessão regular</option>
+          <option value="avaliação">Avaliação</option>
+          <option value="devolutiva">Devolutiva</option>
+          <option value="emergência">Emergência</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <label>Link da videochamada</label>
+        <div class="meet-row">
+          <input type="url" id="f_meet" placeholder="https://meet.google.com/...">
+          <button class="btn-meet" onclick="window.open('https://meet.google.com/new','_blank')">🎥 Novo</button>
+        </div>
+        <span class="hint" id="meet-hint"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Financeiro</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Valor cobrado (R$)</label>
+        <input type="number" id="f_valor" step="0.01" min="0" placeholder="0,00">
+      </div>
+      <div class="field">
+        <label>Status do pagamento</label>
+        <select id="f_status_pgto">
+          <option value="pendente">Pendente</option>
+          <option value="pago">Pago</option>
+          <option value="isento">Isento</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Forma de pagamento</label>
+        <select id="f_forma_pgto">
+          <option value="">Selecione</option>
+          <option value="PIX">PIX</option>
+          <option value="transferencia">Transferência bancária</option>
+          <option value="link_pagamento">Link de pagamento</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Data do pagamento</label>
+        <input type="date" id="f_data_pgto">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Observações</div>
+    <div class="field">
+      <textarea id="f_obs" placeholder="Anotações sobre a sessão..."></textarea>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <button class="btn-cancelar" id="btn-cancelar">Cancelar</button>
+  <button class="btn-salvar" onclick="salvar()">Salvar sessão</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
+const params = new URLSearchParams(window.location.search);
+const PACIENTE_ID = params.get('paciente_id');
+
+document.getElementById('btn-voltar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
+document.getElementById('btn-cancelar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
+
+// Pré-definir hoje como data padrão
+document.getElementById('f_data').value = new Date().toISOString().split('T')[0];
+
+function toast(msg, tipo) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + tipo;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function v(id) { return document.getElementById(id)?.value || ''; }
+
+async function carregarPaciente() {
+  if (!PACIENTE_ID) return;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}&select=nome_completo,link_meet,valor_sessao,forma_pagamento`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await r.json();
+    if (data.length) {
+      const p = data[0];
+      document.getElementById('paciente-nome').textContent = '— ' + (p.nome_completo || '');
+      // Pré-preencher link do meet da paciente
+      if (p.link_meet) {
+        document.getElementById('f_meet').value = p.link_meet;
+        document.getElementById('meet-hint').textContent = 'Link padrão da paciente';
+      }
+      // Pré-preencher valor e forma de pagamento se disponível
+      if (p.valor_sessao) document.getElementById('f_valor').value = p.valor_sessao;
+      if (p.forma_pagamento) document.getElementById('f_forma_pgto').value = p.forma_pagamento;
+    }
+  } catch(e) {}
+}
+
+async function salvar() {
+  if (!PACIENTE_ID) { toast('ID da paciente não encontrado', 'erro'); return; }
+  const data = v('f_data');
+  if (!data) { toast('Informe a data da sessão', 'erro'); return; }
+
+  // Montar horários com timezone de Brasília
+  let horario_inicio = null, horario_fim = null;
+  const inicio = v('f_inicio');
+  const fim = v('f_fim');
+  if (inicio) horario_inicio = `${data}T${inicio}:00-03:00`;
+  if (fim) horario_fim = `${data}T${fim}:00-03:00`;
+
+  const dados = {
+    paciente_id: parseInt(PACIENTE_ID),
+    data_sessao: data,
+    horario_inicio,
+    horario_fim,
+    status: v('f_status') || 'agendada',
+    tipo_atendimento: v('f_tipo') || null,
+    link_videochamada: v('f_meet') || null,
+    valor_cobrado: v('f_valor') ? parseFloat(v('f_valor')) : null,
+    status_pagamento: v('f_status_pgto') || 'pendente',
+    forma_pagamento: v('f_forma_pgto') || null,
+    data_pagamento: v('f_data_pgto') || null,
+    observacoes: v('f_obs') || null,
+  };
+
+  // Remover nulls
+  Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify(dados)
+    });
+    if (r.ok) {
+      toast('Sessão agendada!', 'ok');
+      setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`, 1200);
+    } else {
+      const err = await r.json();
+      toast('Erro: ' + (err.message || JSON.stringify(err)), 'erro');
+    }
+  } catch(e) {
+    toast('Erro: ' + e.message, 'erro');
+  }
+}
+
+carregarPaciente();
+</script>
+</body>
+</html>
