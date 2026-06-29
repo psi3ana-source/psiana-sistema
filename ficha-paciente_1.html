@@ -114,8 +114,8 @@
   .anam-campo { display: flex; gap: 8px; margin-bottom: 4px; font-size: 13px; padding: 3px 0; border-bottom: 1px solid #F5F0EF; }
   .anam-campo:last-child { border-bottom: none; }
   .anam-campo .ak { color: #999; min-width: 200px; flex-shrink: 0; }
-  .anam-campo .av { color: #2C2C2C; line-height: 1.5; }
-  .anam-campo .av.vazio { color: #CCC; font-style: italic; }
+  .anam-campo .av { color: #2C2C2C; line-height: 1.5; text-align: left; }
+  .anam-campo .av.vazio { color: #CCC; font-style: italic; text-align: left; }
   .doc-upload { border: 2px dashed #C89F9D; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; background: #FAF6F5; margin-bottom: 1rem; }
   .doc-upload:hover { background: #F0E8E7; }
   .doc-upload input { display: none; }
@@ -546,7 +546,24 @@ function renderAnamnese() {
 
       ${a.observacoes_clinicas ? `<div class="anam-section">
         <div class="titulo">Observações clínicas</div>
-        ${aC('', a.observacoes_clinicas)}
+        ${(() => {
+          const obs = a.observacoes_clinicas;
+          const extrairBloco = (texto, tag) => {
+            const regex = new RegExp('\\[' + tag + '\\]\\s*([^\\[]*)', 'i');
+            const m = texto.match(regex);
+            return m ? m[1].trim() : null;
+          };
+          const historia = extrairBloco(obs, 'História de vida adicional');
+          const posologia = extrairBloco(obs, 'Posologia');
+          const motivo = extrairBloco(obs, 'Motivo do uso');
+          // Se tem marcadores, subdivide; senão mostra tudo junto
+          if (historia || posologia || motivo) {
+            return (historia ? aC('História de vida adicional', historia) : '') +
+                   (posologia ? aC('Posologia', posologia) : '') +
+                   (motivo ? aC('Motivo do uso', motivo) : '');
+          }
+          return aC('Observações', obs);
+        })()}
       </div>` : ''}
     </div>`;
 }
