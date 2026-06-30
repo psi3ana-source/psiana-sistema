@@ -1086,6 +1086,10 @@ async function salvarTudo() {
     });
 
     document.getElementById('preview-box').style.display = 'none';
+    document.querySelector('.import-area').style.display = 'none';
+    document.querySelector('.btn-importar').style.display = 'none';
+    document.querySelector('#painel-importar .field').style.display = 'none';
+    document.querySelector('#painel-importar p').style.display = 'none';
     const nomePac = p.nome_completo || 'Paciente';
     document.getElementById('sucesso-msg').textContent =
       `${nomePac} foi cadastrada e sua anamnese foi salva. Acesse a ficha para complementar informações adicionais.`;
