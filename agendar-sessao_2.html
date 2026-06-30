@@ -52,13 +52,10 @@
         <label>Data da sessão *</label>
         <input type="date" id="f_data">
       </div>
-      <div class="field">
+      <div class="field" style="grid-column:1/-1">
         <label>Horário de início</label>
         <input type="time" id="f_inicio">
-      </div>
-      <div class="field">
-        <label>Horário de fim</label>
-        <input type="time" id="f_fim">
+        <span class="hint">Duração padrão de 50 minutos</span>
       </div>
     </div>
   </div>
@@ -232,10 +229,6 @@ async function carregarPaciente() {
           const hi = new Date(s.horario_inicio);
           set('f_inicio', `${String(hi.getHours()).padStart(2,'0')}:${String(hi.getMinutes()).padStart(2,'0')}`);
         }
-        if (s.horario_fim) {
-          const hf = new Date(s.horario_fim);
-          set('f_fim', `${String(hf.getHours()).padStart(2,'0')}:${String(hf.getMinutes()).padStart(2,'0')}`);
-        }
         set('f_status', s.status);
         set('f_tipo', s.tipo_atendimento);
         if (s.link_videochamada) {
@@ -264,12 +257,18 @@ async function salvar() {
   const data = v('f_data');
   if (!data) { toast('Informe a data da sessão', 'erro'); return; }
 
-  // Montar horários com timezone de Brasília
+  // Montar horários com timezone de Brasília (duração padrão 50 min)
   let horario_inicio = null, horario_fim = null;
   const inicio = v('f_inicio');
-  const fim = v('f_fim');
-  if (inicio) horario_inicio = `${data}T${inicio}:00-03:00`;
-  if (fim) horario_fim = `${data}T${fim}:00-03:00`;
+  if (inicio) {
+    horario_inicio = `${data}T${inicio}:00-03:00`;
+    const [h, m] = inicio.split(':').map(Number);
+    const totalMin = h * 60 + m + 50;
+    const hFim = Math.floor(totalMin / 60) % 24;
+    const mFim = totalMin % 60;
+    const fimStr = `${String(hFim).padStart(2,'0')}:${String(mFim).padStart(2,'0')}`;
+    horario_fim = `${data}T${fimStr}:00-03:00`;
+  }
 
   const dados = {
     paciente_id: parseInt(PACIENTE_ID),
