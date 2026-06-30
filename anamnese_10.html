@@ -231,7 +231,7 @@
         <option value="propria">A própria paciente</option>
         <option value="outra_pessoa">Outra pessoa</option>
       </select>
-      <div id="m-resp-campos" style="display:none;margin-top:8px;display:flex;gap:8px">
+      <div id="m-resp-campos" style="display:none;margin-top:8px;gap:8px">
         <input type="text" id="m-resp-nome" placeholder="Nome do responsável" style="flex:1">
         <input type="text" id="m-resp-cpf" placeholder="CPF" style="flex:1">
       </div>
@@ -267,7 +267,17 @@
 
     <div class="modal-section">
       <label>Quando a paciente costuma pagar?</label>
-      <input type="text" id="m-regra-pgto" placeholder="Ex: todo dia 5, 10 dias antes da sessão, pós sessão...">
+      <select id="m-regra-pgto">
+        <option value="">Selecione</option>
+        <option value="Todo dia 5">Todo dia 5</option>
+        <option value="Todo dia 10">Todo dia 10</option>
+        <option value="Todo dia 15">Todo dia 15</option>
+        <option value="Todo dia 20">Todo dia 20</option>
+        <option value="Todo dia 25">Todo dia 25</option>
+        <option value="Todo dia 30">Todo dia 30</option>
+        <option value="Antes da sessão">Antes da sessão</option>
+        <option value="Depois da sessão">Depois da sessão</option>
+      </select>
     </div>
 
     <div class="modal-section">
