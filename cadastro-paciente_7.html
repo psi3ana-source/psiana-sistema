@@ -191,8 +191,18 @@ function renderForm(p) {
       <div class="section-title">Financeiro</div>
       <div class="grid-2">
         <div class="field" style="grid-column:1/-1">
-          <label>Data de pagamento</label>
-          <input id="f_data_pgto" type="text" placeholder="Ex: todo dia 5, após a sessão...">
+          <label>Quando a paciente costuma pagar?</label>
+          <select id="f_data_pgto">
+            <option value="">Selecione</option>
+            <option value="Todo dia 5">Todo dia 5</option>
+            <option value="Todo dia 10">Todo dia 10</option>
+            <option value="Todo dia 15">Todo dia 15</option>
+            <option value="Todo dia 20">Todo dia 20</option>
+            <option value="Todo dia 25">Todo dia 25</option>
+            <option value="Todo dia 30">Todo dia 30</option>
+            <option value="Antes da sessão">Antes da sessão</option>
+            <option value="Depois da sessão">Depois da sessão</option>
+          </select>
         </div>
         <div class="field" style="grid-column:1/-1">
           <label>Responsável financeiro</label>
@@ -201,7 +211,7 @@ function renderForm(p) {
             <option value="outra_pessoa">Outra pessoa</option>
           </select>
         </div>
-        <div id="resp-campos" style="display:none; grid-column:1/-1; display:none">
+        <div id="resp-campos" style="display:none; grid-column:1/-1">
           <div class="grid-2">
             <div class="field"><label>Nome do responsável</label><input id="f_resp_nome" type="text"></div>
             <div class="field"><label>CPF do responsável</label><input id="f_resp_cpf" type="text" placeholder="000.000.000-00"></div>
