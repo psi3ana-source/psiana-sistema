@@ -1115,7 +1115,6 @@ async function salvarAtendimento() {
 
 function irParaFicha() {
   const id = pacienteCriadaId || sessionStorage.getItem('pacienteCriadaId');
-  alert('irParaFicha chamada. ID: ' + id + ' | pacienteCriadaId: ' + pacienteCriadaId + ' | session: ' + sessionStorage.getItem('pacienteCriadaId'));
   if (id) {
     sessionStorage.removeItem('pacienteCriadaId');
     window.location.href = `ficha-paciente_1.html?id=${id}`;
