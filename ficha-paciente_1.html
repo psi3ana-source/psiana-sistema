@@ -110,6 +110,8 @@
   .s-soap:hover { background: #C89F9D !important; border-color: #C89F9D !important; }
   .s-meet { padding: 7px 14px !important; border-radius: 8px !important; background: #785D56 !important; color: #fff !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; text-decoration: none !important; white-space: nowrap !important; border: none !important; display: inline-block !important; }
   .s-meet:hover { background: #C89F9D !important; }
+  .s-recorrencia { background: #FAF6F5 !important; color: #785D56 !important; border-color: #C89F9D !important; font-weight: 600 !important; }
+  .s-recorrencia:hover { background: #F0E8E7 !important; }
   .subtabs { display: flex; gap: 4px; margin-bottom: 1.25rem; border-bottom: 2px solid #EDE4E3; padding-bottom: 0; }
   .subtab { padding: 8px 16px; font-size: 13px; font-weight: 500; color: #999; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; }
   .subtab.ativa { color: #785D56; border-bottom-color: #C89F9D; }
@@ -402,6 +404,9 @@ function renderSessoes(filtroData) {
     const soapBtn = s.status === 'realizada'
       ? `<button class="s-acao s-soap" onclick="event.stopPropagation();abrirTranscricao(${s.id})">Prontuário</button>`
       : '';
+    const recorrenciaBtn = s.tipo_atendimento === 'primeira sessão'
+      ? `<button class="s-acao s-recorrencia" onclick="event.stopPropagation();gerarRecorrencia(${s.id})">Gerar recorrência</button>`
+      : '';
     return `<div class="sessao-card">
       <div class="sessao-data">
         <div class="dia">${d ? d.getDate() : '—'}</div>
@@ -415,6 +420,7 @@ function renderSessoes(filtroData) {
       <div class="sessao-acoes">
         ${iniciarBtn}
         ${soapBtn}
+        ${recorrenciaBtn}
         <button class="s-acao" onclick="event.stopPropagation();editarSessao(${s.id})">Editar</button>
         <button class="s-acao s-cancel" onclick="event.stopPropagation();cancelarSessao(${s.id})">Cancelar</button>
         <button class="s-acao" onclick="event.stopPropagation();remarcarSessao(${s.id})">Remarcar</button>
@@ -737,6 +743,83 @@ function agendarSessao() {
 
 function editarPaciente() {
   window.location.href = `cadastro-paciente_7.html?id=${PACIENTE_ID}`;
+}
+
+async function gerarRecorrencia(sessaoId) {
+  const base = sessoes.find(s => s.id === sessaoId);
+  if (!base) {
+    alert('Sessão não encontrada.');
+    return;
+  }
+
+  const baseData = new Date(base.data_sessao + 'T12:00:00');
+  const diaSemana = baseData.getDay();
+
+  const hi = base.horario_inicio ? new Date(base.horario_inicio) : null;
+  const hf = base.horario_fim ? new Date(base.horario_fim) : null;
+  const horasInicio = hi ? hi.getHours() : 14;
+  const minutosInicio = hi ? hi.getMinutes() : 0;
+  const horasFim = hf ? hf.getHours() : horasInicio + 1;
+  const minutosFim = hf ? hf.getMinutes() : minutosInicio;
+
+  const proximoMes = new Date(baseData.getFullYear(), baseData.getMonth() + 1, 1);
+
+  const datas = [];
+  const d = new Date(proximoMes);
+  while (d.getDay() !== diaSemana) d.setDate(d.getDate() + 1);
+  while (d.getMonth() === proximoMes.getMonth()) {
+    datas.push(new Date(d));
+    d.setDate(d.getDate() + 7);
+  }
+
+  if (datas.length === 0) {
+    alert('Não foi possível calcular as datas.');
+    return;
+  }
+
+  const diasSemana = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const confirmMsg = `Gerar ${datas.length} sessões em ${meses[proximoMes.getMonth()]}, baseado na primeira sessão (${diasSemana[diaSemana]})?\n\n` +
+    datas.map(dt => `${dt.getDate()}/${dt.getMonth()+1} (${diasSemana[dt.getDay()]})`).join('\n');
+
+  if (!confirm(confirmMsg)) return;
+
+  const linkMeet = base.link_videochamada || paciente.link_meet || null;
+  let erros = 0;
+
+  for (const dt of datas) {
+    const dataStr = dt.toISOString().split('T')[0];
+    const hiStr = `${dataStr}T${String(horasInicio).padStart(2,'0')}:${String(minutosInicio).padStart(2,'0')}:00-03:00`;
+    const hfStr = `${dataStr}T${String(horasFim).padStart(2,'0')}:${String(minutosFim).padStart(2,'0')}:00-03:00`;
+
+    const dados = {
+      paciente_id: parseInt(PACIENTE_ID),
+      data_sessao: dataStr,
+      horario_inicio: hiStr,
+      horario_fim: hfStr,
+      status: 'agendada',
+      tipo_atendimento: 'sessão regular',
+      link_videochamada: linkMeet,
+      valor_cobrado: base.valor_cobrado || null,
+      status_pagamento: 'pendente',
+      forma_pagamento: base.forma_pagamento || null,
+    };
+    Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
+
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' },
+      body: JSON.stringify(dados)
+    });
+    if (!r.ok) erros++;
+  }
+
+  if (erros === 0) {
+    alert(`${datas.length} sessões geradas com sucesso!`);
+  } else {
+    alert(`${datas.length - erros} sessões geradas. ${erros} erro(s).`);
+  }
+  location.reload();
 }
 
 function editarSessao(id) {
