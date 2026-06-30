@@ -51,10 +51,11 @@
   .sessao-info .tipo { font-size: 13px; font-weight: 500; color: #2C2C2C; }
   .sessao-info .detalhe { font-size: 12px; color: #999; margin-top: 2px; }
   .sessao-status { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
-  .s-realizada { background: #E8F5E9; color: #2E7D32; }
-  .s-agendada { background: #E3F2FD; color: #1565C0; }
-  .s-faltou { background: #FFEBEE; color: #C62828; }
-  .s-cancelada { background: #F3E5F5; color: #6A1B9A; }
+  .s-realizada { background: #E3F2FD; color: #1565C0; }
+  .s-agendada { background: #F3E5F5; color: #6A1B9A; }
+  .s-confirmada { background: #E8F5E9; color: #2E7D32; }
+  .s-faltou { background: #424242; color: #fff; }
+  .s-cancelada { background: #FFEBEE; color: #C62828; }
   .s-remarcada { background: #FFF8E1; color: #F57F17; }
   .modal-block { background: #FAF6F5; border: 1px solid #EDE4E3; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem; }
   .modal-dot { width: 10px; height: 10px; border-radius: 50%; background: #C89F9D; flex-shrink: 0; }
@@ -93,6 +94,7 @@
   .btn-add-sessao { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border: 1px dashed #C89F9D; border-radius: 8px; background: transparent; color: #C89F9D; font-size: 14px; cursor: pointer; margin-bottom: 1rem; }
   .btn-add-sessao:hover { background: #FAF6F5; }
   .sessoes-busca { display: flex; gap: 8px; align-items: center; margin-bottom: 1rem; }
+  .busca-label { font-size: 13px; color: #785D56; font-weight: 600; }
   .sessoes-busca input[type=date] { padding: 8px 12px; border: 1px solid #DDD; border-radius: 8px; font-size: 13px; color: #2C2C2C; background: #FAFAFA; }
   .sessoes-busca input[type=date]:focus { outline: none; border-color: #C89F9D; }
   .btn-limpar-busca { padding: 8px 14px; border: 1px solid #DDD; border-radius: 8px; background: #fff; color: #999; font-size: 13px; cursor: pointer; }
@@ -164,6 +166,7 @@
 
   <div id="painel-sessoes" class="painel">
     <div class="sessoes-busca">
+      <span class="busca-label">Consultar sessões:</span>
       <input type="date" id="busca-data" onchange="filtrarSessoesPorData()">
       <button class="btn-limpar-busca" onclick="limparBuscaSessoes()">Limpar filtro</button>
     </div>
@@ -381,7 +384,7 @@ function renderSessoes(filtroData) {
   const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   const statusMap = {
     realizada:'s-realizada', agendada:'s-agendada', faltou:'s-faltou',
-    cancelada:'s-cancelada', remarcada:'s-remarcada', confirmada:'s-agendada'
+    cancelada:'s-cancelada', remarcada:'s-remarcada', confirmada:'s-confirmada'
   };
   const statusLabel = {
     realizada:'Realizada', agendada:'Agendada', faltou:'Faltou',
