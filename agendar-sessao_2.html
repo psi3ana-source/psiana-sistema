@@ -39,7 +39,7 @@
 
 <div class="header">
   <button class="btn-voltar" id="btn-voltar">← Voltar</button>
-  <h1>Agendar sessão</h1>
+  <h1 id='page-title'>Agendar sessão</h1>
   <span class="paciente-nome" id="paciente-nome"></span>
 </div>
 
@@ -80,6 +80,7 @@
       <div class="field">
         <label>Tipo</label>
         <select id="f_tipo">
+          <option value="primeira sessão">Primeira sessão</option>
           <option value="sessão regular">Sessão regular</option>
           <option value="avaliação">Avaliação</option>
           <option value="devolutiva">Devolutiva</option>
@@ -101,27 +102,14 @@
     <div class="section-title">Financeiro</div>
     <div class="grid-2">
       <div class="field">
-        <label>Valor cobrado (R$)</label>
-        <input type="number" id="f_valor" step="0.01" min="0" placeholder="0,00">
-      </div>
-      <div class="field">
         <label>Status do pagamento</label>
-        <select id="f_status_pgto">
+        <select id="f_status_pgto" onchange="toggleDataPgto()">
           <option value="pendente">Pendente</option>
           <option value="pago">Pago</option>
           <option value="isento">Isento</option>
         </select>
       </div>
-      <div class="field">
-        <label>Forma de pagamento</label>
-        <select id="f_forma_pgto">
-          <option value="">Selecione</option>
-          <option value="PIX">PIX</option>
-          <option value="transferencia">Transferência bancária</option>
-          <option value="link_pagamento">Link de pagamento</option>
-        </select>
-      </div>
-      <div class="field">
+      <div class="field" id="campo-data-pgto" style="display:none">
         <label>Data do pagamento</label>
         <input type="date" id="f_data_pgto">
       </div>
@@ -149,6 +137,8 @@ const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
 const params = new URLSearchParams(window.location.search);
 const PACIENTE_ID = params.get('paciente_id');
+const SESSAO_ID = params.get('sessao_id');
+const REMARCAR_ID = params.get('remarcar_id');
 
 document.getElementById('btn-voltar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
 document.getElementById('btn-cancelar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
@@ -166,26 +156,107 @@ function toast(msg, tipo) {
 
 function v(id) { return document.getElementById(id)?.value || ''; }
 
+function set(id, val) { const el = document.getElementById(id); if (el && val !== null && val !== undefined) el.value = val; }
+
+let ehPrimeiraSessao = false;
+let valorCobradoSessao = null;
+let pacienteFormaPagamento = null;
+
+function toggleDataPgto() {
+  const status = document.getElementById('f_status_pgto').value;
+  const campo = document.getElementById('campo-data-pgto');
+  campo.style.display = status === 'pago' ? 'flex' : 'none';
+  if (status === 'pago' && !v('f_data_pgto')) {
+    document.getElementById('f_data_pgto').value = new Date().toISOString().split('T')[0];
+  }
+}
+
 async function carregarPaciente() {
   if (!PACIENTE_ID) return;
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}&select=nome_completo,link_meet,valor_sessao,forma_pagamento`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const data = await r.json();
-    if (data.length) {
-      const p = data[0];
+    // Verificar se já existem sessões (só se não for edição)
+    if (!SESSAO_ID) {
+      const rCheck = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?paciente_id=eq.${PACIENTE_ID}&select=id&limit=1`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      const checkData = await rCheck.json();
+      ehPrimeiraSessao = checkData.length === 0;
+      if (ehPrimeiraSessao) {
+        document.getElementById('f_tipo').value = 'primeira sessão';
+      } else {
+        document.getElementById('f_tipo').value = 'sessão regular';
+      }
+    }
+
+    const promises = [
+      fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}&select=nome_completo,link_meet,valor_sessao,forma_pagamento,preco_id`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      })
+    ];
+    if (SESSAO_ID) {
+      promises.push(fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${SESSAO_ID}`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      }));
+    }
+    const results = await Promise.all(promises);
+    const pacData = await results[0].json();
+
+    if (pacData.length) {
+      const p = pacData[0];
       document.getElementById('paciente-nome').textContent = '— ' + (p.nome_completo || '');
-      // Pré-preencher link do meet da paciente
       if (p.link_meet) {
         document.getElementById('f_meet').value = p.link_meet;
         document.getElementById('meet-hint').textContent = 'Link padrão da paciente';
       }
-      // Pré-preencher valor e forma de pagamento se disponível
-      if (p.valor_sessao) document.getElementById('f_valor').value = p.valor_sessao;
-      if (p.forma_pagamento) document.getElementById('f_forma_pgto').value = p.forma_pagamento;
+      pacienteFormaPagamento = p.forma_pagamento || null;
+      // Buscar valor da modalidade financeira
+      if (p.preco_id) {
+        try {
+          const rp = await fetch(`${SUPABASE_URL}/rest/v1/tabela_precos?id=eq.${p.preco_id}&select=valor_unitario`, {
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+          });
+          const dp = await rp.json();
+          if (dp.length) valorCobradoSessao = parseFloat(dp[0].valor_unitario);
+        } catch(e) {}
+      }
     }
-  } catch(e) {}
+
+    // Modo edição
+    if (SESSAO_ID && results[1]) {
+      document.getElementById('page-title').textContent = 'Editar sessão';
+      const sesData = await results[1].json();
+      if (sesData.length) {
+        const s = sesData[0];
+        if (s.data_sessao) set('f_data', s.data_sessao);
+        if (s.horario_inicio) {
+          const hi = new Date(s.horario_inicio);
+          set('f_inicio', `${String(hi.getHours()).padStart(2,'0')}:${String(hi.getMinutes()).padStart(2,'0')}`);
+        }
+        if (s.horario_fim) {
+          const hf = new Date(s.horario_fim);
+          set('f_fim', `${String(hf.getHours()).padStart(2,'0')}:${String(hf.getMinutes()).padStart(2,'0')}`);
+        }
+        set('f_status', s.status);
+        set('f_tipo', s.tipo_atendimento);
+        if (s.link_videochamada) {
+          set('f_meet', s.link_videochamada);
+          document.getElementById('meet-hint').textContent = 'Link da sessão';
+        }
+        set('f_status_pgto', s.status_pagamento || 'pendente');
+        if (s.data_pagamento) set('f_data_pgto', s.data_pagamento);
+        toggleDataPgto();
+        set('f_obs', s.observacoes);
+        valorCobradoSessao = s.valor_cobrado || null;
+      }
+    }
+
+    // Modo remarcação
+    if (REMARCAR_ID) {
+      document.getElementById('page-title').textContent = 'Remarcar sessão';
+      document.getElementById('f_status').value = 'agendada';
+      document.getElementById('f_data').value = '';
+    }
+  } catch(e) { console.error(e); }
 }
 
 async function salvar() {
@@ -208,9 +279,9 @@ async function salvar() {
     status: v('f_status') || 'agendada',
     tipo_atendimento: v('f_tipo') || null,
     link_videochamada: v('f_meet') || null,
-    valor_cobrado: v('f_valor') ? parseFloat(v('f_valor')) : null,
+    valor_cobrado: valorCobradoSessao,
     status_pagamento: v('f_status_pgto') || 'pendente',
-    forma_pagamento: v('f_forma_pgto') || null,
+    forma_pagamento: pacienteFormaPagamento,
     data_pagamento: v('f_data_pgto') || null,
     observacoes: v('f_obs') || null,
   };
@@ -219,18 +290,33 @@ async function salvar() {
   Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
 
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        Prefer: 'return=representation'
-      },
-      body: JSON.stringify(dados)
-    });
+    let r;
+    if (SESSAO_ID) {
+      // Edição — PATCH
+      delete dados.paciente_id;
+      r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${SESSAO_ID}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify(dados)
+      });
+    } else {
+      // Nova sessão — POST
+      r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=representation' },
+        body: JSON.stringify(dados)
+      });
+    }
     if (r.ok) {
-      toast('Sessão agendada!', 'ok');
+      // Se for a primeira sessão, atualiza campo primeira_sessao no paciente
+      if (ehPrimeiraSessao && !SESSAO_ID) {
+        await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+          body: JSON.stringify({ primeira_sessao: data })
+        });
+      }
+      toast(SESSAO_ID ? 'Sessão atualizada!' : 'Sessão agendada!', 'ok');
       setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`, 1200);
     } else {
       const err = await r.json();
