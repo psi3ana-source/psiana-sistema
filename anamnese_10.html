@@ -240,7 +240,7 @@
     <div class="modal-divider"></div>
 
     <div class="modal-section">
-      <label>A primeira sessão é hoje, data do preenchimento desta anamnese?</label>
+      <label>Primeira sessão será realizada na data do preenchimento da anamnese?</label>
       <select id="m-primeira-igual" onchange="togglePrimeiraData()">
         <option value="sim">Sim</option>
         <option value="nao">Não</option>
@@ -266,13 +266,19 @@
     </div>
 
     <div class="modal-section">
-      <label>Status do pagamento</label>
+      <label>Quando a paciente costuma pagar?</label>
+      <input type="text" id="m-regra-pgto" placeholder="Ex: todo dia 5, 10 dias antes da sessão, pós sessão...">
+    </div>
+
+    <div class="modal-section">
+      <label>Status do pagamento desta sessão</label>
       <select id="m-status-pgto" onchange="toggleDataPgtoModal()">
         <option value="pendente">Pendente</option>
         <option value="pago">Pago</option>
         <option value="isento">Isento</option>
       </select>
       <div id="m-data-pgto-campo" style="display:none;margin-top:8px">
+        <label id="m-data-pgto-label" style="font-size:11px;font-weight:500;text-transform:none;color:#999;margin-bottom:4px">Data do pagamento</label>
         <input type="date" id="m-data-pgto">
       </div>
     </div>
@@ -1159,6 +1165,7 @@ async function salvarAtendimento() {
     frequencia: document.getElementById('m-frequencia').value || null,
     forma_pagamento: formaPagamento,
     link_meet: linkMeet,
+    data_pagamento: document.getElementById('m-regra-pgto').value || null,
     responsavel_financeiro: respTipo,
     responsavel_nome: respTipo === 'outra_pessoa' ? (document.getElementById('m-resp-nome').value || null) : null,
     responsavel_cpf: respTipo === 'outra_pessoa' ? (document.getElementById('m-resp-cpf').value || null) : null,
