@@ -404,7 +404,7 @@ function renderSessoes(filtroData) {
     const soapBtn = s.status === 'realizada'
       ? `<button class="s-acao s-soap" onclick="event.stopPropagation();abrirTranscricao(${s.id})">Prontuário</button>`
       : '';
-    const recorrenciaBtn = s.tipo_atendimento === 'primeira sessão'
+    const recorrenciaBtn = s.status !== 'cancelada'
       ? `<button class="s-acao s-recorrencia" onclick="event.stopPropagation();gerarRecorrencia(${s.id})">Gerar recorrência</button>`
       : '';
     return `<div class="sessao-card">
