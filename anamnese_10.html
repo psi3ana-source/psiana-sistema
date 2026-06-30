@@ -94,6 +94,7 @@
   .btn-modal-pular { padding: 12px 20px; background: #fff; border: 1px solid #DDD; border-radius: 8px; font-size: 14px; color: #999; cursor: pointer; }
   .btn-modal-pular:hover { background: #FAF6F5; }
   .preco-info { font-size: 12px; color: #C89F9D; margin-top: 4px; font-style: italic; }
+  .modal-divider { height: 1px; background: #EDE4E3; margin: 1.5rem 0; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
@@ -196,8 +197,6 @@
       <div class="preco-info" id="preco-info"></div>
     </div>
 
-
-
     <div class="modal-section">
       <label>Frequência</label>
       <select id="m-frequencia">
@@ -223,6 +222,58 @@
       <div class="meet-row">
         <input type="url" id="m-meet" placeholder="https://meet.google.com/xxx-xxxx-xxx">
         <button class="btn-meet" onclick="abrirNovoMeet()">🎥 Gerar novo</button>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <label>Responsável financeiro</label>
+      <select id="m-resp-tipo" onchange="toggleRespFinanceiro()">
+        <option value="propria">A própria paciente</option>
+        <option value="outra_pessoa">Outra pessoa</option>
+      </select>
+      <div id="m-resp-campos" style="display:none;margin-top:8px;display:flex;gap:8px">
+        <input type="text" id="m-resp-nome" placeholder="Nome do responsável" style="flex:1">
+        <input type="text" id="m-resp-cpf" placeholder="CPF" style="flex:1">
+      </div>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <div class="modal-section">
+      <label>A primeira sessão é hoje, data do preenchimento desta anamnese?</label>
+      <select id="m-primeira-igual" onchange="togglePrimeiraData()">
+        <option value="sim">Sim</option>
+        <option value="nao">Não</option>
+      </select>
+      <div id="m-primeira-data-campo" style="display:none;margin-top:8px">
+        <input type="date" id="m-primeira-data">
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <label>Horário da primeira sessão</label>
+      <input type="time" id="m-primeira-horario">
+      <div class="preco-info">Duração padrão de 50 minutos</div>
+    </div>
+
+    <div class="modal-section">
+      <label>Status da sessão</label>
+      <select id="m-status-sessao">
+        <option value="agendada">Agendada</option>
+        <option value="confirmada">Confirmada</option>
+        <option value="realizada">Realizada</option>
+      </select>
+    </div>
+
+    <div class="modal-section">
+      <label>Status do pagamento</label>
+      <select id="m-status-pgto" onchange="toggleDataPgtoModal()">
+        <option value="pendente">Pendente</option>
+        <option value="pago">Pago</option>
+        <option value="isento">Isento</option>
+      </select>
+      <div id="m-data-pgto-campo" style="display:none;margin-top:8px">
+        <input type="date" id="m-data-pgto">
       </div>
     </div>
 
@@ -1068,6 +1119,26 @@ function abrirNovoMeet() {
   window.open('https://meet.google.com/new', '_blank');
 }
 
+function toggleRespFinanceiro() {
+  const val = document.getElementById('m-resp-tipo').value;
+  document.getElementById('m-resp-campos').style.display = val === 'outra_pessoa' ? 'flex' : 'none';
+}
+
+function togglePrimeiraData() {
+  const val = document.getElementById('m-primeira-igual').value;
+  const campo = document.getElementById('m-primeira-data-campo');
+  campo.style.display = val === 'nao' ? 'block' : 'none';
+}
+
+function toggleDataPgtoModal() {
+  const status = document.getElementById('m-status-pgto').value;
+  const campo = document.getElementById('m-data-pgto-campo');
+  campo.style.display = status === 'pago' ? 'block' : 'none';
+  if (status === 'pago' && !document.getElementById('m-data-pgto').value) {
+    document.getElementById('m-data-pgto').value = new Date().toISOString().split('T')[0];
+  }
+}
+
 async function salvarAtendimento() {
   if (!pacienteCriadaId) {
     mostrarToast('Erro: ID da paciente não encontrado', 'erro');
@@ -1075,43 +1146,100 @@ async function salvarAtendimento() {
   }
 
   const precoSel = document.getElementById('m-preco');
-
   const precoId = precoSel.value ? parseInt(precoSel.value) : null;
   const precoOpt = precoSel.options[precoSel.selectedIndex];
+  const valorSessao = precoId ? parseFloat(precoOpt.dataset.valor) : null;
 
-  const dados = {
+  const respTipo = document.getElementById('m-resp-tipo').value;
+  const formaPagamento = document.getElementById('m-pagamento').value || null;
+  const linkMeet = document.getElementById('m-meet').value || null;
+
+  const dadosPaciente = {
     preco_id: precoId,
     frequencia: document.getElementById('m-frequencia').value || null,
-    forma_pagamento: document.getElementById('m-pagamento').value || null,
-    link_meet: document.getElementById('m-meet').value || null
+    forma_pagamento: formaPagamento,
+    link_meet: linkMeet,
+    responsavel_financeiro: respTipo,
+    responsavel_nome: respTipo === 'outra_pessoa' ? (document.getElementById('m-resp-nome').value || null) : null,
+    responsavel_cpf: respTipo === 'outra_pessoa' ? (document.getElementById('m-resp-cpf').value || null) : null,
   };
-
-  // Remover nulls
-  Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
-
+  Object.keys(dadosPaciente).forEach(k => { if (dadosPaciente[k] === null) delete dadosPaciente[k]; });
 
   try {
+    // 1. Atualizar dados financeiros da paciente
     const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${parseInt(pacienteCriadaId)}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`
-      },
-      body: JSON.stringify(dados)
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify(dadosPaciente)
     });
 
-    if (r.ok) {
-      mostrarToast('Dados do atendimento salvos!', 'sucesso');
-      setTimeout(() => irParaFicha(), 800);
-    } else {
+    if (!r.ok) {
       const err = await r.json();
       mostrarToast('Erro ao salvar: ' + (err.message || JSON.stringify(err)), 'erro');
+      return;
     }
+
+    // 2. Determinar data da primeira sessão
+    const primeiraIgual = document.getElementById('m-primeira-igual').value;
+    let dataSessao;
+    if (primeiraIgual === 'sim') {
+      dataSessao = new Date().toISOString().split('T')[0];
+    } else {
+      dataSessao = document.getElementById('m-primeira-data').value;
+    }
+
+    // 3. Se tiver data, criar a primeira sessão
+    if (dataSessao) {
+      const horario = document.getElementById('m-primeira-horario').value;
+      let horario_inicio = null, horario_fim = null;
+      if (horario) {
+        horario_inicio = `${dataSessao}T${horario}:00-03:00`;
+        const [h, m] = horario.split(':').map(Number);
+        const totalMin = h * 60 + m + 50;
+        const hFim = Math.floor(totalMin / 60) % 24;
+        const mFim = totalMin % 60;
+        horario_fim = `${dataSessao}T${String(hFim).padStart(2,'0')}:${String(mFim).padStart(2,'0')}:00-03:00`;
+      }
+
+      const statusPgto = document.getElementById('m-status-pgto').value;
+      const dataPgto = document.getElementById('m-data-pgto').value || null;
+
+      const dadosSessao = {
+        paciente_id: parseInt(pacienteCriadaId),
+        data_sessao: dataSessao,
+        horario_inicio,
+        horario_fim,
+        status: document.getElementById('m-status-sessao').value,
+        tipo_atendimento: 'primeira sessão',
+        link_videochamada: linkMeet,
+        valor_cobrado: valorSessao,
+        status_pagamento: statusPgto,
+        forma_pagamento: formaPagamento,
+        data_pagamento: dataPgto,
+      };
+      Object.keys(dadosSessao).forEach(k => { if (dadosSessao[k] === null) delete dadosSessao[k]; });
+
+      await fetch(`${SUPABASE_URL}/rest/v1/sessoes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify(dadosSessao)
+      });
+
+      // Atualizar campo primeira_sessao na paciente
+      await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${parseInt(pacienteCriadaId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify({ primeira_sessao: dataSessao })
+      });
+    }
+
+    mostrarToast('Dados do atendimento salvos!', 'sucesso');
+    setTimeout(() => irParaFicha(), 800);
   } catch(e) {
     mostrarToast('Erro: ' + e.message, 'erro');
   }
 }
+
 
 function irParaFicha() {
   const id = pacienteCriadaId || sessionStorage.getItem('pacienteCriadaId');
