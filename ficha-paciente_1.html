@@ -397,6 +397,7 @@ function renderSessoes(filtroData) {
     return;
   }
   const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const mesesFull = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   const statusMap = {
     realizada:'s-realizada', agendada:'s-agendada', faltou:'s-faltou',
     cancelada:'s-cancelada', remarcada:'s-remarcada', confirmada:'s-confirmada'
@@ -405,7 +406,8 @@ function renderSessoes(filtroData) {
     realizada:'Realizada', agendada:'Agendada', faltou:'Faltou',
     cancelada:'Cancelada', remarcada:'Remarcada', confirmada:'Confirmada'
   };
-  document.getElementById('sessoes-content').innerHTML = lista.map(s => {
+
+  const cards = lista.map(s => {
     const d = s.data_sessao ? new Date(s.data_sessao + 'T12:00:00') : null;
     const hi = s.horario_inicio ? new Date(s.horario_inicio).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : null;
     const hf = s.horario_fim ? new Date(s.horario_fim).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : null;
@@ -445,6 +447,36 @@ function renderSessoes(filtroData) {
       </div>`}
     </div>`;
   }).join('');
+
+  // Verificar se precisa mostrar aviso de fim de mês
+  let avisoMes = '';
+  if (!filtroData) {
+    const sessoesAtivas = sessoes.filter(s => s.status !== 'cancelada' && s.data_sessao);
+    if (sessoesAtivas.length > 0) {
+      // Pegar a última sessão ativa
+      const ultima = sessoesAtivas[sessoesAtivas.length - 1];
+      const dataUltima = new Date(ultima.data_sessao + 'T12:00:00');
+      const mesUltima = dataUltima.getMonth();
+      const anoUltima = dataUltima.getFullYear();
+      // Verificar se existe alguma sessão no mês seguinte
+      const temProximoMes = sessoesAtivas.some(s => {
+        const d = new Date(s.data_sessao + 'T12:00:00');
+        return d.getMonth() === (mesUltima + 1) % 12 && (mesUltima < 11 ? d.getFullYear() === anoUltima : d.getFullYear() === anoUltima + 1);
+      });
+      if (!temProximoMes) {
+        const proximoMesNome = mesesFull[(mesUltima + 1) % 12];
+        avisoMes = `<div style="margin-top:16px;background:#FFF8E1;border:1px solid #FFD54F;border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="font-size:13px;color:#785D56;">
+            <strong>📅 Última sessão de ${mesesFull[mesUltima]}</strong><br>
+            <span style="color:#999;font-size:12px">Nenhuma sessão agendada para ${proximoMesNome}</span>
+          </div>
+          <button onclick="gerarRecorrencia(${ultima.id})" style="padding:8px 16px;background:#785D56;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Gerar ${proximoMesNome}</button>
+        </div>`;
+      }
+    }
+  }
+
+  document.getElementById('sessoes-content').innerHTML = cards + avisoMes;
 }
 
 function renderFinanceiro() {
