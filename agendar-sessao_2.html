@@ -137,9 +137,10 @@ const params = new URLSearchParams(window.location.search);
 const PACIENTE_ID = params.get('paciente_id');
 const SESSAO_ID = params.get('sessao_id');
 const REMARCAR_ID = params.get('remarcar_id');
+const ORIGEM = params.get('origem') || 'dados';
 
-document.getElementById('btn-voltar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
-document.getElementById('btn-cancelar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
+document.getElementById('btn-voltar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}&aba=${ORIGEM}`;
+document.getElementById('btn-cancelar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}&aba=${ORIGEM}`;
 
 // Pré-definir hoje como data padrão
 document.getElementById('f_data').value = new Date().toISOString().split('T')[0];
@@ -159,6 +160,7 @@ function set(id, val) { const el = document.getElementById(id); if (el && val !=
 let ehPrimeiraSessao = false;
 let valorCobradoSessao = null;
 let pacienteFormaPagamento = null;
+let numeroEncontro = 1;
 
 function toggleDataPgto() {
   const status = document.getElementById('f_status_pgto').value;
@@ -172,13 +174,15 @@ function toggleDataPgto() {
 async function carregarPaciente() {
   if (!PACIENTE_ID) return;
   try {
-    // Verificar se já existem sessões (só se não for edição)
+    // Verificar sessões existentes (só se não for edição)
     if (!SESSAO_ID) {
-      const rCheck = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?paciente_id=eq.${PACIENTE_ID}&select=id&limit=1`, {
+      // Busca sessões que contam como encontro (exclui canceladas)
+      const rCheck = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?paciente_id=eq.${PACIENTE_ID}&status=not.eq.cancelada&select=id`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
       });
       const checkData = await rCheck.json();
       ehPrimeiraSessao = checkData.length === 0;
+      numeroEncontro = checkData.length + 1; // próximo encontro
       if (ehPrimeiraSessao) {
         document.getElementById('f_tipo').value = 'primeira sessão';
       } else {
@@ -253,22 +257,23 @@ async function carregarPaciente() {
   } catch(e) { console.error(e); }
 }
 
-async function criarEventoCalendar(sessaoId, pacienteNome, horarioInicio, horarioFim, tipo) {
+async function criarEventoCalendar(sessaoId, horarioInicio, horarioFim, tipo, numEncontro, horaFormatada) {
   try {
+    const titulo = `Sessão ${horaFormatada} — Encontro ${numEncontro}`;
     const resp = await fetch(N8N_CALENDAR_WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessao_id: String(sessaoId),
-        paciente_nome: pacienteNome,
+        paciente_nome: titulo,
         data_inicio: horarioInicio,
         data_fim: horarioFim,
-        descricao: `Sessão ${tipo} — PsiAna Sistema`
+        descricao: `${tipo} — PsiAna Sistema`
       })
     });
     if (!resp.ok) return null;
     const data = await resp.json();
-    return data; // { google_event_id, hangoutLink }
+    return data;
   } catch(e) {
     console.warn('Erro ao criar evento no Calendar:', e);
     return null;
@@ -346,11 +351,12 @@ async function salvar() {
 
       // Integração Google Calendar — apenas novas sessões com horário definido
       if (!SESSAO_ID && sessaoSalva?.id && horario_inicio && horario_fim) {
-        const nomePaciente = document.getElementById('paciente-nome').textContent.replace('— ', '').trim();
         const tipo = v('f_tipo') || 'sessão regular';
-        const calResp = await criarEventoCalendar(sessaoSalva.id, nomePaciente, horario_inicio, horario_fim, tipo);
+        // Formatar hora para título: "10h" ou "10h30"
+        const [hStr, mStr] = inicio.split(':');
+        const horaFormatada = mStr === '00' ? `${parseInt(hStr)}h` : `${parseInt(hStr)}h${mStr}`;
+        const calResp = await criarEventoCalendar(sessaoSalva.id, horario_inicio, horario_fim, tipo, numeroEncontro, horaFormatada);
         if (calResp?.google_event_id) {
-          // Salvar google_event_id e meet_link de volta na sessão
           const meetLink = calResp.hangoutLink || calResp.meet_link || null;
           await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoSalva.id}`, {
             method: 'PATCH',
@@ -365,7 +371,7 @@ async function salvar() {
       }
 
       toast(SESSAO_ID ? 'Sessão atualizada!' : 'Sessão agendada! 📅', 'ok');
-      setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`, 1200);
+      setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}&aba=${ORIGEM}`, 1200);
     } else {
       const err = await r.json();
       toast('Erro: ' + (err.message || JSON.stringify(err)), 'erro');
