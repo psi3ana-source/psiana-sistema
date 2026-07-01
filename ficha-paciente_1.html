@@ -852,6 +852,23 @@ function cancelarSessao(id) {
 
 async function excluirSessao(id) {
   if (!confirm('Excluir permanentemente esta sessão? Esta ação não pode ser desfeita.')) return;
+
+  // Buscar google_event_id da sessão antes de excluir
+  const sessao = sessoes.find(s => s.id === id);
+  if (sessao?.google_event_id) {
+    // Deletar evento no Google Calendar via n8n
+    try {
+      await fetch('https://psi3ana.app.n8n.cloud/webhook/deletar-evento-calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ google_event_id: sessao.google_event_id })
+      });
+    } catch(e) {
+      console.warn('Erro ao deletar evento do Calendar:', e);
+    }
+  }
+
+  // Deletar do Supabase
   const r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${id}`, {
     method: 'DELETE',
     headers: {
@@ -908,7 +925,7 @@ async function carregar() {
     renderFinanceiro();
     renderProntuario();
     // Abre na aba de origem se vier de outra tela
-    if (ABA_INICIAL !== 'dados') trocarTab(ABA_INICIAL);
+    if (ABA_INICIAL !== 'dados') requestAnimationFrame(() => trocarTab(ABA_INICIAL));
   } catch(e) {
     document.getElementById('perfil-box').innerHTML = '<div style="color:#C62828;padding:1rem">Erro ao carregar: ' + e.message + '</div>';
   }
