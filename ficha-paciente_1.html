@@ -788,6 +788,12 @@ async function gerarRecorrencia(sessaoId) {
   const horasFim = hf ? hf.getHours() : horasInicio + 1;
   const minutosFim = hf ? hf.getMinutes() : minutosInicio;
 
+  // Calcular intervalo de dias baseado na frequência da paciente
+  const freq = paciente?.frequencia || 'semanal';
+  let intervaloDias = 7; // padrão semanal
+  if (freq === 'quinzenal') intervaloDias = 14;
+  else if (freq === 'mensal') intervaloDias = 28; // 4 semanas
+
   // Gerar datas do mesmo mês da sessão base, após ela
   const mesBase = new Date(baseData.getFullYear(), baseData.getMonth(), 1);
 
@@ -800,7 +806,7 @@ async function gerarRecorrencia(sessaoId) {
     if (d.getTime() > baseData.getTime()) {
       datas.push(new Date(d));
     }
-    d.setDate(d.getDate() + 7);
+    d.setDate(d.getDate() + intervaloDias);
   }
 
   if (datas.length === 0) {
@@ -861,7 +867,7 @@ async function gerarRecorrencia(sessaoId) {
           const horaFormatada = minutosInicio === 0
             ? `${horasInicio}h`
             : `${horasInicio}h${String(minutosInicio).padStart(2,'0')}`;
-          const titulo = `Sessão ${horaFormatada} — Encontro ${numeroEncontroBase}`;
+          const titulo = `Encontro ${numeroEncontroBase} — Sessão`;
           const calResp = await fetch(N8N_CALENDAR_WEBHOOK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -876,8 +882,8 @@ async function gerarRecorrencia(sessaoId) {
           if (calResp.ok) {
             const calData = await calResp.json();
             if (calData?.google_event_id) {
-              // Usa link Meet da paciente (fixo) — não substitui pelo link novo do Calendar
-              const meetLink = paciente?.link_meet || linkMeet || calData.hangoutLink || calData.meet_link || null;
+              // Usa link Meet fixo da paciente — não substitui pelo link novo do Calendar
+              const meetLink = paciente?.link_meet || linkMeet || null;
               await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoSalva.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
