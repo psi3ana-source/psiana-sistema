@@ -366,6 +366,7 @@ async function salvar() {
         const calResp = await criarEventoCalendar(sessaoSalva.id, horario_inicio, horario_fim, tipo, numeroEncontro, horaFormatada);
         if (calResp?.google_event_id) {
           const meetLink = calResp.hangoutLink || calResp.meet_link || null;
+          // Salvar google_event_id e meet_link na sessão
           await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoSalva.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
@@ -375,6 +376,20 @@ async function salvar() {
               link_videochamada: meetLink || dados.link_videochamada || null
             })
           });
+          // Se não tiver link Meet salvo na paciente, salvar este como fixo
+          if (meetLink) {
+            const rPac = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}&select=link_meet`, {
+              headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+            });
+            const pacData = await rPac.json();
+            if (!pacData[0]?.link_meet) {
+              await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+                body: JSON.stringify({ link_meet: meetLink })
+              });
+            }
+          }
         }
       }
 
