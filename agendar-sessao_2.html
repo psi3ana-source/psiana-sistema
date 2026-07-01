@@ -259,7 +259,7 @@ async function carregarPaciente() {
 
 async function criarEventoCalendar(sessaoId, horarioInicio, horarioFim, tipo, numEncontro, horaFormatada) {
   try {
-    const titulo = `Sessão ${horaFormatada} — Encontro ${numEncontro}`;
+    const titulo = `Encontro ${numEncontro} — Sessão`;
     const resp = await fetch(N8N_CALENDAR_WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -363,8 +363,7 @@ async function salvar() {
         // Formatar hora para título: "10h" ou "10h30"
         const [hStr, mStr] = inicio.split(':');
         const horaFormatada = mStr === '00' ? `${parseInt(hStr)}h` : `${parseInt(hStr)}h${mStr}`;
-        const calResp = await criarEventoCalendar(sessaoSalva.id, horario_inicio, horario_fim, tipo, numeroEncontro, horaFormatada);
-        if (calResp?.google_event_id) {
+        const calResp = await criarEventoCalendar(sessaoSalva.id, horario_inicio, horario_fim, tipo, numeroEncontro, horaFormatada);        if (calResp?.google_event_id) {
           const meetLink = calResp.hangoutLink || calResp.meet_link || null;
           // Salvar google_event_id e meet_link na sessão
           await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoSalva.id}`, {
