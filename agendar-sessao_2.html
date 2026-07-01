@@ -284,10 +284,13 @@ async function salvar() {
   if (!PACIENTE_ID) { toast('ID da paciente não encontrado', 'erro'); return; }
   const data = v('f_data');
   if (!data) { toast('Informe a data da sessão', 'erro'); return; }
+  const inicio = v('f_inicio');
+  if (!inicio) { toast('Informe o horário de início', 'erro'); return; }
+  if (!v('f_tipo')) { toast('Informe o tipo de sessão', 'erro'); return; }
+  if (!v('f_status_pgto')) { toast('Informe o status do pagamento', 'erro'); return; }
 
   // Montar horários com timezone de Brasília (duração padrão 50 min)
   let horario_inicio = null, horario_fim = null;
-  const inicio = v('f_inicio');
   if (inicio) {
     horario_inicio = `${data}T${inicio}:00-03:00`;
     const [h, m] = inicio.split(':').map(Number);
