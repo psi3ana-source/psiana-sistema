@@ -470,7 +470,7 @@ function renderSessoes(filtroData) {
             <strong>📅 Última sessão de ${mesesFull[mesUltima]}</strong><br>
             <span style="color:#999;font-size:12px">Nenhuma sessão agendada para ${proximoMesNome}</span>
           </div>
-          <button onclick="gerarRecorrencia(${ultima.id})" style="padding:8px 16px;background:#785D56;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Gerar ${proximoMesNome}</button>
+          <button onclick="gerarRecorrencia(${ultima.id}, true)" style="padding:8px 16px;background:#785D56;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Gerar ${proximoMesNome}</button>
         </div>`;
       }
     }
@@ -803,7 +803,7 @@ function editarPaciente() {
   window.location.href = `cadastro-paciente_7.html?id=${PACIENTE_ID}&origem=dados`;
 }
 
-async function gerarRecorrencia(sessaoId) {
+async function gerarRecorrencia(sessaoId, proximoMes = false) {
   const base = sessoes.find(s => s.id === sessaoId);
   if (!base) {
     alert('Sessão não encontrada.');
@@ -826,16 +826,16 @@ async function gerarRecorrencia(sessaoId) {
   if (freq === 'quinzenal') intervaloDias = 14;
   else if (freq === 'mensal') intervaloDias = 28; // 4 semanas
 
-  // Gerar datas do mesmo mês da sessão base, após ela
-  const mesBase = new Date(baseData.getFullYear(), baseData.getMonth(), 1);
+  // Se proximoMes=true, gera no mês seguinte ao da sessão base; senão, no mesmo mês após ela
+  const mesRef = proximoMes
+    ? new Date(baseData.getFullYear(), baseData.getMonth() + 1, 1)
+    : new Date(baseData.getFullYear(), baseData.getMonth(), 1);
 
   const datas = [];
-  const d = new Date(mesBase);
-  // Avança até o primeiro dia da semana igual ao da sessão base
+  const d = new Date(mesRef);
   while (d.getDay() !== diaSemana) d.setDate(d.getDate() + 1);
-  // Coleta todas as ocorrências do mês, pulando a própria data base
-  while (d.getMonth() === mesBase.getMonth()) {
-    if (d.getTime() > baseData.getTime()) {
+  while (d.getMonth() === mesRef.getMonth()) {
+    if (proximoMes || d.getTime() > baseData.getTime()) {
       datas.push(new Date(d));
     }
     d.setDate(d.getDate() + intervaloDias);
@@ -848,7 +848,7 @@ async function gerarRecorrencia(sessaoId) {
 
   const diasSemana = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
   const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  const confirmMsg = `Gerar ${datas.length} sessões em ${meses[mesBase.getMonth()]}, baseado na sessão de ${baseData.getDate()}/${baseData.getMonth()+1} (${diasSemana[diaSemana]})?\n\n` +
+  const confirmMsg = `Gerar ${datas.length} sessões em ${meses[mesRef.getMonth()]}, baseado na sessão de ${baseData.getDate()}/${baseData.getMonth()+1} (${diasSemana[diaSemana]})?\n\n` +
     datas.map(dt => `${dt.getDate()}/${dt.getMonth()+1} (${diasSemana[dt.getDay()]})`).join('\n');
 
   if (!confirm(confirmMsg)) return;
@@ -1083,7 +1083,7 @@ async function carregar() {
     renderFinanceiro();
     renderProntuario();
     // Abre na aba de origem se vier de outra tela
-    if (ABA_INICIAL !== 'dados') requestAnimationFrame(() => trocarTab(ABA_INICIAL));
+    if (ABA_INICIAL !== 'dados') setTimeout(() => trocarTab(ABA_INICIAL), 50);
   } catch(e) {
     document.getElementById('perfil-box').innerHTML = '<div style="color:#C62828;padding:1rem">Erro ao carregar: ' + e.message + '</div>';
   }
