@@ -205,6 +205,7 @@ const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
 
 const params = new URLSearchParams(window.location.search);
 const PACIENTE_ID = params.get('id');
+const ABA_INICIAL = params.get('aba') || 'dados';
 
 let paciente = null;
 let sessoes = [];
@@ -218,6 +219,11 @@ function trocarTab(nome) {
   });
   document.querySelectorAll('.painel').forEach(p => p.classList.remove('ativo'));
   document.getElementById('painel-' + nome).classList.add('ativo');
+  if (nome === 'prontuario') {
+    // ativa a primeira subtab de prontuário se nenhuma estiver ativa
+    const subtabAtiva = document.querySelector('.subtab.ativa');
+    if (!subtabAtiva) mudarSubtabPorNome('anamnese-inicial');
+  }
 }
 
 function iniciais(nome) {
@@ -405,7 +411,7 @@ function renderSessoes(filtroData) {
       ? `<button class="s-acao s-soap" onclick="event.stopPropagation();abrirTranscricao(${s.id})">Prontuário</button>`
       : '';
     const recorrenciaBtn = s.status !== 'cancelada'
-      ? `<button class="s-acao s-recorrencia" onclick="event.stopPropagation();gerarRecorrencia(${s.id})">Gerar recorrência</button>`
+      ? `<button class="s-acao s-recorrencia" onclick="event.stopPropagation();gerarRecorrencia(${s.id})">Repetir</button>`
       : '';
     return `<div class="sessao-card">
       <div class="sessao-data">
@@ -424,6 +430,7 @@ function renderSessoes(filtroData) {
         <button class="s-acao" onclick="event.stopPropagation();editarSessao(${s.id})">Editar</button>
         <button class="s-acao s-cancel" onclick="event.stopPropagation();cancelarSessao(${s.id})">Cancelar</button>
         <button class="s-acao" onclick="event.stopPropagation();remarcarSessao(${s.id})">Remarcar</button>
+        <button class="s-acao s-cancel" onclick="event.stopPropagation();excluirSessao(${s.id})" style="color:#C62828">Excluir</button>
       </div>
     </div>`;
   }).join('');
@@ -498,6 +505,14 @@ function mudarSubtab(nome) {
   document.querySelectorAll('.subpainel').forEach(p => p.classList.remove('ativo'));
   event.target.classList.add('ativa');
   document.getElementById('subpainel-' + nome).classList.add('ativo');
+  if (nome === 'documentos' && !documentosCarregados) carregarDocumentos();
+}
+
+function mudarSubtabPorNome(nome) {
+  document.querySelectorAll('.subtab').forEach(t => t.classList.remove('ativa'));
+  document.querySelectorAll('.subpainel').forEach(p => p.classList.remove('ativo'));
+  document.querySelector(`.subtab[onclick*="${nome}"]`)?.classList.add('ativa');
+  document.getElementById('subpainel-' + nome)?.classList.add('ativo');
   if (nome === 'documentos' && !documentosCarregados) carregarDocumentos();
 }
 
@@ -738,11 +753,11 @@ function limparBuscaSessoes() {
 }
 
 function agendarSessao() {
-  window.location.href = `agendar-sessao_2.html?paciente_id=${PACIENTE_ID}`;
+  window.location.href = `agendar-sessao_2.html?paciente_id=${PACIENTE_ID}&origem=sessoes`;
 }
 
 function editarPaciente() {
-  window.location.href = `cadastro-paciente_7.html?id=${PACIENTE_ID}`;
+  window.location.href = `cadastro-paciente_7.html?id=${PACIENTE_ID}&origem=dados`;
 }
 
 async function gerarRecorrencia(sessaoId) {
@@ -823,7 +838,7 @@ async function gerarRecorrencia(sessaoId) {
 }
 
 function editarSessao(id) {
-  window.location.href = `agendar-sessao_2.html?paciente_id=${PACIENTE_ID}&sessao_id=${id}`;
+  window.location.href = `agendar-sessao_2.html?paciente_id=${PACIENTE_ID}&sessao_id=${id}&origem=sessoes`;
 }
 
 function cancelarSessao(id) {
@@ -835,8 +850,18 @@ function cancelarSessao(id) {
   }).then(r => { if (r.ok) location.reload(); });
 }
 
+async function excluirSessao(id) {
+  if (!confirm('Excluir permanentemente esta sessão? Esta ação não pode ser desfeita.')) return;
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if (r.ok) location.reload();
+  else alert('Erro ao excluir sessão.');
+}
+
 function remarcarSessao(id) {
-  window.location.href = `agendar-sessao_2.html?paciente_id=${PACIENTE_ID}&remarcar_id=${id}`;
+  window.location.href = `agendar-sessao_2.html?paciente_id=${PACIENTE_ID}&remarcar_id=${id}&origem=sessoes`;
 }
 
 function abrirTranscricao(id) {
@@ -880,6 +905,8 @@ async function carregar() {
 }
 
 carregar();
+// Abre na aba de origem se vier de outra tela
+if (ABA_INICIAL !== 'dados') trocarTab(ABA_INICIAL);
 </script>
 </body>
 </html>
