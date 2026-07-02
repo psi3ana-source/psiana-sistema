@@ -826,19 +826,30 @@ async function gerarRecorrencia(sessaoId, proximoMes = false) {
   if (freq === 'quinzenal') intervaloDias = 14;
   else if (freq === 'mensal') intervaloDias = 28; // 4 semanas
 
-  // Se proximoMes=true, gera no mês seguinte ao da sessão base; senão, no mesmo mês após ela
+  // Se proximoMes=true, continua o intervalo a partir da data base até o mês seguinte
+  // Se proximoMes=false, gera no mesmo mês após a sessão base
   const mesRef = proximoMes
     ? new Date(baseData.getFullYear(), baseData.getMonth() + 1, 1)
     : new Date(baseData.getFullYear(), baseData.getMonth(), 1);
 
   const datas = [];
-  const d = new Date(mesRef);
-  while (d.getDay() !== diaSemana) d.setDate(d.getDate() + 1);
-  while (d.getMonth() === mesRef.getMonth()) {
-    if (proximoMes || d.getTime() > baseData.getTime()) {
-      datas.push(new Date(d));
-    }
+
+  if (proximoMes) {
+    // Continua somando intervaloDias a partir da data base até cair no mês seguinte
+    const d = new Date(baseData);
     d.setDate(d.getDate() + intervaloDias);
+    while (d.getMonth() === mesRef.getMonth() && d.getFullYear() === mesRef.getFullYear()) {
+      datas.push(new Date(d));
+      d.setDate(d.getDate() + intervaloDias);
+    }
+  } else {
+    // Mesmo mês — primeiro dia da semana igual ao da base, pulando a própria data
+    const d = new Date(mesRef);
+    while (d.getDay() !== diaSemana) d.setDate(d.getDate() + 1);
+    while (d.getMonth() === mesRef.getMonth()) {
+      if (d.getTime() > baseData.getTime()) datas.push(new Date(d));
+      d.setDate(d.getDate() + intervaloDias);
+    }
   }
 
   if (datas.length === 0) {
