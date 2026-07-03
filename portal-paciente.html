@@ -121,10 +121,14 @@
     box-shadow: 0 0 0 3px rgba(200,159,157,0.20);
   }
   .field .toggle-eye{
-    position:absolute; right: 12px; top: 34px;
-    cursor:pointer; color: var(--ink-soft); font-size: 13px;
+    position:absolute; right: 12px; top: 32px;
+    cursor:pointer; color: var(--ink-soft);
     user-select:none;
+    display:flex; align-items:center; justify-content:center;
+    width: 22px; height: 22px;
   }
+  .field .toggle-eye svg{ width: 19px; height: 19px; }
+  .field .toggle-eye:hover{ color: var(--mocha); }
   .hint{ font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height:1.4; }
   .hint.err{ color: var(--err); }
   .hint.ok{ color: var(--ok); }
@@ -297,7 +301,7 @@
         <div class="field">
           <label for="login-senha">Senha</label>
           <input type="password" id="login-senha" placeholder="Digite sua senha" autocomplete="current-password">
-          <span class="toggle-eye" onclick="toggleEye('login-senha', this)">mostrar</span>
+          <span class="toggle-eye" onclick="toggleEye('login-senha', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
         </div>
         <button class="btn" onclick="fakeLogin()">Entrar</button>
       </form>
@@ -322,7 +326,7 @@
         <div class="field">
           <label for="nova-senha">Nova senha</label>
           <input type="password" id="nova-senha" placeholder="Mínimo 8 caracteres" oninput="validarSenha()">
-          <span class="toggle-eye" onclick="toggleEye('nova-senha', this)">mostrar</span>
+          <span class="toggle-eye" onclick="toggleEye('nova-senha', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
           <p class="hint" id="hint-tam">8 ou mais caracteres</p>
           <p class="hint" id="hint-num">Pelo menos 1 número</p>
           <p class="hint" id="hint-esp">Pelo menos 1 caractere especial</p>
@@ -330,7 +334,7 @@
         <div class="field">
           <label for="confirma-senha">Confirmar senha</label>
           <input type="password" id="confirma-senha" placeholder="Repita a senha">
-          <span class="toggle-eye" onclick="toggleEye('confirma-senha', this)">mostrar</span>
+          <span class="toggle-eye" onclick="toggleEye('confirma-senha', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
         </div>
         <button class="btn" onclick="criarSenha()">Criar senha e entrar</button>
       </form>
@@ -422,10 +426,13 @@
     document.getElementById('view-' + view).classList.add('active');
   }
 
+  var EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYE_CLOSED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c7 0 10.5 7 10.5 7a13.6 13.6 0 0 1-3.1 3.9M6.5 6.5C3.6 8.3 1.5 12 1.5 12s3.5 7 10.5 7a10.4 10.4 0 0 0 4.3-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
   function toggleEye(inputId, el){
     var input = document.getElementById(inputId);
-    if(input.type === 'password'){ input.type = 'text'; el.textContent = 'ocultar'; }
-    else { input.type = 'password'; el.textContent = 'mostrar'; }
+    if(input.type === 'password'){ input.type = 'text'; el.innerHTML = EYE_CLOSED; }
+    else { input.type = 'password'; el.innerHTML = EYE_OPEN; }
   }
 
   document.getElementById('login-cpf').addEventListener('input', function(e){
