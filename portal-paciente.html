@@ -235,12 +235,12 @@
 
   /* --- Tabs --- */
   .tabs{
-    display:flex; background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; padding: 4px; margin-bottom: 18px;
+    display:flex; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 4px; margin-bottom: 18px; gap: 3px;
     box-shadow: var(--shadow);
   }
   .tab-btn{
-    flex:1; text-align:center; padding: 10px 0; font-size: 13.5px;
+    flex: 1 1 42%; text-align:center; padding: 9px 4px; font-size: 12.5px;
     color: var(--ink-soft); cursor:pointer; border-radius: 10px;
     background:none; border:none; font-family:'Segoe UI', Arial, sans-serif;
   }
@@ -274,6 +274,26 @@
   .empty{
     text-align:center; padding: 30px 10px; color: var(--ink-soft); font-size: 13.5px;
   }
+
+  /* --- Jornada --- */
+  .prog-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .prog-card{
+    background: #FEFCFB; border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 14px; text-align:center;
+  }
+  .prog-icon{ color: var(--rose); margin-bottom: 8px; }
+  .prog-icon svg{ width: 22px; height: 22px; }
+  .prog-value{ font-size: 22px; font-weight: 600; color: var(--mocha-deep); line-height:1; }
+  .prog-label{ font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height:1.3; }
+
+  .invest-panel{ background: var(--rose-soft); border: none; }
+  .invest-row{ display:flex; align-items:center; justify-content:space-between; }
+  .invest-value{ font-size: 24px; font-weight: 600; color: var(--mocha-deep); }
+  .invest-icon{ color: var(--mocha); opacity: 0.55; }
+  .invest-icon svg{ width: 30px; height: 30px; }
+  .invest-note{ font-size: 12.5px; color: var(--mocha); margin: 12px 0 0; line-height:1.5; }
 
   /* --- Financeiro --- */
   .fin-grid{
@@ -391,6 +411,7 @@
     <div class="tabs">
       <button class="tab-btn active" id="tab-home-btn" onclick="switchTab('home')">Início</button>
       <button class="tab-btn" id="tab-sessoes-btn" onclick="switchTab('sessoes')">Sessões</button>
+      <button class="tab-btn" id="tab-jornada-btn" onclick="switchTab('jornada')">Minha Jornada</button>
       <button class="tab-btn" id="tab-financeiro-btn" onclick="switchTab('financeiro')">Financeiro</button>
     </div>
 
@@ -430,7 +451,13 @@
             <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/><path d="M12.8 18.5c1-1.3 2.6-2 4.4-1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M22.8 16.8c1.8-.3 3.4.4 4.4 1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.5 27c2-2.3 4-3.3 5.5-3.3s3.5 1 5.5 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
           <button class="mood-btn" data-mood="chorando" onclick="selecionarHumor(this)" title="Chorando">
-            <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/><path d="M12.8 18.5c1-1.3 2.6-2 4.4-1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M22.8 16.8c1.8-.3 3.4.4 4.4 1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.5 27.3c2-2.3 4-3.3 5.5-3.3s3.5 1 5.5 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 20.5c0 2-1.6 3-1.6 4.6a1.6 1.6 0 0 0 3.2 0c0-1.6-1.6-2.6-1.6-4.6Z" fill="currentColor" opacity="0.85"/></svg>
+            <svg viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M12.5 15.5c1.3-1.6 3.2-1.6 4.5 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M23 15.5c1.3-1.6 3.2-1.6 4.5 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M15 27c1.8-2.4 3.6-3.5 5-3.5s3.2 1.1 5 3.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+              <path d="M15.3 18c2.5 3-2.6 5-2.6 8.3a2.6 2.6 0 0 0 5.2 0c0-2.2-1.7-3.4-2.6-8.3Z" fill="#6FA3C9" opacity="0.9"/>
+            </svg>
           </button>
         </div>
         <p class="mood-confirm" id="mood-confirm">Registrado. Obrigada por compartilhar. 🤍</p>
@@ -443,6 +470,57 @@
         <h2>Histórico de sessões</h2>
         <p class="small">Acompanhe as suas últimas sessões.</p>
         <div id="lista-sessoes"></div>
+      </div>
+    </div>
+
+    <!-- ABA: PROGRESSO -->
+    <div id="tab-jornada" class="tab-view hidden">
+      <div class="panel">
+        <h2>Sua jornada até aqui</h2>
+        <p class="small">Cada encontro é um passo. Aqui está o caminho que você já percorreu com a gente.</p>
+        <div class="prog-grid">
+          <div class="prog-card">
+            <div class="prog-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-9.5-8.5C.6 8.7 2 5 5.5 4.2 8 3.6 10 5 12 7.5 14 5 16 3.6 18.5 4.2 22 5 23.4 8.7 21.5 12.5 19 16.65 12 21 12 21Z"/></svg>
+            </div>
+            <div class="prog-value">11</div>
+            <div class="prog-label">Encontros realizados</div>
+          </div>
+          <div class="prog-card">
+            <div class="prog-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
+            </div>
+            <div class="prog-value">9h10</div>
+            <div class="prog-label">Dedicadas a você</div>
+          </div>
+          <div class="prog-card">
+            <div class="prog-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12.5l2.5 2.5L16 9"/><circle cx="12" cy="12" r="9.5"/></svg>
+            </div>
+            <div class="prog-value">6</div>
+            <div class="prog-label">Tarefas concluídas</div>
+          </div>
+          <div class="prog-card">
+            <div class="prog-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10h8M8 14h5"/></svg>
+            </div>
+            <div class="prog-value">2</div>
+            <div class="prog-label">Tarefas pendentes</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel invest-panel">
+        <div class="invest-row">
+          <div>
+            <div class="prog-label" style="margin-bottom:6px;">Investimento na sua jornada</div>
+            <div class="invest-value">R$ 2.420,00</div>
+          </div>
+          <div class="invest-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6M15 7h6"/></svg>
+          </div>
+        </div>
+        <p class="invest-note">Cada sessão foi um investimento em você — e olha até onde você já chegou. 🤍</p>
       </div>
     </div>
 
