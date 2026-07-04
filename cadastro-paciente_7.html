@@ -3,315 +3,1984 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PsiAna — Editar Paciente</title>
+<title>Portal · PsiAna</title>
+<link rel="icon" href="icone_selo.png">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: #FAF6F5; color: #2C2C2C; }
-  .header { background: #fff; border-bottom: 1px solid #EDE4E3; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
-  .header h1 { font-size: 17px; font-weight: 700; color: #785D56; }
-  .btn-voltar { padding: 7px 14px; border: 1px solid #DDD; border-radius: 8px; background: #fff; color: #785D56; font-size: 13px; cursor: pointer; }
-  .btn-voltar:hover { background: #F0E8E7; }
-  .container { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
-  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #EDE4E3; }
-  .section-title { font-size: 13px; font-weight: 700; color: #C89F9D; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-  .field input, .field select, .field textarea { font-size: 14px; padding: 10px 12px; border: 1px solid #DDD; border-radius: 8px; background: #FAFAFA; color: #2C2C2C; width: 100%; }
-  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #C89F9D; }
-  .field textarea { resize: vertical; min-height: 80px; }
-  .footer { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #EDE4E3; padding: 14px 24px; display: flex; justify-content: flex-end; gap: 10px; }
-  .btn-salvar { padding: 12px 28px; background: #785D56; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn-salvar:hover { background: #C89F9D; }
-  .btn-cancelar { padding: 12px 20px; background: #fff; border: 1px solid #DDD; border-radius: 8px; font-size: 14px; color: #999; cursor: pointer; }
-  .toast { position: fixed; bottom: 80px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 999; display: none; }
-  .toast.ok { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
-  .toast.erro { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
-  .loading { text-align: center; padding: 40px; color: #999; }
+  :root{
+    --bg: #FAF6F5;
+    --card: #FFFFFF;
+    --rose: #C89F9D;
+    --rose-soft: #F3E4E1;
+    --mocha: #785D56;
+    --mocha-deep: #5A453F;
+    --ink: #2C2C2C;
+    --ink-soft: #8A7A75;
+    --line: #EBDFDC;
+    --ok: #4C7A5E;
+    --err: #B5514A;
+    --shadow: 0 12px 32px -16px rgba(120, 93, 86, 0.28);
+    --radius: 20px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(200,159,157,0.10), transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(200,159,157,0.10), transparent 40%);
+    font-family:'Segoe UI', Arial, sans-serif;
+    color: var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 32px 16px;
+  }
+
+  .voice{ font-weight: 600; }
+  .signature{ color: var(--rose); }
+
+  .app{ width:100%; max-width: 420px; }
+
+  .hidden{ display:none !important; }
+
+  /* --- Selo / badge motif --- */
+  .selo-frame{
+    width: 76px; height: 76px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .selo-frame::before{
+    content:'';
+    position:absolute; inset:-6px;
+    border-radius:50%;
+    border: 1px dashed var(--rose);
+    opacity: 0.45;
+  }
+  .selo-frame img{ width: 40px; height: 40px; object-fit: contain; }
+
+  /* --- Card --- */
+  .card{
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 40px 32px 32px;
+    border: 1px solid var(--line);
+  }
+
+  .eyebrow{
+    text-align:center;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin: 0 0 4px;
+  }
+  h1.title{
+    text-align:center;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: #2C2C2C;
+  }
+  p.subtitle{
+    text-align:center;
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+    line-height: 1.5;
+  }
+
+  /* --- Form elements --- */
+  .field{ margin-bottom: 16px; position: relative; }
+  .field label{
+    display:block; font-size: 12.5px; color: var(--mocha);
+    margin-bottom: 6px; letter-spacing: 0.02em;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-family:'Segoe UI', Arial, sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    background: #FEFCFB;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .field textarea{ resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(200,159,157,0.20);
+  }
+  .field .toggle-eye{
+    position:absolute; right: 12px; top: 32px;
+    cursor:pointer; color: var(--ink-soft);
+    user-select:none;
+    display:flex; align-items:center; justify-content:center;
+    width: 22px; height: 22px;
+  }
+  .field .toggle-eye svg{ width: 19px; height: 19px; }
+  .field .toggle-eye:hover{ color: var(--mocha); }
+  .hint{ font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height:1.4; }
+  .hint.err{ color: var(--err); }
+  .hint.ok{ color: var(--ok); }
+
+  .btn{
+    width:100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: var(--mocha);
+    color: #FFF6F4;
+    font-family:'Segoe UI', Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    cursor:pointer;
+    transition: background .15s ease, transform .05s ease;
+    margin-top: 6px;
+  }
+  .btn:hover{ background: var(--mocha-deep); }
+  .btn:active{ transform: scale(0.99); }
+  .btn.ghost{
+    background: transparent;
+    color: var(--mocha);
+    border: 1px solid var(--line);
+  }
+  .btn.ghost:hover{ background: var(--rose-soft); }
+
+  .foot-link{
+    text-align:center; margin-top: 20px;
+    font-size: 13px; color: var(--ink-soft);
+  }
+  .foot-link a{ color: var(--mocha); text-decoration: none; border-bottom: 1px solid var(--rose); cursor:pointer; }
+
+  .error-box{
+    background: #FBEDEC; border: 1px solid #F0D3D0;
+    color: var(--err); font-size: 13px;
+    padding: 10px 14px; border-radius: 10px;
+    margin-bottom: 16px; display:none;
+  }
+  .error-box.show{ display:block; }
+
+  /* --- Authenticated shell --- */
+  .shell{ width:100%; max-width: 460px; }
+  .topbar{
+    display:flex; align-items:center; justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  .topbar .who{ display:flex; align-items:center; gap: 14px; }
+  .topbar .selo-mini{
+    width:68px; height:68px; border-radius:50%;
+    background: var(--card); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: var(--shadow); flex-shrink:0;
+  }
+  .topbar .selo-mini img{ width:42px; height:42px; object-fit:contain; }
+  .topbar .greeting{ font-size: 22px; color: var(--ink-soft); }
+  .topbar .greeting b{ color: var(--mocha-deep); font-weight:600; }
+  .logout{
+    font-size: 15px; color: var(--ink-soft); cursor:pointer;
+    border: 1px solid var(--line); padding: 9px 18px; border-radius: 20px;
+    background: var(--card); flex-shrink:0;
+  }
+  .logout:hover{ border-color: var(--rose); color: var(--mocha); }
+
+  .panel{
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 26px 24px;
+    margin-bottom: 18px;
+  }
+  .panel h2{
+    font-family:'Segoe UI', Arial, sans-serif;
+    font-size: 19px; font-weight: 600; margin: 0 0 4px; color: var(--mocha-deep);
+  }
+  .panel .small{ font-size: 12.5px; color: var(--ink-soft); margin: 0 0 16px; }
+
+  .session-next{
+    display:flex; align-items:center; gap: 14px;
+    background: var(--rose-soft); border-radius: 14px; padding: 14px 16px;
+  }
+  .session-next .date-block{
+    width: 52px; text-align:center; flex-shrink:0;
+  }
+  .session-next .date-block .d{ font-family:'Segoe UI', Arial, sans-serif; font-size: 24px; font-weight:600; color: var(--mocha-deep); line-height:1; }
+  .session-next .date-block .m{ font-size: 10.5px; text-transform:uppercase; letter-spacing:0.06em; color: var(--mocha); }
+  .session-next .info .t{ font-size: 14.5px; color: var(--ink); font-weight: 500; }
+  .session-next .info .s{ font-size: 12.5px; color: var(--ink-soft); }
+
+  .task-list{ display:flex; flex-direction:column; gap: 12px; }
+  .task-item{ display:flex; align-items:center; gap: 12px; }
+  .task-item.interativo{ cursor:pointer; }
+  .task-check{
+    width: 20px; height:20px; border-radius:6px; border: 1.6px solid var(--line);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    color:#fff;
+  }
+  .task-item.done .task-check{ background: var(--mocha); border-color: var(--mocha); }
+  .task-check svg{ width: 13px; height:13px; }
+  .task-text{ font-size: 13.5px; color: var(--ink); }
+  .task-item.done .task-text{ color: var(--ink-soft); text-decoration: line-through; }
+
+  .task-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 2px; }
+  .task-card-head h2{ margin-bottom:0; }
+  .task-access-btn{
+    font-size: 12px; padding: 7px 15px; border-radius: 20px;
+    border: 1px solid var(--mocha); background:#fff; color: var(--mocha);
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; white-space:nowrap; flex-shrink:0;
+  }
+  .task-access-btn:hover{ background: var(--rose-soft); }
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background: rgba(62,50,46,0.45);
+    align-items:center; justify-content:center; padding: 20px; z-index: 100;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-card{
+    background: var(--card); border-radius: 20px; padding: 28px 26px;
+    width: 100%; max-width: 420px; max-height: 85vh; overflow-y:auto;
+    box-shadow: 0 20px 50px -12px rgba(62,50,46,0.35);
+  }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 4px; }
+  .modal-head h2{ margin-bottom:0; }
+  .modal-close{
+    border:none; background:none; font-size: 16px; color: var(--ink-soft);
+    cursor:pointer; padding: 4px 8px;
+  }
+  .task-historico{ border-top: 1px solid var(--line); margin-top: 20px; padding-top: 6px; }
+  .task-hist-item{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size: 12.5px; color: var(--ink-soft); padding: 8px 0;
+  }
+  .task-hist-item .semana{ color: var(--ink); }
+  .task-hist-item .contagem{ color: var(--mocha); font-weight: 600; }
+
+  .mood-row{ display:flex; justify-content: space-between; margin-top: 4px; }
+  .mood-btn{
+    background: none; border: 2px solid transparent; border-radius: 50%;
+    width: 44px; height:44px; cursor:pointer; padding: 0;
+    display:flex; align-items:center; justify-content:center;
+    transition: all .15s ease; flex-shrink:0;
+  }
+  .mood-btn svg{ width: 44px; height: 44px; }
+  .mood-btn:hover{ transform: scale(1.06); }
+  .mood-btn.selected{ border-color: var(--mocha); transform: scale(1.1); }
+  .mood-radiante{ color: #E3A06E; }
+  .mood-bem{ color: #D9A99A; }
+  .mood-neutro{ color: #C4A79C; }
+  .mood-cansado{ color: #A78F8A; }
+  .mood-dificil{ color: #8592A3; }
+  .mood-chorando{ color: #6F8CA8; }
+  .mood-label{
+    font-size: 12.5px; color: var(--mocha); text-align:center; margin: 10px 0 0;
+    min-height: 16px; opacity: 0; transition: opacity .15s ease;
+  }
+  .mood-label.show{ opacity: 1; }
+
+  .mood-confirmar{ display:none; margin-top: 12px; text-align:center; }
+  .mood-confirmar.show{ display:block; }
+  .mood-confirmar p{ font-size: 13.5px; color: var(--ink); margin: 0 0 12px; }
+  .mood-confirmar-botoes{ display:flex; gap: 10px; }
+  .mood-confirmar-botoes .btn{ margin-top:0; font-size: 13px; padding: 10px; }
+  .mood-confirm{ font-size: 12.5px; color: var(--ok); text-align:center; margin-top: 10px; display:none; }
+  .mood-confirm.show{ display:block; }
+
+  /* --- Tabs --- */
+  .tabs{
+    display:flex; flex-wrap: nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 4px; margin-bottom: 18px; gap: 3px;
+    box-shadow: var(--shadow); scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab-btn{
+    flex: 0 0 auto; white-space: nowrap; text-align:center; padding: 9px 14px; font-size: 12.5px;
+    color: var(--ink-soft); cursor:pointer; border-radius: 10px;
+    background:none; border:none; font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .tab-btn.active{ background: var(--mocha); color:#FFF6F4; }
+
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* --- Sessions list --- */
+  .sess-item{
+    display:flex; align-items:center; gap: 14px;
+    padding: 13px 0; border-bottom: 1px solid var(--line);
+  }
+  .sess-item:last-child{ border-bottom:none; }
+  .sess-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .sess-item .info{ flex:1; }
+  .sess-item .info .t{ font-size: 14px; color: var(--ink); }
+  .sess-item .info .s{ font-size: 12px; color: var(--ink-soft); }
+  .sess-status{
+    font-size: 11px; padding: 4px 10px; border-radius: 20px;
+    font-weight: 500; white-space: nowrap;
+  }
+
+  .s-agendada{ background:#EFEAFB; color:#6B57A8; }
+  .s-confirmada{ background:#E7F3EA; color:#3E7A54; }
+  .s-cancelada{ background:#FBEAEA; color:#B5514A; }
+  .s-remarcada{ background:#FCF3DE; color:#A6790F; }
+  .s-realizada{ background:#DCEFEA; color:#1D7A6B; }
+  .s-faltou{ background:#EFEFEF; color:#7A7A7A; }
+
+  /* --- Cards de status (Sessões) --- */
+  .status-card{
+    border: 1px solid var(--line); border-radius: 14px; margin-bottom: 10px;
+    overflow: hidden; background: #FEFCFB;
+  }
+  .status-card-header{
+    width:100%; display:flex; align-items:center; gap: 12px;
+    padding: 14px 14px; border:none; background:none; cursor:pointer;
+    border-left: 4px solid transparent; font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .status-card[data-status="agendada"] .status-card-header{ border-left-color:#6B57A8; }
+  .status-card[data-status="realizada"] .status-card-header{ border-left-color:#1D7A6B; }
+  .status-card[data-status="cancelada"] .status-card-header{ border-left-color:#B5514A; }
+  .status-card[data-status="remarcada"] .status-card-header{ border-left-color:#A6790F; }
+  .status-card[data-status="faltou"] .status-card-header{ border-left-color:#7A7A7A; }
+
+  .status-icon{
+    width: 34px; height:34px; border-radius: 50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .status-icon svg{ width: 17px; height:17px; }
+  .status-card[data-status="agendada"] .status-icon{ background:#EFEAFB; color:#6B57A8; }
+  .status-card[data-status="realizada"] .status-icon{ background:#DCEFEA; color:#1D7A6B; }
+  .status-card[data-status="cancelada"] .status-icon{ background:#FBEAEA; color:#B5514A; }
+  .status-card[data-status="remarcada"] .status-icon{ background:#FCF3DE; color:#A6790F; }
+  .status-card[data-status="faltou"] .status-icon{ background:#EFEFEF; color:#7A7A7A; }
+
+  .status-name{ flex:1; text-align:left; font-size: 14px; color: var(--ink); }
+  .status-count{ font-size: 15px; font-weight: 600; color: var(--mocha-deep); margin-right: 4px; }
+  .status-chevron{ width: 16px; height:16px; color: var(--ink-soft); transition: transform .2s ease; flex-shrink:0; }
+  .status-chevron.open{ transform: rotate(180deg); }
+
+  .status-card-body{ max-height:0; overflow:hidden; transition: max-height .25s ease; }
+  .status-card-body.open{ max-height: 600px; }
+  .status-card-body .sess-item{ padding: 12px 14px; border-top: 1px solid var(--line); border-bottom:none; }
+  .status-card-body .sess-item:first-child{ border-top: 1px solid var(--line); }
+  .status-card-empty{ padding: 14px; font-size: 12.5px; color: var(--ink-soft); text-align:center; }
+
+  .empty{
+    text-align:center; padding: 30px 10px; color: var(--ink-soft); font-size: 13.5px;
+  }
+
+  /* --- Jornada --- */
+  .prog-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .prog-card{
+    background: #FEFCFB; border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 14px; text-align:center;
+  }
+  .prog-icon{ color: var(--rose); margin-bottom: 8px; }
+  .prog-icon svg{ width: 22px; height: 22px; }
+  .prog-value{ font-size: 22px; font-weight: 600; color: var(--mocha-deep); line-height:1; }
+  .prog-label{ font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height:1.3; }
+
+  /* --- Manchete de destaque (dentro do painel de evolução) --- */
+  .highlight-inline{
+    background: linear-gradient(135deg, var(--rose-soft), #FEFCFB);
+    border-radius: 14px; text-align:center;
+    padding: 20px 16px; margin-bottom: 20px;
+  }
+  .highlight-badge{
+    display:inline-block; font-size: 11px; text-transform:uppercase; letter-spacing:0.06em;
+    color: var(--mocha); background:#fff; border: 1px solid var(--line);
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 14px;
+  }
+  .highlight-stat{
+    font-size: 38px; font-weight: 700; color: var(--mocha-deep); line-height:1;
+  }
+  .highlight-desc{
+    font-size: 13px; color: var(--ink); margin: 8px 0 0;
+  }
+
+  /* --- Indicadores de evolução --- */
+  /* --- Filtro de intervalo (slider duplo) --- */
+  .range-filter{ margin-bottom: 20px; }
+  .range-labels{
+    display:flex; justify-content:space-between; font-size: 12.5px;
+    font-weight: 600; color: var(--mocha-deep); margin-bottom: 6px;
+  }
+  .range-slider-wrap{ position:relative; height: 26px; }
+  .range-track{
+    position:absolute; top:50%; left:0; right:0; height:4px;
+    background:#F0E6E4; border-radius:4px; transform:translateY(-50%);
+  }
+  .range-track-fill{
+    position:absolute; top:50%; height:4px; background: var(--mocha);
+    border-radius:4px; transform:translateY(-50%);
+  }
+  .range-input{
+    position:absolute; width:100%; top:0; left:0; margin:0; height:26px;
+    background:transparent; -webkit-appearance:none; appearance:none;
+    pointer-events:none;
+  }
+  .range-input::-webkit-slider-runnable-track{ background:transparent; }
+  .range-input::-moz-range-track{ background:transparent; }
+  .range-input::-webkit-slider-thumb{
+    -webkit-appearance:none; pointer-events:auto;
+    width:18px; height:18px; border-radius:50%;
+    background: var(--mocha); border: 2.5px solid #fff;
+    box-shadow: 0 1px 5px rgba(120,93,86,0.4); cursor:pointer; margin-top: 5px;
+  }
+  .range-input::-moz-range-thumb{
+    pointer-events:auto; width:18px; height:18px; border-radius:50%;
+    background: var(--mocha); border: 2.5px solid #fff;
+    box-shadow: 0 1px 5px rgba(120,93,86,0.4); cursor:pointer;
+  }
+  .range-ticks{
+    display:flex; justify-content:space-between; font-size: 10.5px;
+    color: var(--ink-soft); margin-top: 8px; padding: 0 1px;
+  }
+
+  .indic-legend{
+    display:flex; gap: 18px; font-size: 11.5px; color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+  .indic-legend i{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right: 5px; vertical-align: middle; }
+  .indic-legend i.dot-inicio{ background:#fff; border: 2px solid var(--ink-soft); }
+  .indic-legend i.dot-agora{ background: var(--mocha); border: 2px solid var(--mocha); }
+
+  .indic-row{ margin-bottom: 18px; }
+  .indic-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; }
+  .indic-name{ font-size: 13px; color: var(--ink); }
+  .indic-delta{
+    font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+    background: #E7F3EA; color: #2E7D32;
+  }
+  .indic-track{ position:relative; height: 5px; background: #F0E6E4; border-radius: 4px; }
+  .indic-dot{ position:absolute; top:50%; width: 12px; height:12px; border-radius:50%; transform: translate(-50%,-50%); transition: left .2s ease; }
+  .indic-dot.inicio{ background:#fff; border: 2px solid var(--ink-soft); }
+  .indic-dot.agora{ background: var(--mocha); border: 2px solid var(--mocha); }
+
+  .invest-panel{ background: var(--rose-soft); border: none; }
+  .invest-toggle{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    background:none; border:none; cursor:pointer; padding:0;
+    font-family:'Segoe UI', Arial, sans-serif; color: var(--mocha-deep);
+  }
+  .invest-toggle-label{ display:flex; align-items:center; gap: 10px; font-size: 15px; font-weight: 600; }
+  .invest-toggle-label svg{ width: 20px; height: 20px; color: var(--mocha); }
+  .invest-chevron{ width: 18px; height: 18px; transition: transform .2s ease; }
+  .invest-chevron.open{ transform: rotate(180deg); }
+  .invest-details{
+    max-height: 0; overflow: hidden; transition: max-height .2s ease;
+  }
+  .invest-details.open{ max-height: 120px; }
+  .invest-detail-row{
+    display:flex; align-items:center; gap: 9px;
+    font-size: 12.5px; color: var(--mocha); padding-top: 12px;
+  }
+  .invest-detail-row svg{ width: 16px; height: 16px; flex-shrink:0; opacity: 0.75; }
+  .invest-note{ font-size: 12.5px; color: var(--mocha); margin: 14px 0 0; line-height:1.5; }
+
+  /* --- Financeiro --- */
+  .fin-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .fin-caption{ font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
+
+  .filtro-linha{ display:flex; align-items:center; gap: 8px; margin-bottom: 10px; }
+  .chip-group-label{ font-size: 11px; color: var(--ink-soft); width: 42px; flex-shrink:0; }
+  .chip{
+    font-size: 12px; padding: 6px 13px; border-radius: 20px;
+    border: 1px solid var(--line); background: #FEFCFB; color: var(--ink-soft);
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; flex-shrink:0;
+  }
+  .chip.active{ background: var(--mocha); border-color: var(--mocha); color:#FFF6F4; }
+  .filtro-select{
+    flex:1; min-width:0; font-size: 12.5px; padding: 6px 10px;
+    border: 1px solid var(--line); border-radius: 20px; background:#FEFCFB;
+    color: var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .filtro-select:focus{ outline:none; border-color: var(--rose); }
+
+  .filtro-grade{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+  }
+  .filtro-campo{ display:flex; flex-direction:column; gap: 5px; }
+  .filtro-campo-label{ font-size: 11px; color: var(--ink-soft); }
+  .filtro-select-grade{
+    font-size: 12.5px; padding: 9px 10px;
+    border: 1px solid var(--line); border-radius: 10px; background:#FEFCFB;
+    color: var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .filtro-select-grade:focus{ outline:none; border-color: var(--rose); }
+
+  /* --- Documentos --- */
+  .doc-lista{ display:flex; flex-direction:column; gap: 10px; }
+  .doc-item{
+    display:flex; align-items:center; gap: 12px;
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
+    background: #FEFCFB;
+  }
+  .doc-icon{
+    width: 36px; height:36px; border-radius: 10px; background: var(--rose-soft);
+    color: var(--mocha); flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  }
+  .doc-icon svg{ width: 18px; height:18px; }
+  .doc-info{ flex:1; min-width:0; }
+  .doc-nome{ font-size: 13.5px; color: var(--ink); }
+  .doc-data{ font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+  .doc-btn{
+    font-size: 12px; padding: 7px 14px; border-radius: 20px;
+    border: 1px solid var(--line); background:#fff; color: var(--mocha);
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; white-space:nowrap; flex-shrink:0;
+  }
+  .doc-btn:hover{ background: var(--rose-soft); }
+  .anamnese-detail{
+    max-height:0; overflow:hidden; transition: max-height .25s ease;
+    background: #FEFCFB; border: 1px solid var(--line); border-top:none;
+    border-radius: 0 0 12px 12px; margin-top: -10px;
+  }
+  .anamnese-detail.open{ max-height: 400px; padding: 14px 16px; margin-top: 0; }
+  .anamnese-detail p{ font-size: 13px; color: var(--ink); line-height: 1.6; margin: 0 0 10px; }
+  .anamnese-detail p:last-child{ margin-bottom:0; }
+
+  /* --- Solicitações --- */
+  .solic-form.hidden{ display:none; }
+  .limite-box{
+    display:flex; align-items:center; justify-content:space-between;
+    background: var(--rose-soft); border-radius: 10px; padding: 10px 14px;
+    font-size: 12.5px; color: var(--mocha-deep); margin-bottom: 16px;
+  }
+  .limite-box .limite-num{ font-weight: 600; }
+  .taxa-aviso{
+    display:none; background:#FFF1E0; border: 1px solid #F5DDB8; border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 16px;
+  }
+  .taxa-aviso.show{ display:block; }
+  .taxa-aviso p{ font-size: 12.5px; color: #8A5A0F; margin: 0 0 10px; line-height:1.5; }
+  .taxa-check{
+    display:flex; align-items:flex-start; gap: 8px; font-size: 12px; color: #8A5A0F;
+    cursor:pointer; line-height:1.4;
+  }
+  .taxa-check input{ margin-top: 2px; flex-shrink:0; }
+
+  .pix-box{ display:none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #F5DDB8; text-align:center; }
+  .pix-box.show{ display:block; }
+  .pix-titulo{ font-size: 13.5px; font-weight: 600; color: #8A5A0F; margin: 0 0 12px; }
+  .pix-qr{ display:flex; justify-content:center; margin-bottom: 14px; }
+  .pix-qr img, .pix-qr canvas{ border-radius: 10px; background:#fff; padding: 8px; }
+  .pix-alt{ text-align:left; background:#fff; border-radius: 10px; padding: 12px 14px; }
+  .pix-alt-titulo{ font-size: 11px; text-transform:uppercase; letter-spacing:0.05em; color: var(--ink-soft); margin: 0 0 8px; }
+  .pix-alt-linha{ font-size: 12.5px; color: var(--ink); margin: 0 0 4px; }
+  .pix-alt-linha:last-child{ margin-bottom:0; }
+
+  .solic-item{
+    display:flex; align-items:center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--line);
+  }
+  .solic-item:last-child{ border-bottom:none; }
+  .solic-icon{
+    width: 34px; height:34px; border-radius: 50%; background: var(--rose-soft);
+    color: var(--mocha); flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  }
+  .solic-icon svg{ width: 16px; height:16px; }
+  .solic-info{ flex:1; min-width:0; }
+  .solic-info .t{ font-size: 13.5px; color: var(--ink); }
+  .solic-info .s{ font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+  .solic-status{
+    font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 500; white-space:nowrap;
+  }
+  .solic-status.aguardando{ background:#FCF3DE; color:#A6790F; }
+  .solic-status.aprovada{ background:#E7F3EA; color:#2E7D32; }
+  .solic-status.recusada{ background:#FBEAEA; color:#B5514A; }
+  .fin-card{
+    background: #FEFCFB; border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .fin-card.alerta .fin-value{ color: var(--err); }
+  .fin-label{
+    font-size: 11px; color: var(--ink-soft); text-transform: uppercase;
+    letter-spacing: 0.05em; margin-bottom: 4px;
+  }
+  .fin-value{ font-size: 19px; font-weight: 600; color: var(--mocha-deep); }
+
+  .pgto-item{
+    display:flex; align-items:center; gap: 12px;
+    padding: 13px 0; border-bottom: 1px solid var(--line);
+  }
+  .pgto-item:last-child{ border-bottom:none; }
+  .pgto-item .info{ flex:1; }
+  .pgto-item .info .t{ font-size: 14px; color: var(--ink); }
+  .pgto-item .info .s{ font-size: 12px; color: var(--ink-soft); }
+  .pgto-item .valor{ font-size: 14px; font-weight: 600; color: var(--mocha-deep); white-space:nowrap; }
+  .pgto-badges{ display:flex; flex-direction:column; align-items:flex-end; gap: 4px; }
+  .badge-pgto{ font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; white-space:nowrap; }
+  .badge-pgto.pago{ background:#E7F3EA; color:#2E7D32; }
+  .badge-pgto.pendente{ background:#FFF1E0; color:#B5680F; }
+  .badge-recibo{ font-size: 10.5px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space:nowrap; }
+  .badge-recibo.emitido{ background:#E8F5E9; color:#2E7D32; }
+  .badge-recibo.pendente{ background:#F2ECEC; color:#8A7A75; }
+
+  @media (max-width: 420px){
+    .card{ padding: 32px 22px 26px; }
+  }
+
+  /* --- Desktop: área autenticada aproveita mais espaço --- */
+  @media (min-width: 860px){
+    body{ padding: 56px 24px; align-items: flex-start; }
+    #view-app.shell{
+      max-width: 1280px; width: 94%; margin: 0 auto;
+      display:grid; grid-template-columns: 230px 1fr;
+      grid-template-areas: "topbar topbar" "tabs content";
+      column-gap: 36px;
+    }
+    .topbar{ grid-area: topbar; }
+    .tabs{
+      grid-area: tabs; flex-direction: column; overflow-x: visible;
+      align-items: stretch; height: fit-content; padding: 8px;
+    }
+    .tab-btn{ text-align:left; padding: 12px 14px; font-size: 14px; }
+    .tab-content{ grid-area: content; min-width:0; }
+    .panel{ padding: 30px 36px; }
+    .prog-grid{ grid-template-columns: repeat(4, 1fr); }
+    .fin-grid{ grid-template-columns: repeat(2, minmax(0,220px)); }
+    .mood-row{ max-width: 460px; margin-left:auto; margin-right:auto; }
+  }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+<div class="app">
 
-<div class="header">
-  <button class="btn-voltar" id="btn-voltar">← Voltar</button>
-  <h1>Editar paciente</h1>
+  <!-- ===================== TELA: LOGIN ===================== -->
+  <div id="view-login" class="view active">
+    <div class="card">
+      <div class="selo-frame">
+        <img src="icone_selo.png" alt="" onerror="this.onerror=null; this.src='selo.png';">
+      </div>
+      <h1 class="title voice">Cantinho do cuidado</h1>
+      <p class="subtitle">Acesse o seu portal e acompanhe a sua evolução comigo.</p>
+
+      <div class="error-box" id="login-error">CPF ou senha incorretos. Tente novamente.</div>
+
+      <form id="login-form" onsubmit="return false;">
+        <div class="field">
+          <label for="login-cpf">CPF</label>
+          <input type="text" id="login-cpf" placeholder="000.000.000-00" maxlength="14" autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="login-senha">Senha</label>
+          <input type="password" id="login-senha" placeholder="Digite sua senha" autocomplete="current-password">
+          <span class="toggle-eye" onclick="toggleEye('login-senha', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+        </div>
+        <button class="btn" onclick="fakeLogin()">Entrar</button>
+      </form>
+
+      <p class="foot-link">Primeiro acesso? <a onclick="goTo('primeiro-acesso')">Criar minha senha</a></p>
+    </div>
+  </div>
+
+  <!-- ===================== TELA: PRIMEIRO ACESSO ===================== -->
+  <div id="view-primeiro-acesso" class="view">
+    <div class="card">
+      <div class="selo-frame">
+        <img src="icone_selo.png" alt="" onerror="this.onerror=null; this.src='selo.png';">
+      </div>
+      <p class="eyebrow">Primeiro acesso</p>
+      <h1 class="title voice">Vamos criar sua senha</h1>
+      <p class="subtitle">Escolha uma senha só sua para acessar o portal sempre que precisar.</p>
+
+      <div class="error-box" id="senha-error">As senhas não coincidem.</div>
+
+      <form onsubmit="return false;">
+        <div class="field">
+          <label for="nova-senha">Nova senha</label>
+          <input type="password" id="nova-senha" placeholder="Mínimo 8 caracteres" oninput="validarSenha()">
+          <span class="toggle-eye" onclick="toggleEye('nova-senha', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <p class="hint" id="hint-tam">8 ou mais caracteres</p>
+          <p class="hint" id="hint-num">Pelo menos 1 número</p>
+          <p class="hint" id="hint-esp">Pelo menos 1 caractere especial</p>
+        </div>
+        <div class="field">
+          <label for="confirma-senha">Confirmar senha</label>
+          <input type="password" id="confirma-senha" placeholder="Repita a senha">
+          <span class="toggle-eye" onclick="toggleEye('confirma-senha', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+        </div>
+        <button class="btn" onclick="criarSenha()">Criar senha e entrar</button>
+      </form>
+
+      <p class="foot-link"><a onclick="goTo('login')">Voltar para o login</a></p>
+    </div>
+  </div>
+
 </div>
 
-<div class="container" id="form-container">
-  <div class="loading">Carregando dados...</div>
-</div>
-
-<div class="footer">
-  <button class="btn-cancelar" id="btn-cancelar">Cancelar</button>
-  <button class="btn-salvar" onclick="salvar()">Salvar alterações</button>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
-const params = new URLSearchParams(window.location.search);
-const PACIENTE_ID = params.get('id');
-
-document.getElementById('btn-voltar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
-document.getElementById('btn-cancelar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
-
-function toast(msg, tipo) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + tipo;
-  t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 3000);
-}
-
-function v(id) { return document.getElementById(id)?.value || ''; }
-function set(id, val) { const el = document.getElementById(id); if (el && val !== null && val !== undefined) el.value = val; }
-
-function toggleResp() {
-  const val = document.getElementById('f_resp_tipo').value;
-  const campos = document.getElementById('resp-campos');
-  campos.style.display = val === 'outra_pessoa' ? 'block' : 'none';
-}
-
-async function carregar() {
-  if (!PACIENTE_ID) {
-    document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">ID não informado.</div>';
-    return;
-  }
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  const data = await r.json();
-  if (!data.length) {
-    document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">Paciente não encontrada.</div>';
-    return;
-  }
-  const p = data[0];
-  renderForm(p);
-}
-
-function renderForm(p) {
-  document.getElementById('form-container').innerHTML = `
-    <div class="section">
-      <div class="section-title">Dados pessoais</div>
-      <div class="grid-2" style="margin-bottom:14px">
-        <div class="field" style="grid-column:1/-1"><label>Nome completo</label><input id="f_nome" type="text"></div>
-      </div>
-      <div class="grid-3">
-        <div class="field"><label>Data de nascimento</label><input id="f_nasc" type="date"></div>
-        <div class="field"><label>Gênero</label>
-          <select id="f_genero">
-            <option value="">Selecione</option>
-            <option value="feminino">Feminino</option>
-            <option value="masculino">Masculino</option>
-            <option value="não-binário">Não-binário</option>
-            <option value="outro">Outro</option>
-            <option value="prefiro não dizer">Prefiro não dizer</option>
-          </select>
+  <!-- ===================== SHELL AUTENTICADO ===================== -->
+  <div id="view-app" class="shell view">
+    <div class="topbar">
+      <div class="who">
+        <div class="selo-mini">
+          <img src="icone_selo.png" alt="" onerror="this.onerror=null; this.src='selo.png';">
         </div>
-        <div class="field"><label>Estado civil</label>
-          <select id="f_estado_civil">
-            <option value="">Selecione</option>
-            <option value="solteiro(a)">Solteiro(a)</option>
-            <option value="casado(a)">Casado(a)</option>
-            <option value="divorciado(a)">Divorciado(a)</option>
-            <option value="viúvo(a)">Viúvo(a)</option>
-            <option value="união estável">União estável</option>
-          </select>
+        <div class="greeting">Olá, <b id="nome-paciente">—</b></div>
+      </div>
+      <div class="logout" onclick="fazerLogout()">Sair</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-home-btn" onclick="switchTab('home')">Início</button>
+      <button class="tab-btn" id="tab-sessoes-btn" onclick="switchTab('sessoes')">Sessões</button>
+      <button class="tab-btn" id="tab-financeiro-btn" onclick="switchTab('financeiro')">Financeiro</button>
+      <button class="tab-btn" id="tab-documentos-btn" onclick="switchTab('documentos')">Documentos</button>
+      <button class="tab-btn" id="tab-solicitacoes-btn" onclick="switchTab('solicitacoes')">Solicitações</button>
+      <button class="tab-btn" id="tab-jornada-btn" onclick="switchTab('jornada')">Minha Jornada</button>
+    </div>
+
+    <div class="tab-content">
+    <!-- ABA: HOME -->
+    <div id="tab-home" class="tab-view">
+      <div class="panel">
+        <h2>Próxima sessão</h2>
+        <div class="session-next" id="proxima-sessao-box">
+          <div class="date-block">
+            <div class="d">14</div>
+            <div class="m">jul</div>
+          </div>
+          <div class="info">
+            <div class="t">Terça-feira, 10h00</div>
+            <div class="s">Atendimento online · link disponível no dia</div>
+          </div>
+        </div>
+        <button class="btn" style="margin-top:14px;" onclick="abrirAvisoGravacao()">Entrar na sessão</button>
+      </div>
+
+      <!-- Modal de aviso antes de abrir o Meet -->
+      <div class="modal-overlay" id="modal-gravacao">
+        <div class="modal-card">
+          <div class="modal-head">
+            <h2>Antes de entrar</h2>
+          </div>
+          <p style="font-size:13.5px; color:var(--ink); line-height:1.6; margin:0 0 16px;">
+            Esta sessão poderá ser gravada em áudio, conforme sua autorização de cadastro, exclusivamente para fins de transcrição clínica. A gravação é descartada assim que a evolução da sessão é registrada no seu prontuário.
+          </p>
+          <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:0 0 18px;">
+            Se você não quiser que esta sessão específica seja gravada, avise sua psicóloga no início do encontro — isso não afeta o atendimento.
+          </p>
+          <button class="btn" onclick="continuarParaMeet()">Entendi, continuar</button>
+          <button class="btn ghost" style="margin-top:8px;" onclick="fecharAvisoGravacao()">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="panel" id="painel-avaliacao" style="display:none;">
+        <h2>Como foi a sua última sessão?</h2>
+        <p class="small" id="avaliacao-sessao-info">Sua opinião ajuda a psicóloga a acompanhar como você está se sentindo com o processo.</p>
+        <div class="mood-row" id="avaliacao-row">
+          <button class="mood-btn mood-radiante" onclick="selecionarAvaliacao(this, 'otima')" data-label="Ótima" onmouseenter="mostrarLabelAvaliacao(this)" onmouseleave="ocultarLabelAvaliacao()">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14.5 18.5c0-1.8 1.2-3.2 2.8-3.2s2.8 1.4 2.8 3.2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M24 18.5c0-1.8 1.2-3.2 2.8-3.2s2.8 1.4 2.8 3.2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M13.5 25c2 4.3 5.2 6.5 8.5 6.5s6.5-2.2 8.5-6.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-bem" onclick="selecionarAvaliacao(this, 'boa')" data-label="Boa" onmouseenter="mostrarLabelAvaliacao(this)" onmouseleave="ocultarLabelAvaliacao()">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1.8" fill="#fff"/>
+              <circle cx="27" cy="19" r="1.8" fill="#fff"/>
+              <path d="M15.5 26.5c2.2 2.5 4.4 3.7 6.5 3.7s4.3-1.2 6.5-3.7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-neutro" onclick="selecionarAvaliacao(this, 'neutra')" data-label="Neutra" onmouseenter="mostrarLabelAvaliacao(this)" onmouseleave="ocultarLabelAvaliacao()">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1.8" fill="#fff"/>
+              <circle cx="27" cy="19" r="1.8" fill="#fff"/>
+              <path d="M15.5 28h13" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-dificil" onclick="selecionarAvaliacao(this, 'ruim')" data-label="Ruim" onmouseenter="mostrarLabelAvaliacao(this)" onmouseleave="ocultarLabelAvaliacao()">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14 20c1.2-1.5 2.9-2.2 4.8-1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25.2 18.2c1.9-.4 3.6.3 4.8 1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 30c2.2-2.6 4.3-3.8 6-3.8s3.8 1.2 6 3.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-chorando" onclick="selecionarAvaliacao(this, 'pessima')" data-label="Péssima" onmouseenter="mostrarLabelAvaliacao(this)" onmouseleave="ocultarLabelAvaliacao()">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14 19.5c1.2-1.5 2.9-2.2 4.8-1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25.2 17.7c1.9-.4 3.6.3 4.8 1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16.5 30.5c2.2-2.6 4.1-3.8 5.8-3.8s3.6 1.2 5.8 3.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12.8 20.5c1.8 1.6 1.8 3.6 0.6 5.4a1.9 1.9 0 0 1-2.8-2.5c1-1.1 1.6-1.8 2.2-2.9Z" fill="#fff"/>
+            </svg>
+          </button>
+        </div>
+        <p class="mood-label" id="avaliacao-label">&nbsp;</p>
+        <p class="mood-confirm" id="avaliacao-confirm">Obrigada por compartilhar. Isso ajuda muito o seu acompanhamento. 🤍</p>
+      </div>
+
+      <div class="panel" id="painel-humor">
+        <h2>Como está se sentindo hoje?</h2>
+        <p class="small">Registre o seu humor para compreendermos as suas oscilações durante a semana.</p>
+        <div class="mood-row" id="mood-row">
+          <button class="mood-btn mood-radiante" data-mood="radiante" data-label="Radiante" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14.5 18.5c0-1.8 1.2-3.2 2.8-3.2s2.8 1.4 2.8 3.2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M24 18.5c0-1.8 1.2-3.2 2.8-3.2s2.8 1.4 2.8 3.2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M13.5 25c2 4.3 5.2 6.5 8.5 6.5s6.5-2.2 8.5-6.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-bem" data-mood="bem" data-label="Bem" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1.8" fill="#fff"/>
+              <circle cx="27" cy="19" r="1.8" fill="#fff"/>
+              <path d="M15.5 26.5c2.2 2.5 4.4 3.7 6.5 3.7s4.3-1.2 6.5-3.7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-neutro" data-mood="neutro" data-label="Neutro" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1.8" fill="#fff"/>
+              <circle cx="27" cy="19" r="1.8" fill="#fff"/>
+              <path d="M15.5 28h13" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-cansado" data-mood="cansado" data-label="Cansado" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14.5 18.5h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M24.5 18.5h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 29c2.2-2.2 4.3-3.3 6-3.3s3.8 1.1 6 3.3" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-dificil" data-mood="dificil" data-label="Difícil" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14 20c1.2-1.5 2.9-2.2 4.8-1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25.2 18.2c1.9-.4 3.6.3 4.8 1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 30c2.2-2.6 4.3-3.8 6-3.8s3.8 1.2 6 3.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-chorando" data-mood="chorando" data-label="Chorando" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14 19.5c1.2-1.5 2.9-2.2 4.8-1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25.2 17.7c1.9-.4 3.6.3 4.8 1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16.5 30.5c2.2-2.6 4.1-3.8 5.8-3.8s3.6 1.2 5.8 3.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12.8 20.5c1.8 1.6 1.8 3.6 0.6 5.4a1.9 1.9 0 0 1-2.8-2.5c1-1.1 1.6-1.8 2.2-2.9Z" fill="#fff"/>
+            </svg>
+          </button>
+        </div>
+        <p class="mood-label" id="mood-label">&nbsp;</p>
+        <div class="mood-confirmar" id="mood-confirmar">
+          <p>Confirma que você está se sentindo <b id="mood-confirmar-nome">—</b>?</p>
+          <div class="mood-confirmar-botoes">
+            <button class="btn ghost" onclick="cancelarSelecaoHumor()">Escolher de novo</button>
+            <button class="btn" onclick="confirmarHumor()">Confirmar</button>
+          </div>
+        </div>
+        <p class="mood-confirm" id="mood-confirm">Registrado. Obrigada por compartilhar. 🤍</p>
+      </div>
+
+      <div class="panel">
+        <div class="task-card-head">
+          <h2>Tarefas da semana</h2>
+          <button class="task-access-btn" onclick="abrirTarefas()">Acessar</button>
+        </div>
+        <p class="small" id="tarefas-resumo">O que ficou combinado no nosso último encontro.</p>
+        <div class="task-list" id="task-list-preview"></div>
+      </div>
+    </div>
+
+    <!-- Modal de Tarefas -->
+    <div class="modal-overlay" id="tarefas-modal">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h2>Tarefas da semana</h2>
+          <button class="modal-close" onclick="fecharTarefas()">✕</button>
+        </div>
+        <p class="small">Marque o que você já fez. Quando terminar, toque em Salvar.</p>
+        <div class="task-list" id="task-list-full"></div>
+        <button class="btn" onclick="salvarTarefas()">Salvar</button>
+        <div class="task-historico">
+          <p class="small" style="margin-top:20px; margin-bottom:2px;"><b>Seu histórico</b></p>
+          <p class="small" style="margin-bottom:8px;">Quantas tarefas você concluiu em cada semana anterior.</p>
+          <div id="task-historico-list"></div>
         </div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Contato</div>
-      <div class="grid-2">
-        <div class="field"><label>E-mail</label><input id="f_email" type="email"></div>
-        <div class="field"><label>Telefone</label><input id="f_tel" type="text"></div>
-        <div class="field"><label>WhatsApp</label><input id="f_wpp" type="text"></div>
-        <div class="field"><label>CPF</label><input id="f_cpf" type="text"></div>
+    <!-- ABA: SESSÕES -->
+    <div id="tab-sessoes" class="tab-view hidden">
+      <div class="panel">
+        <h2>Histórico de sessões</h2>
+        <p class="small">Toque em um status para ver o detalhe.</p>
+        <div id="status-cards"></div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Endereço</div>
-      <div class="grid-3">
-        <div class="field"><label>CEP</label><input id="f_cep" type="text"></div>
-        <div class="field" style="grid-column:2/-1"><label>Logradouro</label><input id="f_end" type="text"></div>
-        <div class="field"><label>Número</label><input id="f_num" type="text"></div>
-        <div class="field"><label>Complemento</label><input id="f_comp" type="text"></div>
-        <div class="field"><label>Bairro</label><input id="f_bairro" type="text"></div>
-        <div class="field"><label>Cidade</label><input id="f_cidade" type="text"></div>
-        <div class="field"><label>Estado</label><input id="f_estado" type="text"></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Informações clínicas</div>
-      <div class="grid-2">
-        <div class="field"><label>Escolaridade</label><input id="f_escol" type="text"></div>
-        <div class="field"><label>Profissão</label><input id="f_prof" type="text"></div>
-        <div class="field"><label>Como conheceu</label><input id="f_como" type="text"></div>
-        <div class="field"><label>Tem filhos?</label>
-          <select id="f_filhos">
-            <option value="">Selecione</option>
-            <option value="true">Sim</option>
-            <option value="false">Não</option>
-          </select>
-        </div>
-      </div>
-      <div class="field" style="margin-top:14px"><label>Anotações</label><textarea id="f_anot"></textarea></div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Atendimento</div>
-      <div class="grid-2">
-        <div class="field"><label>Frequência</label>
-          <select id="f_freq">
-            <option value="">Selecione</option>
-            <option value="semanal">Semanal</option>
-            <option value="quinzenal">Quinzenal</option>
-            <option value="mensal">Mensal</option>
-          </select>
-        </div>
-        <div class="field"><label>Forma de pagamento</label>
-          <select id="f_pgto">
-            <option value="">Selecione</option>
-            <option value="PIX">PIX</option>
-            <option value="transferencia">Transferência bancária</option>
-            <option value="link_pagamento">Link de pagamento</option>
-          </select>
-        </div>
-        <div class="field" style="grid-column:1/-1"><label>Link Google Meet</label><input id="f_meet" type="url" placeholder="https://meet.google.com/..."></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Financeiro</div>
-      <div class="grid-2">
-        <div class="field" style="grid-column:1/-1">
-          <label>Quando a paciente costuma pagar?</label>
-          <select id="f_data_pgto">
-            <option value="">Selecione</option>
-            <option value="Todo dia 5">Todo dia 5</option>
-            <option value="Todo dia 10">Todo dia 10</option>
-            <option value="Todo dia 15">Todo dia 15</option>
-            <option value="Todo dia 20">Todo dia 20</option>
-            <option value="Todo dia 25">Todo dia 25</option>
-            <option value="Todo dia 30">Todo dia 30</option>
-            <option value="Antes da sessão">Antes da sessão</option>
-            <option value="Depois da sessão">Depois da sessão</option>
-          </select>
-        </div>
-        <div class="field" style="grid-column:1/-1">
-          <label>Responsável financeiro</label>
-          <select id="f_resp_tipo" onchange="toggleResp()">
-            <option value="propria">A própria paciente</option>
-            <option value="outra_pessoa">Outra pessoa</option>
-          </select>
-        </div>
-        <div id="resp-campos" style="display:none; grid-column:1/-1">
-          <div class="grid-2">
-            <div class="field"><label>Nome do responsável</label><input id="f_resp_nome" type="text"></div>
-            <div class="field"><label>CPF do responsável</label><input id="f_resp_cpf" type="text" placeholder="000.000.000-00"></div>
+    <!-- ABA: PROGRESSO -->
+    <div id="tab-jornada" class="tab-view hidden">
+      <div class="panel">
+        <h2>Sua jornada até aqui</h2>
+        <p class="small">Aqui está o caminho que você já percorreu comigo.</p>
+        <div class="prog-grid">
+          <div class="prog-card">
+            <div class="prog-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="13" rx="2"/><path d="M8 21h8M12 17.5V21"/></svg>
+            </div>
+            <div class="prog-value">11</div>
+            <div class="prog-label">Encontros realizados</div>
+          </div>
+          <div class="prog-card">
+            <div class="prog-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
+            </div>
+            <div class="prog-value">9h10</div>
+            <div class="prog-label">Dedicadas a você</div>
+          </div>
+          <div class="prog-card">
+            <div class="prog-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12.5l2.5 2.5L16 9"/><circle cx="12" cy="12" r="9.5"/></svg>
+            </div>
+            <div class="prog-value">6</div>
+            <div class="prog-label">Tarefas concluídas</div>
+          </div>
+          <div class="prog-card">
+            <div class="prog-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10h8M8 14h5"/></svg>
+            </div>
+            <div class="prog-value">2</div>
+            <div class="prog-label">Tarefas pendentes</div>
           </div>
         </div>
       </div>
+
+      <div class="panel">
+        <h2>Sua evolução</h2>
+        <p class="small">Arraste para comparar dois momentos da sua jornada.</p>
+
+        <div class="highlight-inline">
+          <div class="highlight-badge" id="highlight-badge">4 meses de jornada · Mar/2026 – Jul/2026</div>
+          <div class="highlight-stat" id="highlight-stat">+4,1</div>
+          <p class="highlight-desc">pontos no seu índice geral de bem-estar</p>
+        </div>
+
+        <div class="range-filter">
+          <div class="range-labels">
+            <span id="range-label-start">Mar/2026</span>
+            <span id="range-label-end">Jul/2026</span>
+          </div>
+          <div class="range-slider-wrap">
+            <div class="range-track"></div>
+            <div class="range-track-fill" id="range-track-fill"></div>
+            <input type="range" min="0" max="4" step="1" value="0" id="range-start" class="range-input" oninput="onRangeStartChange()">
+            <input type="range" min="0" max="4" step="1" value="4" id="range-end" class="range-input" oninput="onRangeEndChange()">
+          </div>
+          <div class="range-ticks"><span>Mar</span><span>Abr</span><span>Mai</span><span>Jun</span><span>Jul</span></div>
+        </div>
+
+        <div class="indic-legend">
+          <span><i class="dot-inicio"></i> <span id="legend-inicio">Mar/2026</span></span>
+          <span><i class="dot-agora"></i> <span id="legend-agora">Jul/2026</span></span>
+        </div>
+
+        <div class="indic-row" data-key="humor">
+          <div class="indic-head"><span class="indic-name">Humor</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
+        </div>
+        <div class="indic-row" data-key="ansiosos">
+          <div class="indic-head"><span class="indic-name">Sintomas ansiosos</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
+        </div>
+        <div class="indic-row" data-key="depressivos">
+          <div class="indic-head"><span class="indic-name">Sintomas depressivos</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
+        </div>
+        <div class="indic-row" data-key="insonia">
+          <div class="indic-head"><span class="indic-name">Insônia</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
+        </div>
+        <div class="indic-row" data-key="tolerancia">
+          <div class="indic-head"><span class="indic-name">Tolerância à frustração</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
+        </div>
+        <div class="indic-row" data-key="limites">
+          <div class="indic-head"><span class="indic-name">Posicionamento e limites</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
+        </div>
+        <div class="indic-row" data-key="autocuidado" style="margin-bottom:0;">
+          <div class="indic-head"><span class="indic-name">Autocuidado</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
+        </div>
+      </div>
+
+      <div class="panel invest-panel">
+        <button class="invest-toggle" onclick="toggleInvest()">
+          <span class="invest-toggle-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6M15 7h6"/></svg>
+            Total investido
+          </span>
+          <svg id="invest-chevron" class="invest-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="invest-details" id="invest-details">
+          <div class="invest-detail-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>
+            <span>Primeiro pagamento: 03/03/2026</span>
+          </div>
+          <div class="invest-detail-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v19M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.4-5 3.3c0 4.4 10 2 10 6.4 0 2-2.2 3.3-5 3.3s-5-1.4-5-3.3"/></svg>
+            <span>Total investido: R$ 2.420,00</span>
+          </div>
+        </div>
+        <p class="invest-note">O valor investido caminhou lado a lado com a sua evolução.
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;vertical-align:-1px;color:var(--rose);"><path d="M12 21s-7-4.35-9.5-8.5C.6 8.7 2 5 5.5 4.2 8 3.6 10 5 12 7.5 14 5 16 3.6 18.5 4.2 22 5 23.4 8.7 21.5 12.5 19 16.65 12 21 12 21Z"/></svg>
+        </p>
+      </div>
     </div>
-  `;
 
-  // Preencher valores
-  set('f_nome', p.nome_completo);
-  set('f_nasc', p.data_nascimento);
-  set('f_genero', p.genero);
-  set('f_estado_civil', p.estado_civil);
-  set('f_email', p.email);
-  set('f_tel', p.telefone);
-  set('f_wpp', p.whatsapp);
-  set('f_cpf', p.cpf);
-  set('f_cep', p.cep);
-  set('f_end', p.endereco);
-  set('f_num', p.numero || p['Nº']);
-  set('f_comp', p.complemento);
-  set('f_bairro', p.bairro);
-  set('f_cidade', p.cidade);
-  set('f_estado', p.estado);
-  set('f_escol', p.escolaridade);
-  set('f_prof', p.profissao);
-  set('f_como', p.como_conheceu);
-  set('f_filhos', p.tem_filhos !== null && p.tem_filhos !== undefined ? String(p.tem_filhos) : '');
-  set('f_anot', p.anotacoes);
-  set('f_freq', p.frequencia);
-  set('f_pgto', p.forma_pagamento);
-  set('f_meet', p.link_meet);
-  set('f_data_pgto', p.data_pagamento);
-  if (p.responsavel_financeiro === 'outra_pessoa') {
-    document.getElementById('f_resp_tipo').value = 'outra_pessoa';
-    document.getElementById('resp-campos').style.display = 'block';
-    set('f_resp_nome', p.responsavel_nome);
-    set('f_resp_cpf', p.responsavel_cpf);
-  }
-}
+    <!-- ABA: FINANCEIRO -->
+    <div id="tab-financeiro" class="tab-view hidden">
+      <div class="panel">
+        <h2>Resumo financeiro</h2>
+        <p class="small">Um panorama dos seus pagamentos até agora.</p>
+        <div class="fin-grid">
+          <div class="fin-card alerta">
+            <div class="fin-label">Pendente</div>
+            <div class="fin-value">R$ 220,00</div>
+          </div>
+          <div class="fin-card">
+            <div class="fin-label">Último pagamento</div>
+            <div class="fin-value">R$ 220,00</div>
+            <div class="fin-caption">30/06/2026 · Pix</div>
+          </div>
+        </div>
+      </div>
 
-async function salvar() {
-  if (!PACIENTE_ID) return;
-  const dados = {
-    nome_completo: v('f_nome'),
-    data_nascimento: v('f_nasc') || null,
-    genero: v('f_genero') || null,
-    estado_civil: v('f_estado_civil') || null,
-    email: v('f_email') || null,
-    telefone: v('f_tel') || null,
-    whatsapp: v('f_wpp') || null,
-    cpf: v('f_cpf') || null,
-    cep: v('f_cep') || null,
-    endereco: v('f_end') || null,
-    numero: v('f_num') || null,
-    complemento: v('f_comp') || null,
-    bairro: v('f_bairro') || null,
-    cidade: v('f_cidade') || null,
-    estado: v('f_estado') || null,
-    escolaridade: v('f_escol') || null,
-    profissao: v('f_prof') || null,
-    como_conheceu: v('f_como') || null,
-    tem_filhos: v('f_filhos') !== '' ? v('f_filhos') === 'true' : null,
-    anotacoes: v('f_anot') || null,
-    frequencia: v('f_freq') || null,
-    forma_pagamento: v('f_pgto') || null,
-    link_meet: v('f_meet') || null,
-    data_pagamento: v('f_data_pgto') || null,
-    responsavel_financeiro: v('f_resp_tipo') === 'outra_pessoa' ? 'outra_pessoa' : 'propria',
-    responsavel_nome: v('f_resp_tipo') === 'outra_pessoa' ? (v('f_resp_nome') || null) : null,
-    responsavel_cpf: v('f_resp_tipo') === 'outra_pessoa' ? (v('f_resp_cpf') || null) : null,
+      <div class="panel">
+        <h2>Histórico de pagamentos</h2>
+        <div class="filtro-grade">
+          <div class="filtro-campo">
+            <label class="filtro-campo-label">Data</label>
+            <select class="filtro-select-grade" id="select-periodo" onchange="setFiltroSelect('periodo', this.value)">
+              <option value="">Tudo</option>
+              <option value="2026-06">Junho/2026</option>
+              <option value="2026-05">Maio/2026</option>
+              <option value="2026-04">Abril/2026</option>
+            </select>
+          </div>
+          <div class="filtro-campo">
+            <label class="filtro-campo-label">Status</label>
+            <select class="filtro-select-grade" id="select-status" onchange="setFiltroSelect('status', this.value)">
+              <option value="">Todos</option>
+              <option value="pago">Pago</option>
+              <option value="pendente">Pendente</option>
+            </select>
+          </div>
+          <div class="filtro-campo">
+            <label class="filtro-campo-label">Forma</label>
+            <select class="filtro-select-grade" id="select-forma" onchange="setFiltroSelect('forma', this.value)">
+              <option value="">Todas</option>
+              <option value="Pix">Pix</option>
+              <option value="Cartão">Cartão</option>
+            </select>
+          </div>
+          <div class="filtro-campo">
+            <label class="filtro-campo-label">Recibo</label>
+            <select class="filtro-select-grade" id="select-recibo" onchange="setFiltroSelect('recibo', this.value)">
+              <option value="">Todos</option>
+              <option value="emitido">Emitido</option>
+              <option value="pendente">Pendente</option>
+            </select>
+          </div>
+        </div>
+        <div id="lista-pagamentos"></div>
+      </div>
+    </div>
+
+    <!-- ABA: DOCUMENTOS -->
+    <div id="tab-documentos" class="tab-view hidden">
+      <div class="panel">
+        <h2>Contratos e termos</h2>
+        <p class="small">Documentos assinados no início do acompanhamento.</p>
+        <div class="doc-lista">
+          <div class="doc-item">
+            <div class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6a1.5 1.5 0 0 0-1.5 1.5v16A1.5 1.5 0 0 0 6 21.5h12a1.5 1.5 0 0 0 1.5-1.5V8.5L14 2.5Z"/><path d="M13.5 2.5V8h5.5"/></svg></div>
+            <div class="doc-info">
+              <div class="doc-nome">Contrato de prestação de serviços</div>
+              <div class="doc-data">Assinado em 03/03/2026</div>
+            </div>
+            <button class="doc-btn">Visualizar</button>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6a1.5 1.5 0 0 0-1.5 1.5v16A1.5 1.5 0 0 0 6 21.5h12a1.5 1.5 0 0 0 1.5-1.5V8.5L14 2.5Z"/><path d="M13.5 2.5V8h5.5"/></svg></div>
+            <div class="doc-info">
+              <div class="doc-nome">Termo de consentimento informado</div>
+              <div class="doc-data">Assinado em 03/03/2026</div>
+            </div>
+            <button class="doc-btn">Visualizar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Sua anamnese</h2>
+        <p class="small">Um resumo simples do que conversamos no início do acompanhamento.</p>
+        <div class="doc-lista">
+          <div class="doc-item doc-item-expand">
+            <div class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-9.5-8.5C.6 8.7 2 5 5.5 4.2 8 3.6 10 5 12 7.5 14 5 16 3.6 18.5 4.2 22 5 23.4 8.7 21.5 12.5 19 16.65 12 21 12 21Z"/></svg></div>
+            <div class="doc-info">
+              <div class="doc-nome">Resumo da anamnese inicial</div>
+              <div class="doc-data">Registrado em 03/03/2026</div>
+            </div>
+            <button class="doc-btn" onclick="toggleAnamnese()">
+              <span id="anamnese-btn-label">Ver resumo</span>
+            </button>
+          </div>
+          <div class="anamnese-detail" id="anamnese-detail">
+            <p>Você chegou relatando sobrecarga emocional, autocrítica intensa e dificuldade em dizer não para os outros, o que vinha afetando seu bem-estar no dia a dia.</p>
+            <p>A partir daí, construímos juntas um plano de acompanhamento usando abordagens de Terapia Cognitivo-Comportamental e Terapia Focada na Compaixão, com foco em fortalecer o autocuidado e o posicionamento saudável nas relações.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Outros documentos</h2>
+        <p class="small">Arquivos enviados por você ou compartilhados por mim.</p>
+        <div class="empty">Nenhum outro documento por aqui ainda.</div>
+      </div>
+    </div>
+
+    <!-- ABA: SOLICITAÇÕES -->
+    <div id="tab-solicitacoes" class="tab-view hidden">
+      <div class="panel" id="painel-nova-solicitacao">
+        <h2>Nova solicitação</h2>
+        <p class="small">Escolha o tipo de solicitação.</p>
+        <div class="filtro-linha" style="margin-bottom:16px;">
+          <button class="chip active" id="tipo-ajuste" onclick="setTipoSolicitacao('ajuste')" style="flex:1;">Ajuste de sessão</button>
+          <button class="chip" id="tipo-financeiro" onclick="setTipoSolicitacao('financeiro')" style="flex:1;">Financeiro</button>
+          <button class="chip" id="tipo-documento" onclick="setTipoSolicitacao('documento')" style="flex:1;">Documento médico</button>
+        </div>
+
+        <!-- FORM: AJUSTE DE SESSÃO -->
+        <div id="form-ajuste" class="solic-form">
+          <div class="field">
+            <label for="ajuste-sessao">Sessão</label>
+            <select id="ajuste-sessao"></select>
+          </div>
+          <div class="field">
+            <label for="ajuste-acao">O que você precisa?</label>
+            <select id="ajuste-acao" onchange="atualizarLimiteAjuste()">
+              <option value="">Selecione…</option>
+              <option value="remarcar">Remarcar</option>
+              <option value="cancelar">Cancelar</option>
+            </select>
+          </div>
+          <div class="limite-box" id="limite-box"></div>
+          <div class="field">
+            <label for="ajuste-justificativa">Justificativa</label>
+            <textarea id="ajuste-justificativa" rows="3" placeholder="Conte rapidamente o motivo…"></textarea>
+          </div>
+          <div class="taxa-aviso" id="taxa-aviso">
+            <p id="taxa-aviso-texto"></p>
+            <label class="taxa-check" id="taxa-check-wrap">
+              <input type="checkbox" id="taxa-aceite" onchange="onAceiteTaxa(this.checked)">
+              <span id="taxa-check-texto">Estou ciente da taxa adicional e desejo continuar.</span>
+            </label>
+
+            <div class="pix-box" id="pix-box">
+              <p class="pix-titulo">Pagamento da taxa — R$ <span id="pix-valor-texto">0,00</span></p>
+              <div class="pix-qr" id="pix-qr"></div>
+              <button class="doc-btn" style="width:100%; margin-bottom:12px;" onclick="copiarPix()">Copiar código Pix (copia e cola)</button>
+              <div class="pix-alt">
+                <p class="pix-alt-titulo">Ou transferência bancária</p>
+                <p class="pix-alt-linha">Ana Caroline Avila Souza</p>
+                <p class="pix-alt-linha">Banco do Brasil · Ag: 1876-7 · CC: 451414-9</p>
+                <p class="pix-alt-linha">Chave Pix: contato@psi3ana.com</p>
+              </div>
+            </div>
+          </div>
+          <button class="btn" id="btn-enviar-ajuste" onclick="enviarSolicitacao('ajuste')">Enviar solicitação</button>
+        </div>
+
+        <!-- FORM: FINANCEIRO -->
+        <div id="form-financeiro" class="solic-form hidden">
+          <div class="field">
+            <label for="fin-assunto">Assunto</label>
+            <select id="fin-assunto">
+              <option>Segunda via de recibo</option>
+              <option>Alterar forma de pagamento</option>
+              <option>Dúvida sobre cobrança</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fin-mensagem">Mensagem</label>
+            <textarea id="fin-mensagem" rows="3" placeholder="Descreva sua solicitação…"></textarea>
+          </div>
+          <button class="btn" onclick="enviarSolicitacao('financeiro')">Enviar solicitação</button>
+        </div>
+
+        <!-- FORM: DOCUMENTO MÉDICO -->
+        <div id="form-documento" class="solic-form hidden">
+          <div class="field">
+            <label for="doc-tipo">Tipo de documento</label>
+            <select id="doc-tipo">
+              <option>Encaminhamento</option>
+              <option>Declaração</option>
+              <option>Prontuário</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="doc-mensagem">Detalhes</label>
+            <textarea id="doc-mensagem" rows="3" placeholder="Para qual finalidade você precisa do documento?"></textarea>
+          </div>
+          <div class="taxa-aviso show" style="background:var(--rose-soft); border-color:var(--line);">
+            <p style="color:var(--mocha);">Este pedido pode ser atendido em até <b>10 dias úteis</b>.</p>
+            <label class="taxa-check" style="color:var(--mocha);">
+              <input type="checkbox" id="doc-aceite" onchange="document.getElementById('btn-enviar-documento').disabled = !this.checked;">
+              Estou ciente do prazo e desejo enviar a solicitação.
+            </label>
+          </div>
+          <button class="btn" id="btn-enviar-documento" onclick="enviarSolicitacao('documento')" disabled>Enviar solicitação</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="task-card-head">
+          <h2>Minhas solicitações</h2>
+          <button class="task-access-btn hidden" id="btn-nova-solicitacao" onclick="mostrarFormSolicitacao()">+ Solicitação</button>
+        </div>
+        <p class="small">Acompanhe o andamento dos seus pedidos.</p>
+        <div id="lista-solicitacoes"></div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+<script>
+  var fakePaciente = { nome: "Camila", cpf: "123.456.789-00", plano: "integral", tipoContratacao: "avulso" };
+
+  var LIMITES_PLANO = {
+    integral:   { cancelamento: 2, remarcacao: 3 },
+    social:     { cancelamento: 1, remarcacao: 2 },
+    social_b:   { cancelamento: 1, remarcacao: 2 },
+    social_50:  { cancelamento: 1, remarcacao: 2 },
+    gratuidade: { cancelamento: 1, remarcacao: 2 }
+  };
+  var NOME_PLANO = {
+    integral: 'Integral',
+    social: 'Valor Social',
+    social_b: 'Valor Social B',
+    social_50: 'Valor Social (avulso)',
+    gratuidade: 'Gratuidade'
+  };
+  // Taxa adicional = valor de uma sessão avulsa ou de pacote, conforme o plano. null = sem essa opção. Gratuidade = sempre bloqueia.
+  var TAXA_PLANO = {
+    integral:  { avulso: 150.00, pacote: 125.00 },
+    social:    { avulso: 90.00,  pacote: 80.00 },
+    social_b:  { avulso: 75.00,  pacote: 62.50 },
+    social_50: { avulso: 50.00,  pacote: null },
+    gratuidade: null
+  };
+  var PIX_CHAVE = 'contato@psi3ana.com';
+  var PIX_NOME = 'ANA CAROLINE AVILA SOUZA';
+  var PIX_CIDADE = 'CRICIUMA';
+
+  var usoMes = { cancelamento: 1, remarcacao: 3 };
+
+  var fakeSolicitacoes = [];
+
+  var fakeSessoes = [
+    { data: "28/07/2026", hora: "10:00", encontro: 14, status: "agendada" },
+    { data: "21/07/2026", hora: "10:00", encontro: 13, status: "agendada" },
+    { data: "14/07/2026", hora: "10:00", encontro: 12, status: "agendada" },
+    { data: "30/06/2026", hora: "10:00", encontro: 11, status: "realizada", avaliada: false },
+    { data: "16/06/2026", hora: "10:00", encontro: 10, status: "realizada", avaliada: true },
+    { data: "02/06/2026", hora: "10:00", encontro: 9, status: "faltou" },
+    { data: "19/05/2026", hora: "10:00", encontro: 8, status: "remarcada" },
+    { data: "05/05/2026", hora: "10:00", encontro: 8, status: "cancelada" },
+    { data: "21/04/2026", hora: "10:00", encontro: 7, status: "realizada", avaliada: true }
+  ];
+
+  var statusLabel = {
+    agendada: "Agendada", confirmada: "Confirmada", cancelada: "Cancelada",
+    remarcada: "Remarcada", realizada: "Realizada", faltou: "Faltou"
   };
 
-  // remover nulls
-  Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
+  var fakePagamentos = [
+    { data: "30/06/2026", encontro: 11, valor: "R$ 220,00", status: "pago", forma: "Pix", recibo: "emitido" },
+    { data: "16/06/2026", encontro: 10, valor: "R$ 220,00", status: "pago", forma: "Pix", recibo: "emitido" },
+    { data: "02/06/2026", encontro: 9, valor: "R$ 220,00", status: "pendente", forma: "—", recibo: "pendente" },
+    { data: "19/05/2026", encontro: 8, valor: "R$ 220,00", status: "pago", forma: "Cartão", recibo: "emitido" },
+    { data: "21/04/2026", encontro: 7, valor: "R$ 220,00", status: "pago", forma: "Pix", recibo: "emitido" },
+    { data: "07/04/2026", encontro: 6, valor: "R$ 220,00", status: "pago", forma: "Pix", recibo: "emitido" }
+  ];
 
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`
-      },
-      body: JSON.stringify(dados)
-    });
-    if (r.ok) {
-      toast('Dados salvos com sucesso!', 'ok');
-      setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`, 1200);
-    } else {
-      const err = await r.json();
-      toast('Erro: ' + (err.message || JSON.stringify(err)), 'erro');
-    }
-  } catch(e) {
-    toast('Erro: ' + e.message, 'erro');
+  var filtroPagamento = { periodo: 'todos', status: 'todos', forma: 'todos', recibo: 'todos' };
+
+  function parseDataBR(str){
+    var partes = str.split('/');
+    return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
   }
-}
 
-carregar();
+  function setFiltroSelect(grupo, valor){
+    filtroPagamento[grupo] = valor === '' ? 'todos' : valor;
+    renderPagamentos();
+  }
+
+  function goTo(view){
+    document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+    document.getElementById('view-' + view).classList.add('active');
+    var appWrap = document.querySelector('.app');
+    appWrap.style.display = (view === 'app') ? 'none' : 'block';
+  }
+
+  var EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYE_CLOSED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c7 0 10.5 7 10.5 7a13.6 13.6 0 0 1-3.1 3.9M6.5 6.5C3.6 8.3 1.5 12 1.5 12s3.5 7 10.5 7a10.4 10.4 0 0 0 4.3-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
+  function toggleEye(inputId, el){
+    var input = document.getElementById(inputId);
+    if(input.type === 'password'){ input.type = 'text'; el.innerHTML = EYE_CLOSED; }
+    else { input.type = 'password'; el.innerHTML = EYE_OPEN; }
+  }
+
+  document.getElementById('login-cpf').addEventListener('input', function(e){
+    var v = e.target.value.replace(/\D/g,'').slice(0,11);
+    if(v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    else if(v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    else if(v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    e.target.value = v;
+  });
+
+  function fakeLogin(){
+    var cpf = document.getElementById('login-cpf').value.trim();
+    var senha = document.getElementById('login-senha').value.trim();
+    var errBox = document.getElementById('login-error');
+    if(!cpf || !senha){
+      errBox.textContent = 'Preencha CPF e senha para continuar.';
+      errBox.classList.add('show');
+      return;
+    }
+    errBox.classList.remove('show');
+    sessionStorage.setItem('psiana_portal_logado', 'true');
+    sessionStorage.setItem('psiana_portal_nome', fakePaciente.nome);
+    entrarNoApp();
+  }
+
+  function validarSenha(){
+    var s = document.getElementById('nova-senha').value;
+    setHint('hint-tam', s.length >= 8);
+    setHint('hint-num', /\d/.test(s));
+    setHint('hint-esp', /[^A-Za-z0-9]/.test(s));
+  }
+  function setHint(id, ok){
+    var el = document.getElementById(id);
+    el.classList.toggle('ok', ok);
+    el.classList.toggle('err', false);
+  }
+
+  function criarSenha(){
+    var nova = document.getElementById('nova-senha').value;
+    var confirma = document.getElementById('confirma-senha').value;
+    var errBox = document.getElementById('senha-error');
+    var valido = nova.length >= 8 && /\d/.test(nova) && /[^A-Za-z0-9]/.test(nova);
+    if(!valido){
+      errBox.textContent = 'A senha precisa ter 8+ caracteres, um número e um caractere especial.';
+      errBox.classList.add('show');
+      return;
+    }
+    if(nova !== confirma){
+      errBox.textContent = 'As senhas não coincidem.';
+      errBox.classList.add('show');
+      return;
+    }
+    errBox.classList.remove('show');
+    sessionStorage.setItem('psiana_portal_logado', 'true');
+    sessionStorage.setItem('psiana_portal_nome', fakePaciente.nome);
+    entrarNoApp();
+  }
+
+  function entrarNoApp(){
+    document.getElementById('nome-paciente').textContent = sessionStorage.getItem('psiana_portal_nome') || fakePaciente.nome;
+    verificarAvaliacaoPendente();
+    renderTarefasPreview();
+    renderSessoes();
+    renderPagamentos();
+    renderEvolucao(0, 4);
+    popularSelectSessoes();
+    renderSolicitacoes();
+    goTo('app');
+  }
+
+  function fazerLogout(){
+    sessionStorage.removeItem('psiana_portal_logado');
+    sessionStorage.removeItem('psiana_portal_nome');
+    goTo('login');
+  }
+
+  function switchTab(tab){
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.tab-view').forEach(function(v){ v.classList.add('hidden'); });
+    document.getElementById('tab-' + tab + '-btn').classList.add('active');
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+  }
+
+  var EVOL_MONTHS = ['Mar', 'Abr', 'Mai', 'Jun', 'Jul'];
+  var EVOL_DATA = {
+    humor:       [30, 40, 55, 65, 75],
+    ansiosos:    [20, 30, 40, 50, 60],
+    depressivos: [25, 35, 45, 55, 65],
+    insonia:     [30, 40, 50, 60, 70],
+    tolerancia:  [25, 35, 45, 55, 65],
+    limites:     [20, 30, 40, 50, 60],
+    autocuidado: [15, 25, 35, 45, 55]
+  };
+
+  function onRangeStartChange(){
+    var startInput = document.getElementById('range-start');
+    var endInput = document.getElementById('range-end');
+    var s = parseInt(startInput.value);
+    var e = parseInt(endInput.value);
+    if(s > e){ endInput.value = s; e = s; }
+    renderEvolucao(s, e);
+  }
+
+  function onRangeEndChange(){
+    var startInput = document.getElementById('range-start');
+    var endInput = document.getElementById('range-end');
+    var e = parseInt(endInput.value);
+    var s = parseInt(startInput.value);
+    if(e < s){ startInput.value = e; s = e; }
+    renderEvolucao(s, e);
+  }
+
+  function renderEvolucao(s, e){
+    var pctStart = (s / 4) * 100;
+    var pctEnd = (e / 4) * 100;
+    var fill = document.getElementById('range-track-fill');
+    fill.style.left = pctStart + '%';
+    fill.style.width = (pctEnd - pctStart) + '%';
+
+    var startLabel = EVOL_MONTHS[s] + '/2026';
+    var endLabel = EVOL_MONTHS[e] + '/2026';
+    document.getElementById('range-label-start').textContent = startLabel;
+    document.getElementById('range-label-end').textContent = endLabel;
+    document.getElementById('legend-inicio').textContent = startLabel;
+    document.getElementById('legend-agora').textContent = endLabel;
+
+    Object.keys(EVOL_DATA).forEach(function(key){
+      var row = document.querySelector('.indic-row[data-key="' + key + '"]');
+      if(!row) return;
+      var vs = EVOL_DATA[key][s];
+      var ve = EVOL_DATA[key][e];
+      row.querySelector('.indic-dot.inicio').style.left = vs + '%';
+      row.querySelector('.indic-dot.agora').style.left = ve + '%';
+      var delta = row.querySelector('.indic-delta');
+      if(ve > vs){ delta.textContent = '↑ Melhora'; delta.style.background = '#E7F3EA'; delta.style.color = '#2E7D32'; }
+      else if(ve < vs){ delta.textContent = '↓ Atenção'; delta.style.background = '#FFF1E0'; delta.style.color = '#B5680F'; }
+      else { delta.textContent = 'Estável'; delta.style.background = '#F2ECEC'; delta.style.color = '#8A7A75'; }
+    });
+
+    var keys = Object.keys(EVOL_DATA);
+    var sumS = 0, sumE = 0;
+    keys.forEach(function(k){ sumS += EVOL_DATA[k][s]; sumE += EVOL_DATA[k][e]; });
+    var avgS = (sumS / keys.length) / 10;
+    var avgE = (sumE / keys.length) / 10;
+    var diff = (avgE - avgS);
+    var diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(1).replace('.', ',');
+    document.getElementById('highlight-stat').textContent = diffStr;
+
+    var monthsDiff = e - s;
+    var mesesTexto = monthsDiff === 0 ? 'Mesmo mês' : monthsDiff + (monthsDiff === 1 ? ' mês' : ' meses') + ' de jornada';
+    document.getElementById('highlight-badge').textContent = mesesTexto + ' · ' + startLabel + ' – ' + endLabel;
+  }
+
+  function setTipoSolicitacao(tipo){
+    ['ajuste', 'financeiro', 'documento'].forEach(function(t){
+      document.getElementById('tipo-' + t).classList.toggle('active', t === tipo);
+      document.getElementById('form-' + t).classList.toggle('hidden', t !== tipo);
+    });
+    if(tipo === 'ajuste') atualizarLimiteAjuste();
+  }
+
+  function crc16ccitt(str){
+    var crc = 0xFFFF;
+    for(var c = 0; c < str.length; c++){
+      crc ^= (str.charCodeAt(c) << 8);
+      for(var i = 0; i < 8; i++){
+        if(crc & 0x8000){ crc = ((crc << 1) ^ 0x1021) & 0xFFFF; }
+        else { crc = (crc << 1) & 0xFFFF; }
+      }
+    }
+    var hex = crc.toString(16).toUpperCase();
+    while(hex.length < 4){ hex = '0' + hex; }
+    return hex;
+  }
+
+  function tlv(id, value){
+    var len = value.length.toString();
+    while(len.length < 2){ len = '0' + len; }
+    return id + len + value;
+  }
+
+  function montarPayloadPix(valor){
+    var chaveField = tlv('00', 'br.gov.bcb.pix') + tlv('01', PIX_CHAVE);
+    var merchantAccountInfo = tlv('26', chaveField);
+    var mcc = tlv('52', '0000');
+    var moeda = tlv('53', '986');
+    var valorField = tlv('54', valor.toFixed(2));
+    var pais = tlv('58', 'BR');
+    var nomeField = tlv('59', PIX_NOME.substring(0, 25));
+    var cidadeField = tlv('60', PIX_CIDADE.substring(0, 15));
+    var addData = tlv('62', tlv('05', '***'));
+
+    var semCRC = tlv('00', '01') + merchantAccountInfo + mcc + moeda + valorField + pais + nomeField + cidadeField + addData + '6304';
+    return semCRC + crc16ccitt(semCRC);
+  }
+
+  var pixPayloadAtual = '';
+
+  function gerarQrPix(valor){
+    pixPayloadAtual = montarPayloadPix(valor);
+    document.getElementById('pix-valor-texto').textContent = valor.toFixed(2).replace('.', ',');
+    var qrEl = document.getElementById('pix-qr');
+    qrEl.innerHTML = '';
+    new QRCode(qrEl, { text: pixPayloadAtual, width: 170, height: 170, colorDark: '#785D56', colorLight: '#ffffff' });
+  }
+
+  function copiarPix(){
+    navigator.clipboard.writeText(pixPayloadAtual).then(function(){
+      alert('Código Pix copiado! Cole no app do seu banco na opção Pix Copia e Cola.');
+    }).catch(function(){
+      alert('Não foi possível copiar automaticamente. Código: ' + pixPayloadAtual);
+    });
+  }
+
+  function onAceiteTaxa(marcado){
+    document.getElementById('btn-enviar-ajuste').disabled = !marcado;
+    document.getElementById('pix-box').classList.toggle('show', marcado);
+  }
+
+  function parseDataHora(dataStr, horaStr){
+    var pd = dataStr.split('/');
+    var ph = horaStr.split(':');
+    return new Date(parseInt(pd[2]), parseInt(pd[1]) - 1, parseInt(pd[0]), parseInt(ph[0]), parseInt(ph[1]));
+  }
+
+  function popularSelectSessoes(){
+    var agora = new Date(2026, 6, 3, 9, 0); // referência de "agora" para a demonstração
+    var limiteMinimo = new Date(agora.getTime() + 12 * 60 * 60 * 1000);
+    var opcoes = fakeSessoes.filter(function(s){
+      if(s.status !== 'agendada') return false;
+      var dt = parseDataHora(s.data, s.hora);
+      if(dt.getMonth() !== agora.getMonth() || dt.getFullYear() !== agora.getFullYear()) return false;
+      if(dt < limiteMinimo) return false;
+      return true;
+    });
+    var select = document.getElementById('ajuste-sessao');
+    if(opcoes.length === 0){
+      select.innerHTML = '<option value="">Nenhuma sessão disponível para ajuste</option>';
+      return;
+    }
+    select.innerHTML = opcoes.map(function(s){
+      return '<option value="' + s.data + '">Encontro ' + s.encontro + ' · ' + s.data + ' · ' + s.hora.replace(':', 'h') + '</option>';
+    }).join('');
+  }
+
+  function atualizarLimiteAjuste(){
+    var acao = document.getElementById('ajuste-acao').value;
+    var aviso = document.getElementById('taxa-aviso');
+    var btn = document.getElementById('btn-enviar-ajuste');
+    var limiteBox = document.getElementById('limite-box');
+
+    if(acao === ''){
+      limiteBox.innerHTML = '';
+      aviso.classList.remove('show');
+      document.getElementById('pix-box').classList.remove('show');
+      btn.disabled = true;
+      return;
+    }
+
+    var chave = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
+    var plano = fakePaciente.plano;
+    var limites = LIMITES_PLANO[plano];
+    var limite = limites[chave];
+    var usados = usoMes[chave];
+    var nomePlano = NOME_PLANO[plano];
+
+    limiteBox.innerHTML =
+      'Plano ' + nomePlano + ': <span class="limite-num">' + usados + ' de ' + limite + '</span> ' +
+      (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' usados este mês';
+
+    var aceite = document.getElementById('taxa-aceite');
+    var checkWrap = document.getElementById('taxa-check-wrap');
+    var pixBox = document.getElementById('pix-box');
+
+    if(usados < limite){
+      aviso.classList.remove('show');
+      pixBox.classList.remove('show');
+      btn.disabled = false;
+      return;
+    }
+
+    aviso.classList.add('show');
+    aceite.checked = false;
+    pixBox.classList.remove('show');
+
+    if(plano === 'gratuidade'){
+      document.getElementById('taxa-aviso-texto').textContent = 'Você já atingiu o limite mensal de ' + (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' do plano Gratuidade. Não é possível enviar novas solicitações de ajuste até o próximo mês.';
+      checkWrap.style.display = 'none';
+      btn.disabled = true;
+      return;
+    }
+
+    checkWrap.style.display = 'flex';
+    var taxaPlano = TAXA_PLANO[plano];
+    var valor = taxaPlano[fakePaciente.tipoContratacao];
+    if(valor == null){ valor = taxaPlano.avulso; }
+
+    document.getElementById('taxa-aviso-texto').textContent = 'Você já atingiu o limite mensal de ' + (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' do seu plano. Esta solicitação terá uma taxa adicional de R$ ' + valor.toFixed(2).replace('.', ',') + ' (equivalente ao valor de uma sessão), mediante seu aceite.';
+    btn.disabled = true;
+    gerarQrPix(valor);
+  }
+
+  function mostrarFormSolicitacao(){
+    document.getElementById('painel-nova-solicitacao').classList.remove('hidden');
+    document.getElementById('btn-nova-solicitacao').classList.add('hidden');
+  }
+
+  function esconderFormSolicitacao(){
+    document.getElementById('painel-nova-solicitacao').classList.add('hidden');
+    document.getElementById('btn-nova-solicitacao').classList.remove('hidden');
+  }
+
+  function enviarSolicitacao(tipo){
+    var item = { tipo: tipo, data: '03/07/2026', status: 'aguardando' };
+    if(tipo === 'ajuste'){
+      var acao = document.getElementById('ajuste-acao').value;
+      var sessaoSelect = document.getElementById('ajuste-sessao');
+      var sessaoTexto = sessaoSelect.options[sessaoSelect.selectedIndex] ? sessaoSelect.options[sessaoSelect.selectedIndex].text : '';
+      item.titulo = (acao === 'cancelar' ? 'Cancelamento' : 'Remarcação') + ' · ' + sessaoTexto;
+      var chaveUso = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
+      usoMes[chaveUso]++;
+    } else if(tipo === 'financeiro'){
+      item.titulo = document.getElementById('fin-assunto').value;
+    } else {
+      item.titulo = document.getElementById('doc-tipo').value;
+    }
+    fakeSolicitacoes.unshift(item);
+    renderSolicitacoes();
+    esconderFormSolicitacao();
+
+    if(tipo === 'ajuste'){
+      document.getElementById('ajuste-justificativa').value = '';
+      document.getElementById('taxa-aceite').checked = false;
+      document.getElementById('pix-box').classList.remove('show');
+      document.getElementById('ajuste-acao').value = '';
+      document.getElementById('btn-enviar-ajuste').disabled = true;
+      atualizarLimiteAjuste();
+    } else if(tipo === 'financeiro'){
+      document.getElementById('fin-mensagem').value = '';
+    } else {
+      document.getElementById('doc-mensagem').value = '';
+      document.getElementById('doc-aceite').checked = false;
+      document.getElementById('btn-enviar-documento').disabled = true;
+    }
+  }
+
+  var SOLIC_ICONS = {
+    ajuste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>',
+    financeiro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v19M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.4-5 3.3c0 4.4 10 2 10 6.4 0 2-2.2 3.3-5 3.3s-5-1.4-5-3.3"/></svg>',
+    documento: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6a1.5 1.5 0 0 0-1.5 1.5v16A1.5 1.5 0 0 0 6 21.5h12a1.5 1.5 0 0 0 1.5-1.5V8.5L14 2.5Z"/><path d="M13.5 2.5V8h5.5"/></svg>'
+  };
+  var SOLIC_STATUS_LABEL = { aguardando: 'Aguardando resposta', aprovada: 'Aprovada', recusada: 'Recusada' };
+
+  function renderSolicitacoes(){
+    var wrap = document.getElementById('lista-solicitacoes');
+    if(fakeSolicitacoes.length === 0){
+      wrap.innerHTML = '<div class="empty">Nenhuma solicitação enviada ainda.</div>';
+      return;
+    }
+    wrap.innerHTML = fakeSolicitacoes.map(function(s){
+      return '<div class="solic-item">' +
+        '<div class="solic-icon">' + SOLIC_ICONS[s.tipo] + '</div>' +
+        '<div class="solic-info">' +
+          '<div class="t">' + s.titulo + '</div>' +
+          '<div class="s">' + s.data + '</div>' +
+        '</div>' +
+        '<div class="solic-status ' + s.status + '">' + SOLIC_STATUS_LABEL[s.status] + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  var fakeTarefas = [
+    { id: 't1', text: 'Praticar respiração antes de dormir (3x)', done: true },
+    { id: 't2', text: 'Registrar 1 situação em que disse "não"', done: false },
+    { id: 't3', text: 'Preencher o RPD de uma situação da semana', done: false }
+  ];
+  var fakeTarefasHistorico = [
+    { semana: '23/06 – 29/06', concluidas: 3, total: 3 },
+    { semana: '16/06 – 22/06', concluidas: 2, total: 3 }
+  ];
+  var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+
+  function taskItemHtml(t, interativo){
+    return '<div class="task-item ' + (t.done ? 'done ' : '') + (interativo ? 'interativo' : '') + '"' +
+      (interativo ? ' onclick="toggleTarefa(\'' + t.id + '\')"' : '') + '>' +
+      '<div class="task-check">' + (t.done ? CHECK_SVG : '') + '</div>' +
+      '<span class="task-text">' + t.text + '</span>' +
+    '</div>';
+  }
+
+  function renderTarefasPreview(){
+    document.getElementById('task-list-preview').innerHTML = fakeTarefas.map(function(t){ return taskItemHtml(t, false); }).join('');
+    var feitas = fakeTarefas.filter(function(t){ return t.done; }).length;
+    document.getElementById('tarefas-resumo').textContent = feitas + ' de ' + fakeTarefas.length + ' concluídas esta semana.';
+  }
+
+  function renderTarefasFull(){
+    document.getElementById('task-list-full').innerHTML = fakeTarefas.map(function(t){ return taskItemHtml(t, true); }).join('');
+  }
+
+  function renderTarefasHistorico(){
+    document.getElementById('task-historico-list').innerHTML = fakeTarefasHistorico.map(function(h){
+      return '<div class="task-hist-item"><span class="semana">Semana de ' + h.semana + '</span><span class="contagem">' + h.concluidas + ' de ' + h.total + ' concluídas</span></div>';
+    }).join('');
+  }
+
+  function toggleTarefa(id){
+    var t = fakeTarefas.find(function(x){ return x.id === id; });
+    t.done = !t.done;
+    renderTarefasFull();
+  }
+
+  var LINK_MEET_FAKE = 'https://meet.google.com/exemplo-fake-link';
+
+  function abrirAvisoGravacao(){
+    document.getElementById('modal-gravacao').classList.add('open');
+  }
+
+  function fecharAvisoGravacao(){
+    document.getElementById('modal-gravacao').classList.remove('open');
+  }
+
+  function continuarParaMeet(){
+    fecharAvisoGravacao();
+    window.open(LINK_MEET_FAKE, '_blank');
+  }
+
+  function abrirTarefas(){
+    renderTarefasFull();
+    renderTarefasHistorico();
+    document.getElementById('tarefas-modal').classList.add('open');
+  }
+
+  function fecharTarefas(){
+    document.getElementById('tarefas-modal').classList.remove('open');
+  }
+
+  function salvarTarefas(){
+    renderTarefasPreview();
+    fecharTarefas();
+  }
+
+  function toggleAnamnese(){
+    var detail = document.getElementById('anamnese-detail');
+    var label = document.getElementById('anamnese-btn-label');
+    var isOpen = detail.classList.toggle('open');
+    label.textContent = isOpen ? 'Ocultar' : 'Ver resumo';
+  }
+
+  function toggleInvest(){
+    var details = document.getElementById('invest-details');
+    var chevron = document.getElementById('invest-chevron');
+    details.classList.toggle('open');
+    chevron.classList.toggle('open');
+  }
+
+  function mostrarLabelHumor(btn){
+    var label = document.getElementById('mood-label');
+    label.textContent = btn.getAttribute('data-label');
+    label.classList.add('show');
+  }
+  function ocultarLabelHumor(){
+    var label = document.getElementById('mood-label');
+    label.classList.remove('show');
+  }
+
+  function mostrarLabelAvaliacao(btn){
+    var label = document.getElementById('avaliacao-label');
+    label.textContent = btn.getAttribute('data-label');
+    label.classList.add('show');
+  }
+  function ocultarLabelAvaliacao(){
+    document.getElementById('avaliacao-label').classList.remove('show');
+  }
+
+  function verificarAvaliacaoPendente(){
+    var pendente = null;
+    for(var i = 0; i < fakeSessoes.length; i++){
+      var s = fakeSessoes[i];
+      if(s.status === 'realizada' && s.avaliada === false){ pendente = s; break; }
+    }
+    var painel = document.getElementById('painel-avaliacao');
+    if(!pendente){ painel.style.display = 'none'; return; }
+    painel.style.display = 'block';
+    document.getElementById('avaliacao-sessao-info').textContent = 'Encontro ' + pendente.encontro + ' · ' + pendente.data;
+    painel.dataset.encontro = pendente.encontro;
+  }
+
+  function selecionarAvaliacao(btn, valor){
+    document.querySelectorAll('#avaliacao-row .mood-btn').forEach(function(b){ b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    mostrarLabelAvaliacao(btn);
+    clearTimeout(window._avalLabelTimeout);
+    window._avalLabelTimeout = setTimeout(ocultarLabelAvaliacao, 1800);
+
+    var encontro = parseInt(document.getElementById('painel-avaliacao').dataset.encontro);
+    var sessao = fakeSessoes.find(function(s){ return s.encontro === encontro; });
+    if(sessao){ sessao.avaliada = true; sessao.avaliacao = valor; }
+
+    document.getElementById('avaliacao-confirm').classList.add('show');
+    setTimeout(function(){
+      document.getElementById('painel-avaliacao').style.display = 'none';
+    }, 2200);
+  }
+
+  function selecionarHumor(btn){
+    document.querySelectorAll('#mood-row .mood-btn').forEach(function(b){ b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    mostrarLabelHumor(btn);
+    clearTimeout(window._moodLabelTimeout);
+    window._moodLabelTimeout = setTimeout(ocultarLabelHumor, 1800);
+
+    document.getElementById('mood-confirmar-nome').textContent = btn.getAttribute('data-label');
+    document.getElementById('mood-confirmar').classList.add('show');
+  }
+
+  function cancelarSelecaoHumor(){
+    document.querySelectorAll('#mood-row .mood-btn').forEach(function(b){ b.classList.remove('selected'); });
+    document.getElementById('mood-confirmar').classList.remove('show');
+  }
+
+  function confirmarHumor(){
+    document.getElementById('mood-confirmar').classList.remove('show');
+    document.getElementById('mood-confirm').classList.add('show');
+    setTimeout(function(){
+      document.getElementById('painel-humor').style.display = 'none';
+    }, 1800);
+  }
+
+  var STATUS_ICONS = {
+    agendada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>',
+    realizada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+    cancelada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    remarcada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 21v-5h5"/></svg>',
+    faltou: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor"/><circle cx="12" cy="12" r="9.5"/></svg>'
+  };
+  var STATUS_ORDER = ['agendada', 'realizada', 'cancelada', 'remarcada', 'faltou'];
+  var STATUS_LABEL_PLURAL = {
+    agendada: 'Agendadas', realizada: 'Realizadas', cancelada: 'Canceladas',
+    remarcada: 'Remarcadas', faltou: 'Ausentes'
+  };
+
+  function renderSessoes(){
+    var wrap = document.getElementById('status-cards');
+    wrap.innerHTML = STATUS_ORDER.map(function(status){
+      var items = fakeSessoes.filter(function(s){ return s.status === status; });
+      return '<div class="status-card" data-status="' + status + '">' +
+        '<button class="status-card-header" onclick="toggleStatusCard(\'' + status + '\')">' +
+          '<span class="status-icon">' + STATUS_ICONS[status] + '</span>' +
+          '<span class="status-name">' + STATUS_LABEL_PLURAL[status] + '</span>' +
+          '<span class="status-count">' + items.length + '</span>' +
+          '<svg class="status-chevron" id="chevron-' + status + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</button>' +
+        '<div class="status-card-body" id="body-' + status + '">' +
+          (items.length === 0
+            ? '<div class="status-card-empty">Nenhuma sessão neste status.</div>'
+            : items.map(function(s){
+                return '<div class="sess-item">' +
+                  '<div class="sess-dot s-' + s.status + '" style="background:currentColor;"></div>' +
+                  '<div class="info">' +
+                    '<div class="t">Encontro ' + s.encontro + ' &middot; ' + s.data + '</div>' +
+                    '<div class="s">' + s.hora + '</div>' +
+                  '</div>' +
+                  '<div class="sess-status s-' + s.status + '">' + statusLabel[s.status] + '</div>' +
+                '</div>';
+              }).join('')
+          ) +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function toggleStatusCard(status){
+    var body = document.getElementById('body-' + status);
+    var chevron = document.getElementById('chevron-' + status);
+    var isOpen = body.classList.contains('open');
+    document.querySelectorAll('.status-card-body').forEach(function(b){ b.classList.remove('open'); });
+    document.querySelectorAll('.status-chevron').forEach(function(c){ c.classList.remove('open'); });
+    if(!isOpen){
+      body.classList.add('open');
+      chevron.classList.add('open');
+    }
+  }
+
+  function renderPagamentos(){
+    var wrap = document.getElementById('lista-pagamentos');
+    var lista = fakePagamentos.filter(function(p){
+      if(filtroPagamento.status !== 'todos' && p.status !== filtroPagamento.status) return false;
+      if(filtroPagamento.forma !== 'todos' && p.forma !== filtroPagamento.forma) return false;
+      if(filtroPagamento.recibo !== 'todos' && p.recibo !== filtroPagamento.recibo) return false;
+      if(filtroPagamento.periodo !== 'todos'){
+        var d = parseDataBR(p.data);
+        var chave = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        if(chave !== filtroPagamento.periodo) return false;
+      }
+      return true;
+    });
+    if(lista.length === 0){
+      wrap.innerHTML = '<div class="empty">Nenhum pagamento encontrado para esse filtro.</div>';
+      return;
+    }
+    wrap.innerHTML = lista.map(function(p){
+      return '<div class="pgto-item">' +
+        '<div class="info">' +
+          '<div class="t">Encontro ' + p.encontro + ' &middot; ' + p.data + '</div>' +
+        '</div>' +
+        '<div class="valor">' + p.valor + '</div>' +
+        '<div class="pgto-badges">' +
+          '<span class="badge-pgto ' + p.status + '">' + (p.status === 'pago' ? 'Pago' : 'Pendente') + '</span>' +
+          '<span class="badge-recibo ' + p.recibo + '">' + (p.recibo === 'emitido' ? 'Recibo emitido' : 'Recibo pendente') + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  (function init(){
+    if(sessionStorage.getItem('psiana_portal_logado') === 'true'){
+      entrarNoApp();
+    }
+    var params = new URLSearchParams(window.location.search);
+    if(params.get('token')){
+      goTo('primeiro-acesso');
+    }
+  })();
 </script>
 </body>
 </html>
