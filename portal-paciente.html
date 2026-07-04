@@ -178,20 +178,20 @@
     display:flex; align-items:center; justify-content: space-between;
     margin-bottom: 22px;
   }
-  .topbar .who{ display:flex; align-items:center; gap: 12px; }
+  .topbar .who{ display:flex; align-items:center; gap: 14px; }
   .topbar .selo-mini{
-    width:52px; height:52px; border-radius:50%;
+    width:68px; height:68px; border-radius:50%;
     background: var(--card); border:1px solid var(--line);
     display:flex; align-items:center; justify-content:center;
     box-shadow: var(--shadow); flex-shrink:0;
   }
-  .topbar .selo-mini img{ width:32px; height:32px; object-fit:contain; }
-  .topbar .greeting{ font-size: 17px; color: var(--ink-soft); }
+  .topbar .selo-mini img{ width:42px; height:42px; object-fit:contain; }
+  .topbar .greeting{ font-size: 22px; color: var(--ink-soft); }
   .topbar .greeting b{ color: var(--mocha-deep); font-weight:600; }
   .logout{
-    font-size: 12.5px; color: var(--ink-soft); cursor:pointer;
-    border: 1px solid var(--line); padding: 7px 14px; border-radius: 20px;
-    background: var(--card);
+    font-size: 15px; color: var(--ink-soft); cursor:pointer;
+    border: 1px solid var(--line); padding: 9px 18px; border-radius: 20px;
+    background: var(--card); flex-shrink:0;
   }
   .logout:hover{ border-color: var(--rose); color: var(--mocha); }
 
@@ -223,6 +223,7 @@
 
   .task-list{ display:flex; flex-direction:column; gap: 12px; }
   .task-item{ display:flex; align-items:center; gap: 12px; }
+  .task-item.interativo{ cursor:pointer; }
   .task-check{
     width: 20px; height:20px; border-radius:6px; border: 1.6px solid var(--line);
     flex-shrink:0; display:flex; align-items:center; justify-content:center;
@@ -232,6 +233,39 @@
   .task-check svg{ width: 13px; height:13px; }
   .task-text{ font-size: 13.5px; color: var(--ink); }
   .task-item.done .task-text{ color: var(--ink-soft); text-decoration: line-through; }
+
+  .task-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 2px; }
+  .task-card-head h2{ margin-bottom:0; }
+  .task-access-btn{
+    font-size: 12px; padding: 7px 15px; border-radius: 20px;
+    border: 1px solid var(--mocha); background:#fff; color: var(--mocha);
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; white-space:nowrap; flex-shrink:0;
+  }
+  .task-access-btn:hover{ background: var(--rose-soft); }
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background: rgba(62,50,46,0.45);
+    align-items:center; justify-content:center; padding: 20px; z-index: 100;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-card{
+    background: var(--card); border-radius: 20px; padding: 28px 26px;
+    width: 100%; max-width: 420px; max-height: 85vh; overflow-y:auto;
+    box-shadow: 0 20px 50px -12px rgba(62,50,46,0.35);
+  }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 4px; }
+  .modal-head h2{ margin-bottom:0; }
+  .modal-close{
+    border:none; background:none; font-size: 16px; color: var(--ink-soft);
+    cursor:pointer; padding: 4px 8px;
+  }
+  .task-historico{ border-top: 1px solid var(--line); margin-top: 20px; padding-top: 6px; }
+  .task-hist-item{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size: 12.5px; color: var(--ink-soft); padding: 8px 0;
+  }
+  .task-hist-item .semana{ color: var(--ink); }
+  .task-hist-item .contagem{ color: var(--mocha); font-weight: 600; }
 
   .mood-row{ display:flex; justify-content: space-between; margin-top: 4px; }
   .mood-btn{
@@ -259,12 +293,14 @@
 
   /* --- Tabs --- */
   .tabs{
-    display:flex; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line);
+    display:flex; flex-wrap: nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    background: var(--card); border: 1px solid var(--line);
     border-radius: 14px; padding: 4px; margin-bottom: 18px; gap: 3px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow); scrollbar-width: none;
   }
+  .tabs::-webkit-scrollbar{ display:none; }
   .tab-btn{
-    flex: 1 1 42%; text-align:center; padding: 9px 4px; font-size: 12.5px;
+    flex: 0 0 auto; white-space: nowrap; text-align:center; padding: 9px 14px; font-size: 12.5px;
     color: var(--ink-soft); cursor:pointer; border-radius: 10px;
     background:none; border:none; font-family:'Segoe UI', Arial, sans-serif;
   }
@@ -519,6 +555,16 @@
   }
   .taxa-check input{ margin-top: 2px; flex-shrink:0; }
 
+  .pix-box{ display:none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #F5DDB8; text-align:center; }
+  .pix-box.show{ display:block; }
+  .pix-titulo{ font-size: 13.5px; font-weight: 600; color: #8A5A0F; margin: 0 0 12px; }
+  .pix-qr{ display:flex; justify-content:center; margin-bottom: 14px; }
+  .pix-qr img, .pix-qr canvas{ border-radius: 10px; background:#fff; padding: 8px; }
+  .pix-alt{ text-align:left; background:#fff; border-radius: 10px; padding: 12px 14px; }
+  .pix-alt-titulo{ font-size: 11px; text-transform:uppercase; letter-spacing:0.05em; color: var(--ink-soft); margin: 0 0 8px; }
+  .pix-alt-linha{ font-size: 12.5px; color: var(--ink); margin: 0 0 4px; }
+  .pix-alt-linha:last-child{ margin-bottom:0; }
+
   .solic-item{
     display:flex; align-items:center; gap: 12px;
     padding: 12px 0; border-bottom: 1px solid var(--line);
@@ -573,15 +619,26 @@
   /* --- Desktop: área autenticada aproveita mais espaço --- */
   @media (min-width: 860px){
     body{ padding: 56px 24px; align-items: flex-start; }
-    .shell{ max-width: 760px; margin: 0 auto; }
+    .shell{
+      max-width: 900px; margin: 0 auto;
+      display:grid; grid-template-columns: 200px 1fr;
+      grid-template-areas: "topbar topbar" "tabs content";
+      column-gap: 28px;
+    }
+    .topbar{ grid-area: topbar; }
+    .tabs{
+      grid-area: tabs; flex-direction: column; overflow-x: visible;
+      align-items: stretch; height: fit-content; padding: 8px;
+    }
+    .tab-btn{ text-align:left; padding: 12px 14px; font-size: 14px; }
+    .tab-content{ grid-area: content; min-width:0; }
     .panel{ padding: 30px 36px; }
-    .tabs{ flex-wrap: nowrap; }
-    .tab-btn{ flex: 1; font-size: 14px; padding: 11px 0; }
     .prog-grid{ grid-template-columns: repeat(4, 1fr); }
     .fin-grid{ grid-template-columns: repeat(2, minmax(0,220px)); }
     .mood-row{ max-width: 460px; margin-left:auto; margin-right:auto; }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -668,6 +725,7 @@
       <button class="tab-btn" id="tab-jornada-btn" onclick="switchTab('jornada')">Minha Jornada</button>
     </div>
 
+    <div class="tab-content">
     <!-- ABA: HOME -->
     <div id="tab-home" class="tab-view">
       <div class="panel">
@@ -680,25 +738,6 @@
           <div class="info">
             <div class="t">Terça-feira, 10h00</div>
             <div class="s">Atendimento online · link disponível no dia</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>Tarefas da semana</h2>
-        <p class="small">O que ficou combinado no nosso último encontro.</p>
-        <div class="task-list">
-          <div class="task-item done">
-            <div class="task-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
-            <span class="task-text">Praticar respiração antes de dormir (3x)</span>
-          </div>
-          <div class="task-item">
-            <div class="task-check"></div>
-            <span class="task-text">Registrar 1 situação em que disse "não"</span>
-          </div>
-          <div class="task-item">
-            <div class="task-check"></div>
-            <span class="task-text">Preencher o RPD de uma situação da semana</span>
           </div>
         </div>
       </div>
@@ -759,6 +798,32 @@
         </div>
         <p class="mood-label" id="mood-label">&nbsp;</p>
         <p class="mood-confirm" id="mood-confirm">Registrado. Obrigada por compartilhar. 🤍</p>
+      </div>
+
+      <div class="panel">
+        <div class="task-card-head">
+          <h2>Tarefas da semana</h2>
+          <button class="task-access-btn" onclick="abrirTarefas()">Acessar</button>
+        </div>
+        <p class="small" id="tarefas-resumo">O que ficou combinado no nosso último encontro.</p>
+        <div class="task-list" id="task-list-preview"></div>
+      </div>
+    </div>
+
+    <!-- Modal de Tarefas -->
+    <div class="modal-overlay" id="tarefas-modal">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h2>Tarefas da semana</h2>
+          <button class="modal-close" onclick="fecharTarefas()">✕</button>
+        </div>
+        <p class="small">Marque o que você já fez. Quando terminar, toque em Salvar.</p>
+        <div class="task-list" id="task-list-full"></div>
+        <button class="btn" onclick="salvarTarefas()">Salvar</button>
+        <div class="task-historico">
+          <p class="small" style="margin-top:20px; margin-bottom:8px;">Semanas anteriores</p>
+          <div id="task-historico-list"></div>
+        </div>
       </div>
     </div>
 
@@ -1037,11 +1102,23 @@
             <textarea id="ajuste-justificativa" rows="3" placeholder="Conte rapidamente o motivo…"></textarea>
           </div>
           <div class="taxa-aviso" id="taxa-aviso">
-            <p></p>
-            <label class="taxa-check">
-              <input type="checkbox" id="taxa-aceite" onchange="document.getElementById('btn-enviar-ajuste').disabled = !this.checked;">
-              Estou ciente da taxa adicional e desejo continuar.
+            <p id="taxa-aviso-texto"></p>
+            <label class="taxa-check" id="taxa-check-wrap">
+              <input type="checkbox" id="taxa-aceite" onchange="onAceiteTaxa(this.checked)">
+              <span id="taxa-check-texto">Estou ciente da taxa adicional e desejo continuar.</span>
             </label>
+
+            <div class="pix-box" id="pix-box">
+              <p class="pix-titulo">Pagamento da taxa — R$ <span id="pix-valor-texto">0,00</span></p>
+              <div class="pix-qr" id="pix-qr"></div>
+              <button class="doc-btn" style="width:100%; margin-bottom:12px;" onclick="copiarPix()">Copiar código Pix (copia e cola)</button>
+              <div class="pix-alt">
+                <p class="pix-alt-titulo">Ou transferência bancária</p>
+                <p class="pix-alt-linha">Ana Caroline Avila Souza</p>
+                <p class="pix-alt-linha">Banco do Brasil · Ag: 1876-7 · CC: 451414-9</p>
+                <p class="pix-alt-linha">Chave Pix: contato@psi3ana.com</p>
+              </div>
+            </div>
           </div>
           <button class="btn" id="btn-enviar-ajuste" onclick="enviarSolicitacao('ajuste')">Enviar solicitação</button>
         </div>
@@ -1069,16 +1146,23 @@
           <div class="field">
             <label for="doc-tipo">Tipo de documento</label>
             <select id="doc-tipo">
-              <option>Declaração de comparecimento</option>
-              <option>Relatório psicológico</option>
-              <option>Outro</option>
+              <option>Encaminhamento</option>
+              <option>Declaração</option>
+              <option>Prontuário</option>
             </select>
           </div>
           <div class="field">
             <label for="doc-mensagem">Detalhes</label>
             <textarea id="doc-mensagem" rows="3" placeholder="Para qual finalidade você precisa do documento?"></textarea>
           </div>
-          <button class="btn" onclick="enviarSolicitacao('documento')">Enviar solicitação</button>
+          <div class="taxa-aviso show" style="background:var(--rose-soft); border-color:var(--line);">
+            <p style="color:var(--mocha);">Este pedido pode ser atendido em até <b>10 dias úteis</b>.</p>
+            <label class="taxa-check" style="color:var(--mocha);">
+              <input type="checkbox" id="doc-aceite" onchange="document.getElementById('btn-enviar-documento').disabled = !this.checked;">
+              Estou ciente do prazo e desejo enviar a solicitação.
+            </label>
+          </div>
+          <button class="btn" id="btn-enviar-documento" onclick="enviarSolicitacao('documento')" disabled>Enviar solicitação</button>
         </div>
       </div>
 
@@ -1088,17 +1172,40 @@
         <div id="lista-solicitacoes"></div>
       </div>
     </div>
+    </div>
   </div>
 
 </div>
 
 <script>
-  var fakePaciente = { nome: "Camila", cpf: "123.456.789-00", plano: "integral" };
+  var fakePaciente = { nome: "Camila", cpf: "123.456.789-00", plano: "integral", tipoContratacao: "avulso" };
 
   var LIMITES_PLANO = {
-    integral: { cancelamento: 2, remarcacao: 3 },
-    social:   { cancelamento: 1, remarcacao: 2 }
+    integral:   { cancelamento: 2, remarcacao: 3 },
+    social:     { cancelamento: 1, remarcacao: 2 },
+    social_b:   { cancelamento: 1, remarcacao: 2 },
+    social_50:  { cancelamento: 1, remarcacao: 2 },
+    gratuidade: { cancelamento: 1, remarcacao: 2 }
   };
+  var NOME_PLANO = {
+    integral: 'Integral',
+    social: 'Valor Social',
+    social_b: 'Valor Social B',
+    social_50: 'Valor Social (avulso)',
+    gratuidade: 'Gratuidade'
+  };
+  // Taxa adicional = valor de uma sessão avulsa ou de pacote, conforme o plano. null = sem essa opção. Gratuidade = sempre bloqueia.
+  var TAXA_PLANO = {
+    integral:  { avulso: 150.00, pacote: 125.00 },
+    social:    { avulso: 90.00,  pacote: 80.00 },
+    social_b:  { avulso: 75.00,  pacote: 62.50 },
+    social_50: { avulso: 50.00,  pacote: null },
+    gratuidade: null
+  };
+  var PIX_CHAVE = 'contato@psi3ana.com';
+  var PIX_NOME = 'ANA CAROLINE AVILA SOUZA';
+  var PIX_CIDADE = 'CRICIUMA';
+
   var usoMes = { cancelamento: 1, remarcacao: 3 };
 
   var fakeSolicitacoes = [];
@@ -1223,6 +1330,7 @@
 
   function entrarNoApp(){
     document.getElementById('nome-paciente').textContent = sessionStorage.getItem('psiana_portal_nome') || fakePaciente.nome;
+    renderTarefasPreview();
     renderSessoes();
     renderPagamentos();
     renderEvolucao(0, 4);
@@ -1322,14 +1430,72 @@
     if(tipo === 'ajuste') atualizarLimiteAjuste();
   }
 
+  function crc16ccitt(str){
+    var crc = 0xFFFF;
+    for(var c = 0; c < str.length; c++){
+      crc ^= (str.charCodeAt(c) << 8);
+      for(var i = 0; i < 8; i++){
+        if(crc & 0x8000){ crc = ((crc << 1) ^ 0x1021) & 0xFFFF; }
+        else { crc = (crc << 1) & 0xFFFF; }
+      }
+    }
+    var hex = crc.toString(16).toUpperCase();
+    while(hex.length < 4){ hex = '0' + hex; }
+    return hex;
+  }
+
+  function tlv(id, value){
+    var len = value.length.toString();
+    while(len.length < 2){ len = '0' + len; }
+    return id + len + value;
+  }
+
+  function montarPayloadPix(valor){
+    var chaveField = tlv('00', 'br.gov.bcb.pix') + tlv('01', PIX_CHAVE);
+    var merchantAccountInfo = tlv('26', chaveField);
+    var mcc = tlv('52', '0000');
+    var moeda = tlv('53', '986');
+    var valorField = tlv('54', valor.toFixed(2));
+    var pais = tlv('58', 'BR');
+    var nomeField = tlv('59', PIX_NOME.substring(0, 25));
+    var cidadeField = tlv('60', PIX_CIDADE.substring(0, 15));
+    var addData = tlv('62', tlv('05', '***'));
+
+    var semCRC = tlv('00', '01') + merchantAccountInfo + mcc + moeda + valorField + pais + nomeField + cidadeField + addData + '6304';
+    return semCRC + crc16ccitt(semCRC);
+  }
+
+  var pixPayloadAtual = '';
+
+  function gerarQrPix(valor){
+    pixPayloadAtual = montarPayloadPix(valor);
+    document.getElementById('pix-valor-texto').textContent = valor.toFixed(2).replace('.', ',');
+    var qrEl = document.getElementById('pix-qr');
+    qrEl.innerHTML = '';
+    new QRCode(qrEl, { text: pixPayloadAtual, width: 170, height: 170, colorDark: '#785D56', colorLight: '#ffffff' });
+  }
+
+  function copiarPix(){
+    navigator.clipboard.writeText(pixPayloadAtual).then(function(){
+      alert('Código Pix copiado! Cole no app do seu banco na opção Pix Copia e Cola.');
+    }).catch(function(){
+      alert('Não foi possível copiar automaticamente. Código: ' + pixPayloadAtual);
+    });
+  }
+
+  function onAceiteTaxa(marcado){
+    document.getElementById('btn-enviar-ajuste').disabled = !marcado;
+    document.getElementById('pix-box').classList.toggle('show', marcado);
+  }
+
   function atualizarLimiteAjuste(){
     var acao = document.getElementById('ajuste-acao').value;
     var chave = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
-    var limites = LIMITES_PLANO[fakePaciente.plano];
+    var plano = fakePaciente.plano;
+    var limites = LIMITES_PLANO[plano];
     var limite = limites[chave];
     var usados = usoMes[chave];
-    var restam = Math.max(limite - usados, 0);
-    var nomePlano = fakePaciente.plano === 'integral' ? 'Integral' : 'Gratuidade / Valor Social';
+    var nomePlano = NOME_PLANO[plano];
 
     document.getElementById('limite-box').innerHTML =
       'Plano ' + nomePlano + ': <span class="limite-num">' + usados + ' de ' + limite + '</span> ' +
@@ -1338,15 +1504,35 @@
     var aviso = document.getElementById('taxa-aviso');
     var btn = document.getElementById('btn-enviar-ajuste');
     var aceite = document.getElementById('taxa-aceite');
-    if(usados >= limite){
-      aviso.querySelector('p').textContent = 'Você já atingiu o limite mensal de ' + (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' do seu plano. Esta solicitação terá uma taxa adicional, mediante seu aceite.';
-      aviso.classList.add('show');
-      aceite.checked = false;
-      btn.disabled = true;
-    } else {
+    var checkWrap = document.getElementById('taxa-check-wrap');
+    var pixBox = document.getElementById('pix-box');
+
+    if(usados < limite){
       aviso.classList.remove('show');
+      pixBox.classList.remove('show');
       btn.disabled = false;
+      return;
     }
+
+    aviso.classList.add('show');
+    aceite.checked = false;
+    pixBox.classList.remove('show');
+
+    if(plano === 'gratuidade'){
+      document.getElementById('taxa-aviso-texto').textContent = 'Você já atingiu o limite mensal de ' + (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' do plano Gratuidade. Não é possível enviar novas solicitações de ajuste até o próximo mês.';
+      checkWrap.style.display = 'none';
+      btn.disabled = true;
+      return;
+    }
+
+    checkWrap.style.display = 'flex';
+    var taxaPlano = TAXA_PLANO[plano];
+    var valor = taxaPlano[fakePaciente.tipoContratacao];
+    if(valor == null){ valor = taxaPlano.avulso; }
+
+    document.getElementById('taxa-aviso-texto').textContent = 'Você já atingiu o limite mensal de ' + (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' do seu plano. Esta solicitação terá uma taxa adicional de R$ ' + valor.toFixed(2).replace('.', ',') + ' (equivalente ao valor de uma sessão), mediante seu aceite.';
+    btn.disabled = true;
+    gerarQrPix(valor);
   }
 
   function enviarSolicitacao(tipo){
@@ -1354,6 +1540,8 @@
     if(tipo === 'ajuste'){
       var acao = document.getElementById('ajuste-acao').value;
       item.titulo = (acao === 'cancelar' ? 'Cancelamento' : 'Remarcação') + ' · Encontro 12';
+      var chaveUso = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
+      usoMes[chaveUso]++;
     } else if(tipo === 'financeiro'){
       item.titulo = document.getElementById('fin-assunto').value;
     } else {
@@ -1365,10 +1553,15 @@
     if(tipo === 'ajuste'){
       document.getElementById('ajuste-justificativa').value = '';
       document.getElementById('taxa-aceite').checked = false;
+      document.getElementById('pix-box').classList.remove('show');
+      document.getElementById('btn-enviar-ajuste').disabled = true;
+      atualizarLimiteAjuste();
     } else if(tipo === 'financeiro'){
       document.getElementById('fin-mensagem').value = '';
     } else {
       document.getElementById('doc-mensagem').value = '';
+      document.getElementById('doc-aceite').checked = false;
+      document.getElementById('btn-enviar-documento').disabled = true;
     }
   }
 
@@ -1395,6 +1588,62 @@
         '<div class="solic-status ' + s.status + '">' + SOLIC_STATUS_LABEL[s.status] + '</div>' +
       '</div>';
     }).join('');
+  }
+
+  var fakeTarefas = [
+    { id: 't1', text: 'Praticar respiração antes de dormir (3x)', done: true },
+    { id: 't2', text: 'Registrar 1 situação em que disse "não"', done: false },
+    { id: 't3', text: 'Preencher o RPD de uma situação da semana', done: false }
+  ];
+  var fakeTarefasHistorico = [
+    { semana: '23/06 – 29/06', concluidas: 3, total: 3 },
+    { semana: '16/06 – 22/06', concluidas: 2, total: 3 }
+  ];
+  var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+
+  function taskItemHtml(t, interativo){
+    return '<div class="task-item ' + (t.done ? 'done ' : '') + (interativo ? 'interativo' : '') + '"' +
+      (interativo ? ' onclick="toggleTarefa(\'' + t.id + '\')"' : '') + '>' +
+      '<div class="task-check">' + (t.done ? CHECK_SVG : '') + '</div>' +
+      '<span class="task-text">' + t.text + '</span>' +
+    '</div>';
+  }
+
+  function renderTarefasPreview(){
+    document.getElementById('task-list-preview').innerHTML = fakeTarefas.map(function(t){ return taskItemHtml(t, false); }).join('');
+    var feitas = fakeTarefas.filter(function(t){ return t.done; }).length;
+    document.getElementById('tarefas-resumo').textContent = feitas + ' de ' + fakeTarefas.length + ' concluídas esta semana.';
+  }
+
+  function renderTarefasFull(){
+    document.getElementById('task-list-full').innerHTML = fakeTarefas.map(function(t){ return taskItemHtml(t, true); }).join('');
+  }
+
+  function renderTarefasHistorico(){
+    document.getElementById('task-historico-list').innerHTML = fakeTarefasHistorico.map(function(h){
+      return '<div class="task-hist-item"><span class="semana">' + h.semana + '</span><span class="contagem">' + h.concluidas + '/' + h.total + '</span></div>';
+    }).join('');
+  }
+
+  function toggleTarefa(id){
+    var t = fakeTarefas.find(function(x){ return x.id === id; });
+    t.done = !t.done;
+    renderTarefasFull();
+  }
+
+  function abrirTarefas(){
+    renderTarefasFull();
+    renderTarefasHistorico();
+    document.getElementById('tarefas-modal').classList.add('open');
+  }
+
+  function fecharTarefas(){
+    document.getElementById('tarefas-modal').classList.remove('open');
+  }
+
+  function salvarTarefas(){
+    renderTarefasPreview();
+    fecharTarefas();
   }
 
   function toggleAnamnese(){
