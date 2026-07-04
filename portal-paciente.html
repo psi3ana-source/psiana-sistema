@@ -104,7 +104,7 @@
     display:block; font-size: 12.5px; color: var(--mocha);
     margin-bottom: 6px; letter-spacing: 0.02em;
   }
-  .field input{
+  .field input, .field select, .field textarea{
     width:100%;
     padding: 13px 14px;
     border: 1px solid var(--line);
@@ -116,7 +116,8 @@
     outline: none;
     transition: border-color .15s ease, box-shadow .15s ease;
   }
-  .field input:focus{
+  .field textarea{ resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus{
     border-color: var(--rose);
     box-shadow: 0 0 0 3px rgba(200,159,157,0.20);
   }
@@ -497,6 +498,46 @@
   .anamnese-detail.open{ max-height: 400px; padding: 14px 16px; margin-top: 0; }
   .anamnese-detail p{ font-size: 13px; color: var(--ink); line-height: 1.6; margin: 0 0 10px; }
   .anamnese-detail p:last-child{ margin-bottom:0; }
+
+  /* --- Solicitações --- */
+  .solic-form.hidden{ display:none; }
+  .limite-box{
+    display:flex; align-items:center; justify-content:space-between;
+    background: var(--rose-soft); border-radius: 10px; padding: 10px 14px;
+    font-size: 12.5px; color: var(--mocha-deep); margin-bottom: 16px;
+  }
+  .limite-box .limite-num{ font-weight: 600; }
+  .taxa-aviso{
+    display:none; background:#FFF1E0; border: 1px solid #F5DDB8; border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 16px;
+  }
+  .taxa-aviso.show{ display:block; }
+  .taxa-aviso p{ font-size: 12.5px; color: #8A5A0F; margin: 0 0 10px; line-height:1.5; }
+  .taxa-check{
+    display:flex; align-items:flex-start; gap: 8px; font-size: 12px; color: #8A5A0F;
+    cursor:pointer; line-height:1.4;
+  }
+  .taxa-check input{ margin-top: 2px; flex-shrink:0; }
+
+  .solic-item{
+    display:flex; align-items:center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--line);
+  }
+  .solic-item:last-child{ border-bottom:none; }
+  .solic-icon{
+    width: 34px; height:34px; border-radius: 50%; background: var(--rose-soft);
+    color: var(--mocha); flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  }
+  .solic-icon svg{ width: 16px; height:16px; }
+  .solic-info{ flex:1; min-width:0; }
+  .solic-info .t{ font-size: 13.5px; color: var(--ink); }
+  .solic-info .s{ font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+  .solic-status{
+    font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 500; white-space:nowrap;
+  }
+  .solic-status.aguardando{ background:#FCF3DE; color:#A6790F; }
+  .solic-status.aprovada{ background:#E7F3EA; color:#2E7D32; }
+  .solic-status.recusada{ background:#FBEAEA; color:#B5514A; }
   .fin-card{
     background: #FEFCFB; border: 1px solid var(--line); border-radius: 12px;
     padding: 14px 16px;
@@ -623,6 +664,7 @@
       <button class="tab-btn" id="tab-sessoes-btn" onclick="switchTab('sessoes')">Sessões</button>
       <button class="tab-btn" id="tab-financeiro-btn" onclick="switchTab('financeiro')">Financeiro</button>
       <button class="tab-btn" id="tab-documentos-btn" onclick="switchTab('documentos')">Documentos</button>
+      <button class="tab-btn" id="tab-solicitacoes-btn" onclick="switchTab('solicitacoes')">Solicitações</button>
       <button class="tab-btn" id="tab-jornada-btn" onclick="switchTab('jornada')">Minha Jornada</button>
     </div>
 
@@ -958,8 +1000,92 @@
 
       <div class="panel">
         <h2>Outros documentos</h2>
-        <p class="small">Arquivos enviados por você ou compartilhados pela psicóloga.</p>
+        <p class="small">Arquivos enviados por você ou compartilhados por mim.</p>
         <div class="empty">Nenhum outro documento por aqui ainda.</div>
+      </div>
+    </div>
+
+    <!-- ABA: SOLICITAÇÕES -->
+    <div id="tab-solicitacoes" class="tab-view hidden">
+      <div class="panel">
+        <h2>Nova solicitação</h2>
+        <p class="small">Escolha o tipo de solicitação.</p>
+        <div class="filtro-linha" style="margin-bottom:16px;">
+          <button class="chip active" id="tipo-ajuste" onclick="setTipoSolicitacao('ajuste')" style="flex:1;">Ajuste de sessão</button>
+          <button class="chip" id="tipo-financeiro" onclick="setTipoSolicitacao('financeiro')" style="flex:1;">Financeiro</button>
+          <button class="chip" id="tipo-documento" onclick="setTipoSolicitacao('documento')" style="flex:1;">Documento médico</button>
+        </div>
+
+        <!-- FORM: AJUSTE DE SESSÃO -->
+        <div id="form-ajuste" class="solic-form">
+          <div class="field">
+            <label for="ajuste-sessao">Sessão</label>
+            <select id="ajuste-sessao">
+              <option value="14/07/2026">Encontro 12 · 14/07/2026 · 10h00</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ajuste-acao">O que você precisa?</label>
+            <select id="ajuste-acao" onchange="atualizarLimiteAjuste()">
+              <option value="remarcar">Remarcar</option>
+              <option value="cancelar">Cancelar</option>
+            </select>
+          </div>
+          <div class="limite-box" id="limite-box"></div>
+          <div class="field">
+            <label for="ajuste-justificativa">Justificativa</label>
+            <textarea id="ajuste-justificativa" rows="3" placeholder="Conte rapidamente o motivo…"></textarea>
+          </div>
+          <div class="taxa-aviso" id="taxa-aviso">
+            <p></p>
+            <label class="taxa-check">
+              <input type="checkbox" id="taxa-aceite" onchange="document.getElementById('btn-enviar-ajuste').disabled = !this.checked;">
+              Estou ciente da taxa adicional e desejo continuar.
+            </label>
+          </div>
+          <button class="btn" id="btn-enviar-ajuste" onclick="enviarSolicitacao('ajuste')">Enviar solicitação</button>
+        </div>
+
+        <!-- FORM: FINANCEIRO -->
+        <div id="form-financeiro" class="solic-form hidden">
+          <div class="field">
+            <label for="fin-assunto">Assunto</label>
+            <select id="fin-assunto">
+              <option>Segunda via de recibo</option>
+              <option>Alterar forma de pagamento</option>
+              <option>Dúvida sobre cobrança</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fin-mensagem">Mensagem</label>
+            <textarea id="fin-mensagem" rows="3" placeholder="Descreva sua solicitação…"></textarea>
+          </div>
+          <button class="btn" onclick="enviarSolicitacao('financeiro')">Enviar solicitação</button>
+        </div>
+
+        <!-- FORM: DOCUMENTO MÉDICO -->
+        <div id="form-documento" class="solic-form hidden">
+          <div class="field">
+            <label for="doc-tipo">Tipo de documento</label>
+            <select id="doc-tipo">
+              <option>Declaração de comparecimento</option>
+              <option>Relatório psicológico</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="doc-mensagem">Detalhes</label>
+            <textarea id="doc-mensagem" rows="3" placeholder="Para qual finalidade você precisa do documento?"></textarea>
+          </div>
+          <button class="btn" onclick="enviarSolicitacao('documento')">Enviar solicitação</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Minhas solicitações</h2>
+        <p class="small">Acompanhe o andamento dos seus pedidos.</p>
+        <div id="lista-solicitacoes"></div>
       </div>
     </div>
   </div>
@@ -967,7 +1093,15 @@
 </div>
 
 <script>
-  var fakePaciente = { nome: "Camila", cpf: "123.456.789-00" };
+  var fakePaciente = { nome: "Camila", cpf: "123.456.789-00", plano: "integral" };
+
+  var LIMITES_PLANO = {
+    integral: { cancelamento: 2, remarcacao: 3 },
+    social:   { cancelamento: 1, remarcacao: 2 }
+  };
+  var usoMes = { cancelamento: 1, remarcacao: 3 };
+
+  var fakeSolicitacoes = [];
 
   var fakeSessoes = [
     { data: "14/07/2026", hora: "10:00", encontro: 12, status: "agendada" },
@@ -1092,6 +1226,8 @@
     renderSessoes();
     renderPagamentos();
     renderEvolucao(0, 4);
+    atualizarLimiteAjuste();
+    renderSolicitacoes();
     goTo('app');
   }
 
@@ -1176,6 +1312,89 @@
     var monthsDiff = e - s;
     var mesesTexto = monthsDiff === 0 ? 'Mesmo mês' : monthsDiff + (monthsDiff === 1 ? ' mês' : ' meses') + ' de jornada';
     document.getElementById('highlight-badge').textContent = mesesTexto + ' · ' + startLabel + ' – ' + endLabel;
+  }
+
+  function setTipoSolicitacao(tipo){
+    ['ajuste', 'financeiro', 'documento'].forEach(function(t){
+      document.getElementById('tipo-' + t).classList.toggle('active', t === tipo);
+      document.getElementById('form-' + t).classList.toggle('hidden', t !== tipo);
+    });
+    if(tipo === 'ajuste') atualizarLimiteAjuste();
+  }
+
+  function atualizarLimiteAjuste(){
+    var acao = document.getElementById('ajuste-acao').value;
+    var chave = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
+    var limites = LIMITES_PLANO[fakePaciente.plano];
+    var limite = limites[chave];
+    var usados = usoMes[chave];
+    var restam = Math.max(limite - usados, 0);
+    var nomePlano = fakePaciente.plano === 'integral' ? 'Integral' : 'Gratuidade / Valor Social';
+
+    document.getElementById('limite-box').innerHTML =
+      'Plano ' + nomePlano + ': <span class="limite-num">' + usados + ' de ' + limite + '</span> ' +
+      (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' usados este mês';
+
+    var aviso = document.getElementById('taxa-aviso');
+    var btn = document.getElementById('btn-enviar-ajuste');
+    var aceite = document.getElementById('taxa-aceite');
+    if(usados >= limite){
+      aviso.querySelector('p').textContent = 'Você já atingiu o limite mensal de ' + (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' do seu plano. Esta solicitação terá uma taxa adicional, mediante seu aceite.';
+      aviso.classList.add('show');
+      aceite.checked = false;
+      btn.disabled = true;
+    } else {
+      aviso.classList.remove('show');
+      btn.disabled = false;
+    }
+  }
+
+  function enviarSolicitacao(tipo){
+    var item = { tipo: tipo, data: '03/07/2026', status: 'aguardando' };
+    if(tipo === 'ajuste'){
+      var acao = document.getElementById('ajuste-acao').value;
+      item.titulo = (acao === 'cancelar' ? 'Cancelamento' : 'Remarcação') + ' · Encontro 12';
+    } else if(tipo === 'financeiro'){
+      item.titulo = document.getElementById('fin-assunto').value;
+    } else {
+      item.titulo = document.getElementById('doc-tipo').value;
+    }
+    fakeSolicitacoes.unshift(item);
+    renderSolicitacoes();
+
+    if(tipo === 'ajuste'){
+      document.getElementById('ajuste-justificativa').value = '';
+      document.getElementById('taxa-aceite').checked = false;
+    } else if(tipo === 'financeiro'){
+      document.getElementById('fin-mensagem').value = '';
+    } else {
+      document.getElementById('doc-mensagem').value = '';
+    }
+  }
+
+  var SOLIC_ICONS = {
+    ajuste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>',
+    financeiro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v19M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.4-5 3.3c0 4.4 10 2 10 6.4 0 2-2.2 3.3-5 3.3s-5-1.4-5-3.3"/></svg>',
+    documento: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6a1.5 1.5 0 0 0-1.5 1.5v16A1.5 1.5 0 0 0 6 21.5h12a1.5 1.5 0 0 0 1.5-1.5V8.5L14 2.5Z"/><path d="M13.5 2.5V8h5.5"/></svg>'
+  };
+  var SOLIC_STATUS_LABEL = { aguardando: 'Aguardando resposta', aprovada: 'Aprovada', recusada: 'Recusada' };
+
+  function renderSolicitacoes(){
+    var wrap = document.getElementById('lista-solicitacoes');
+    if(fakeSolicitacoes.length === 0){
+      wrap.innerHTML = '<div class="empty">Nenhuma solicitação enviada ainda.</div>';
+      return;
+    }
+    wrap.innerHTML = fakeSolicitacoes.map(function(s){
+      return '<div class="solic-item">' +
+        '<div class="solic-icon">' + SOLIC_ICONS[s.tipo] + '</div>' +
+        '<div class="solic-info">' +
+          '<div class="t">' + s.titulo + '</div>' +
+          '<div class="s">' + s.data + '</div>' +
+        '</div>' +
+        '<div class="solic-status ' + s.status + '">' + SOLIC_STATUS_LABEL[s.status] + '</div>' +
+      '</div>';
+    }).join('');
   }
 
   function toggleAnamnese(){
