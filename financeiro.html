@@ -133,10 +133,38 @@
     background:#fff; color:var(--ink-soft); cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; flex-shrink:0;
   }
   .chip.active{ background:var(--mocha); border-color:var(--mocha); color:#fff; }
+
+  .filtro-grade-solic{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .filtro-campo{ display:flex; flex-direction:column; gap:5px; flex:0 0 180px; }
+  .filtro-campo-largo{ flex:1 1 320px; }
+  .filtro-campo-label{ font-size:11px; color:var(--ink-soft); }
+  .filtro-select-grade{
+    font-size:13px; padding:9px 12px; border-radius:10px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .filtro-select-grade:focus{ outline:none; border-color:var(--rose); }
+
   .filtro-select{
     font-size:12.5px; padding:7px 12px; border-radius:20px; border:1px solid var(--line);
     background:#fff; color:var(--ink); font-family:'Segoe UI', Arial, sans-serif;
   }
+
+  .calendario-wrap{ position:relative; display:flex; align-items:center; }
+  .btn-calendario{
+    width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:#fff;
+    color:var(--mocha); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .btn-calendario:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-calendario svg{ width:15px; height:15px; }
+  .input-calendario{
+    position:absolute; opacity:0; width:32px; height:32px; left:0; top:0; pointer-events:none;
+  }
+  .link-mini{
+    font-size:11.5px; color:var(--mocha); background:none; border:none; cursor:pointer;
+    text-decoration:underline; font-family:'Segoe UI', Arial, sans-serif; flex-shrink:0;
+  }
+  .link-mini:hover{ color:var(--rose); }
+  .periodo-label{ font-size:12px; color:var(--mocha-deep); font-weight:600; }
 
   .fin-lista{ margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
   .fin-item{
@@ -291,24 +319,30 @@
       </div>
     </div>
 
-    <div class="filtro-linha" style="margin-top:22px;">
-      <span class="chip-label">Data</span>
-      <button class="chip active" id="chip-periodo" onclick="setFiltroF('periodo','todos')">Este mês</button>
-      <select class="filtro-select" id="select-periodo" onchange="setFiltroF('periodo', this.value)">
-        <option value="">Outro período…</option>
-        <option value="2026-06">Junho/2026</option>
-        <option value="2026-05">Maio/2026</option>
-      </select>
-    </div>
-    <div class="filtro-linha">
-      <span class="chip-label">Status</span>
-      <button class="chip active" id="chip-status" onclick="setFiltroF('status','todos')">Todos</button>
-      <button class="chip" id="chip-status-pago" onclick="setFiltroF('status','pago')">Pago</button>
-      <button class="chip" id="chip-status-pendente" onclick="setFiltroF('status','pendente')">Pendente</button>
-    </div>
-    <div class="filtro-linha">
-      <span class="chip-label">Paciente</span>
-      <input type="text" class="filtro-select" id="busca-paciente" placeholder="Buscar por nome…" oninput="renderFinanceiro()" style="flex:1;">
+    <div class="filtro-grade-solic" style="margin-top:22px;">
+      <div class="filtro-campo filtro-campo-largo">
+        <label class="filtro-campo-label">Paciente</label>
+        <select class="filtro-select-grade" id="select-paciente-fin" onchange="renderFinanceiro()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filtro-campo">
+        <label class="filtro-campo-label">Data</label>
+        <select class="filtro-select-grade" id="select-periodo-fin" onchange="onPeriodoEscolhido(this.value)">
+          <option value="todos">Todos os períodos</option>
+          <option value="2026-06">Junho/2026</option>
+          <option value="2026-05">Maio/2026</option>
+          <option value="2026-04">Abril/2026</option>
+        </select>
+      </div>
+      <div class="filtro-campo">
+        <label class="filtro-campo-label">Status</label>
+        <select class="filtro-select-grade" id="select-status-fin" onchange="setFiltroF('status', this.value)">
+          <option value="todos">Todos</option>
+          <option value="pago">Pago</option>
+          <option value="pendente">Pendente</option>
+        </select>
+      </div>
     </div>
 
     <div id="lista-financeiro" class="fin-lista"></div>
@@ -343,15 +377,11 @@
 
   function setFiltroF(grupo, valor){
     filtroF[grupo] = valor;
-    if(grupo === 'periodo'){
-      document.getElementById('chip-periodo').classList.toggle('active', valor === 'todos');
-      if(valor !== '') document.getElementById('select-periodo').value = '';
-    }
-    if(grupo === 'status'){
-      document.getElementById('chip-status').classList.toggle('active', valor === 'todos');
-      document.getElementById('chip-status-pago').classList.toggle('active', valor === 'pago');
-      document.getElementById('chip-status-pendente').classList.toggle('active', valor === 'pendente');
-    }
+    renderFinanceiro();
+  }
+
+  function onPeriodoEscolhido(valor){
+    filtroF.periodo = valor;
     renderFinanceiro();
   }
 
@@ -360,11 +390,29 @@
     return (partes[0][0] + (partes[partes.length - 1][0] || '')).toUpperCase();
   }
 
+  function parseDataBRparaISO(dataStr){
+    var p = dataStr.split('/');
+    return p[2] + '-' + p[1] + '-' + p[0];
+  }
+
+  function popularSelectPacientes(){
+    var nomes = fakePagamentos.map(function(p){ return p.paciente; });
+    nomes = nomes.filter(function(n, i){ return nomes.indexOf(n) === i; }).sort();
+    var select = document.getElementById('select-paciente-fin');
+    select.innerHTML = '<option value="">Todos</option>' + nomes.map(function(n){
+      return '<option value="' + n + '">' + n + '</option>';
+    }).join('');
+  }
+
   function renderFinanceiro(){
-    var busca = document.getElementById('busca-paciente').value.toLowerCase();
+    var pacienteSelecionado = document.getElementById('select-paciente-fin').value;
     var lista = fakePagamentos.filter(function(p){
       if(filtroF.status !== 'todos' && p.status !== filtroF.status) return false;
-      if(busca && p.paciente.toLowerCase().indexOf(busca) === -1) return false;
+      if(pacienteSelecionado && p.paciente !== pacienteSelecionado) return false;
+      if(filtroF.periodo !== 'todos'){
+        var iso = parseDataBRparaISO(p.data);
+        if(iso.substring(0, 7) !== filtroF.periodo) return false;
+      }
       return true;
     });
     var wrap = document.getElementById('lista-financeiro');
@@ -393,10 +441,14 @@
   }
 
   function marcarPago(idx){
-    var busca = document.getElementById('busca-paciente').value.toLowerCase();
+    var pacienteSelecionado = document.getElementById('select-paciente-fin').value;
     var listaFiltrada = fakePagamentos.filter(function(p){
       if(filtroF.status !== 'todos' && p.status !== filtroF.status) return false;
-      if(busca && p.paciente.toLowerCase().indexOf(busca) === -1) return false;
+      if(pacienteSelecionado && p.paciente !== pacienteSelecionado) return false;
+      if(filtroF.periodo !== 'todos'){
+        var iso = parseDataBRparaISO(p.data);
+        if(iso.substring(0, 7) !== filtroF.periodo) return false;
+      }
       return true;
     });
     var alvo = listaFiltrada[idx];
@@ -406,6 +458,7 @@
     renderFinanceiro();
   }
 
+  popularSelectPacientes();
   renderFinanceiro();
 
   function sair(){
