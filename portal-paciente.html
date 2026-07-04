@@ -236,6 +236,11 @@
   .mood-cansado{ color: #A78F8A; }
   .mood-dificil{ color: #8592A3; }
   .mood-chorando{ color: #6F8CA8; }
+  .mood-label{
+    font-size: 12.5px; color: var(--mocha); text-align:center; margin: 10px 0 0;
+    min-height: 16px; opacity: 0; transition: opacity .15s ease;
+  }
+  .mood-label.show{ opacity: 1; }
   .mood-confirm{ font-size: 12.5px; color: var(--ok); text-align:center; margin-top: 10px; display:none; }
   .mood-confirm.show{ display:block; }
 
@@ -293,6 +298,23 @@
   .prog-icon svg{ width: 22px; height: 22px; }
   .prog-value{ font-size: 22px; font-weight: 600; color: var(--mocha-deep); line-height:1; }
   .prog-label{ font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height:1.3; }
+
+  /* --- Manchete de destaque --- */
+  .highlight-panel{
+    background: linear-gradient(135deg, var(--rose-soft), #FEFCFB);
+    text-align:center;
+  }
+  .highlight-badge{
+    display:inline-block; font-size: 11px; text-transform:uppercase; letter-spacing:0.06em;
+    color: var(--mocha); background:#fff; border: 1px solid var(--line);
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 14px;
+  }
+  .highlight-stat{
+    font-size: 42px; font-weight: 700; color: var(--mocha-deep); line-height:1;
+  }
+  .highlight-desc{
+    font-size: 13.5px; color: var(--ink); margin: 8px 0 0;
+  }
 
   /* --- Indicadores de evolução --- */
   .indic-legend{
@@ -464,8 +486,8 @@
     <div class="tabs">
       <button class="tab-btn active" id="tab-home-btn" onclick="switchTab('home')">Início</button>
       <button class="tab-btn" id="tab-sessoes-btn" onclick="switchTab('sessoes')">Sessões</button>
-      <button class="tab-btn" id="tab-jornada-btn" onclick="switchTab('jornada')">Minha Jornada</button>
       <button class="tab-btn" id="tab-financeiro-btn" onclick="switchTab('financeiro')">Financeiro</button>
+      <button class="tab-btn" id="tab-jornada-btn" onclick="switchTab('jornada')">Minha Jornada</button>
     </div>
 
     <!-- ABA: HOME -->
@@ -488,7 +510,7 @@
         <h2>Como está se sentindo hoje?</h2>
         <p class="small">Registre o seu humor para compreendermos as suas oscilações durante a semana.</p>
         <div class="mood-row" id="mood-row">
-          <button class="mood-btn mood-radiante" data-mood="radiante" onclick="selecionarHumor(this)" title="Radiante">
+          <button class="mood-btn mood-radiante" data-mood="radiante" data-label="Radiante" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
             <svg viewBox="0 0 44 44" fill="none">
               <circle cx="22" cy="22" r="21" fill="currentColor"/>
               <path d="M14.5 18.5c0-1.8 1.2-3.2 2.8-3.2s2.8 1.4 2.8 3.2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
@@ -496,7 +518,7 @@
               <path d="M13.5 25c2 4.3 5.2 6.5 8.5 6.5s6.5-2.2 8.5-6.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
-          <button class="mood-btn mood-bem" data-mood="bem" onclick="selecionarHumor(this)" title="Bem">
+          <button class="mood-btn mood-bem" data-mood="bem" data-label="Bem" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
             <svg viewBox="0 0 44 44" fill="none">
               <circle cx="22" cy="22" r="21" fill="currentColor"/>
               <circle cx="17" cy="19" r="1.8" fill="#fff"/>
@@ -504,7 +526,7 @@
               <path d="M15.5 26.5c2.2 2.5 4.4 3.7 6.5 3.7s4.3-1.2 6.5-3.7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
-          <button class="mood-btn mood-neutro" data-mood="neutro" onclick="selecionarHumor(this)" title="Neutro">
+          <button class="mood-btn mood-neutro" data-mood="neutro" data-label="Neutro" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
             <svg viewBox="0 0 44 44" fill="none">
               <circle cx="22" cy="22" r="21" fill="currentColor"/>
               <circle cx="17" cy="19" r="1.8" fill="#fff"/>
@@ -512,7 +534,7 @@
               <path d="M15.5 28h13" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
-          <button class="mood-btn mood-cansado" data-mood="cansado" onclick="selecionarHumor(this)" title="Cansado">
+          <button class="mood-btn mood-cansado" data-mood="cansado" data-label="Cansado" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
             <svg viewBox="0 0 44 44" fill="none">
               <circle cx="22" cy="22" r="21" fill="currentColor"/>
               <path d="M14.5 18.5h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
@@ -520,7 +542,7 @@
               <path d="M16 29c2.2-2.2 4.3-3.3 6-3.3s3.8 1.1 6 3.3" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
-          <button class="mood-btn mood-dificil" data-mood="dificil" onclick="selecionarHumor(this)" title="Difícil">
+          <button class="mood-btn mood-dificil" data-mood="dificil" data-label="Difícil" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
             <svg viewBox="0 0 44 44" fill="none">
               <circle cx="22" cy="22" r="21" fill="currentColor"/>
               <path d="M14 20c1.2-1.5 2.9-2.2 4.8-1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
@@ -528,17 +550,17 @@
               <path d="M16 30c2.2-2.6 4.3-3.8 6-3.8s3.8 1.2 6 3.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
-          <button class="mood-btn mood-chorando" data-mood="chorando" onclick="selecionarHumor(this)" title="Chorando">
+          <button class="mood-btn mood-chorando" data-mood="chorando" data-label="Chorando" onmouseenter="mostrarLabelHumor(this)" onmouseleave="ocultarLabelHumor()" onclick="selecionarHumor(this)">
             <svg viewBox="0 0 44 44" fill="none">
               <circle cx="22" cy="22" r="21" fill="currentColor"/>
               <path d="M14 19.5c1.2-1.5 2.9-2.2 4.8-1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
               <path d="M25.2 17.7c1.9-.4 3.6.3 4.8 1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
               <path d="M16.5 30.5c2.2-2.6 4.1-3.8 5.8-3.8s3.6 1.2 5.8 3.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-              <path d="M17.3 21c2.3 3-2.3 4.8-2.3 7.6a2.3 2.3 0 0 0 4.6 0c0-2-1.5-3-2.3-7.6Z" fill="#fff"/>
+              <path d="M12.8 20.5c1.8 1.6 1.8 3.6 0.6 5.4a1.9 1.9 0 0 1-2.8-2.5c1-1.1 1.6-1.8 2.2-2.9Z" fill="#fff"/>
             </svg>
           </button>
         </div>
-        </div>
+        <p class="mood-label" id="mood-label">&nbsp;</p>
         <p class="mood-confirm" id="mood-confirm">Registrado. Obrigada por compartilhar. 🤍</p>
       </div>
     </div>
@@ -554,6 +576,12 @@
 
     <!-- ABA: PROGRESSO -->
     <div id="tab-jornada" class="tab-view hidden">
+      <div class="panel highlight-panel">
+        <div class="highlight-badge">4 meses de jornada · Mar/2026 – Jul/2026</div>
+        <div class="highlight-stat">−60%</div>
+        <p class="highlight-desc">nos sintomas ansiosos desde o início do acompanhamento</p>
+      </div>
+
       <div class="panel">
         <h2>Sua jornada até aqui</h2>
         <p class="small">Aqui está o caminho que você já percorreu comigo.</p>
@@ -593,8 +621,8 @@
         <h2>Sua evolução</h2>
         <p class="small">Como cada área da sua vida mudou desde o início do acompanhamento.</p>
         <div class="indic-legend">
-          <span><i class="dot-inicio"></i> Início</span>
-          <span><i class="dot-agora"></i> Agora</span>
+          <span><i class="dot-inicio"></i> Mar/2026</span>
+          <span><i class="dot-agora"></i> Jul/2026</span>
         </div>
 
         <div class="indic-row">
@@ -800,10 +828,23 @@
     chevron.classList.toggle('open');
   }
 
+  function mostrarLabelHumor(btn){
+    var label = document.getElementById('mood-label');
+    label.textContent = btn.getAttribute('data-label');
+    label.classList.add('show');
+  }
+  function ocultarLabelHumor(){
+    var label = document.getElementById('mood-label');
+    label.classList.remove('show');
+  }
+
   function selecionarHumor(btn){
     document.querySelectorAll('.mood-btn').forEach(function(b){ b.classList.remove('selected'); });
     btn.classList.add('selected');
     document.getElementById('mood-confirm').classList.add('show');
+    mostrarLabelHumor(btn);
+    clearTimeout(window._moodLabelTimeout);
+    window._moodLabelTimeout = setTimeout(ocultarLabelHumor, 1800);
   }
 
   function renderSessoes(){
