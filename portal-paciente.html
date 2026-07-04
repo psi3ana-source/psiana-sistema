@@ -760,6 +760,24 @@
             <div class="s">Atendimento online · link disponível no dia</div>
           </div>
         </div>
+        <button class="btn" style="margin-top:14px;" onclick="abrirAvisoGravacao()">Entrar na sessão</button>
+      </div>
+
+      <!-- Modal de aviso antes de abrir o Meet -->
+      <div class="modal-overlay" id="modal-gravacao">
+        <div class="modal-card">
+          <div class="modal-head">
+            <h2>Antes de entrar</h2>
+          </div>
+          <p style="font-size:13.5px; color:var(--ink); line-height:1.6; margin:0 0 16px;">
+            Esta sessão poderá ser gravada em áudio, conforme sua autorização de cadastro, exclusivamente para fins de transcrição clínica. A gravação é descartada assim que a evolução da sessão é registrada no seu prontuário.
+          </p>
+          <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:0 0 18px;">
+            Se você não quiser que esta sessão específica seja gravada, avise sua psicóloga no início do encontro — isso não afeta o atendimento.
+          </p>
+          <button class="btn" onclick="continuarParaMeet()">Entendi, continuar</button>
+          <button class="btn ghost" style="margin-top:8px;" onclick="fecharAvisoGravacao()">Cancelar</button>
+        </div>
       </div>
 
       <div class="panel" id="painel-avaliacao" style="display:none;">
@@ -1749,6 +1767,21 @@
     var t = fakeTarefas.find(function(x){ return x.id === id; });
     t.done = !t.done;
     renderTarefasFull();
+  }
+
+  var LINK_MEET_FAKE = 'https://meet.google.com/exemplo-fake-link';
+
+  function abrirAvisoGravacao(){
+    document.getElementById('modal-gravacao').classList.add('open');
+  }
+
+  function fecharAvisoGravacao(){
+    document.getElementById('modal-gravacao').classList.remove('open');
+  }
+
+  function continuarParaMeet(){
+    fecharAvisoGravacao();
+    window.open(LINK_MEET_FAKE, '_blank');
   }
 
   function abrirTarefas(){
