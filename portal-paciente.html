@@ -619,11 +619,11 @@
   /* --- Desktop: área autenticada aproveita mais espaço --- */
   @media (min-width: 860px){
     body{ padding: 56px 24px; align-items: flex-start; }
-    .shell{
-      max-width: 900px; margin: 0 auto;
-      display:grid; grid-template-columns: 200px 1fr;
+    #view-app.shell{
+      max-width: 1280px; width: 94%; margin: 0 auto;
+      display:grid; grid-template-columns: 230px 1fr;
       grid-template-areas: "topbar topbar" "tabs content";
-      column-gap: 28px;
+      column-gap: 36px;
     }
     .topbar{ grid-area: topbar; }
     .tabs{
@@ -821,7 +821,8 @@
         <div class="task-list" id="task-list-full"></div>
         <button class="btn" onclick="salvarTarefas()">Salvar</button>
         <div class="task-historico">
-          <p class="small" style="margin-top:20px; margin-bottom:8px;">Semanas anteriores</p>
+          <p class="small" style="margin-top:20px; margin-bottom:2px;"><b>Seu histórico</b></p>
+          <p class="small" style="margin-bottom:8px;">Quantas tarefas você concluiu em cada semana anterior.</p>
           <div id="task-historico-list"></div>
         </div>
       </div>
@@ -1072,7 +1073,7 @@
 
     <!-- ABA: SOLICITAÇÕES -->
     <div id="tab-solicitacoes" class="tab-view hidden">
-      <div class="panel">
+      <div class="panel" id="painel-nova-solicitacao">
         <h2>Nova solicitação</h2>
         <p class="small">Escolha o tipo de solicitação.</p>
         <div class="filtro-linha" style="margin-bottom:16px;">
@@ -1085,13 +1086,12 @@
         <div id="form-ajuste" class="solic-form">
           <div class="field">
             <label for="ajuste-sessao">Sessão</label>
-            <select id="ajuste-sessao">
-              <option value="14/07/2026">Encontro 12 · 14/07/2026 · 10h00</option>
-            </select>
+            <select id="ajuste-sessao"></select>
           </div>
           <div class="field">
             <label for="ajuste-acao">O que você precisa?</label>
             <select id="ajuste-acao" onchange="atualizarLimiteAjuste()">
+              <option value="">Selecione…</option>
               <option value="remarcar">Remarcar</option>
               <option value="cancelar">Cancelar</option>
             </select>
@@ -1149,6 +1149,7 @@
               <option>Encaminhamento</option>
               <option>Declaração</option>
               <option>Prontuário</option>
+              <option>Outro</option>
             </select>
           </div>
           <div class="field">
@@ -1167,7 +1168,10 @@
       </div>
 
       <div class="panel">
-        <h2>Minhas solicitações</h2>
+        <div class="task-card-head">
+          <h2>Minhas solicitações</h2>
+          <button class="task-access-btn hidden" id="btn-nova-solicitacao" onclick="mostrarFormSolicitacao()">+ Solicitação</button>
+        </div>
         <p class="small">Acompanhe o andamento dos seus pedidos.</p>
         <div id="lista-solicitacoes"></div>
       </div>
@@ -1211,6 +1215,8 @@
   var fakeSolicitacoes = [];
 
   var fakeSessoes = [
+    { data: "28/07/2026", hora: "10:00", encontro: 14, status: "agendada" },
+    { data: "21/07/2026", hora: "10:00", encontro: 13, status: "agendada" },
     { data: "14/07/2026", hora: "10:00", encontro: 12, status: "agendada" },
     { data: "30/06/2026", hora: "10:00", encontro: 11, status: "realizada" },
     { data: "16/06/2026", hora: "10:00", encontro: 10, status: "realizada" },
@@ -1334,7 +1340,7 @@
     renderSessoes();
     renderPagamentos();
     renderEvolucao(0, 4);
-    atualizarLimiteAjuste();
+    popularSelectSessoes();
     renderSolicitacoes();
     goTo('app');
   }
@@ -1488,8 +1494,46 @@
     document.getElementById('pix-box').classList.toggle('show', marcado);
   }
 
+  function parseDataHora(dataStr, horaStr){
+    var pd = dataStr.split('/');
+    var ph = horaStr.split(':');
+    return new Date(parseInt(pd[2]), parseInt(pd[1]) - 1, parseInt(pd[0]), parseInt(ph[0]), parseInt(ph[1]));
+  }
+
+  function popularSelectSessoes(){
+    var agora = new Date(2026, 6, 3, 9, 0); // referência de "agora" para a demonstração
+    var limiteMinimo = new Date(agora.getTime() + 12 * 60 * 60 * 1000);
+    var opcoes = fakeSessoes.filter(function(s){
+      if(s.status !== 'agendada') return false;
+      var dt = parseDataHora(s.data, s.hora);
+      if(dt.getMonth() !== agora.getMonth() || dt.getFullYear() !== agora.getFullYear()) return false;
+      if(dt < limiteMinimo) return false;
+      return true;
+    });
+    var select = document.getElementById('ajuste-sessao');
+    if(opcoes.length === 0){
+      select.innerHTML = '<option value="">Nenhuma sessão disponível para ajuste</option>';
+      return;
+    }
+    select.innerHTML = opcoes.map(function(s){
+      return '<option value="' + s.data + '">Encontro ' + s.encontro + ' · ' + s.data + ' · ' + s.hora.replace(':', 'h') + '</option>';
+    }).join('');
+  }
+
   function atualizarLimiteAjuste(){
     var acao = document.getElementById('ajuste-acao').value;
+    var aviso = document.getElementById('taxa-aviso');
+    var btn = document.getElementById('btn-enviar-ajuste');
+    var limiteBox = document.getElementById('limite-box');
+
+    if(acao === ''){
+      limiteBox.innerHTML = '';
+      aviso.classList.remove('show');
+      document.getElementById('pix-box').classList.remove('show');
+      btn.disabled = true;
+      return;
+    }
+
     var chave = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
     var plano = fakePaciente.plano;
     var limites = LIMITES_PLANO[plano];
@@ -1497,12 +1541,10 @@
     var usados = usoMes[chave];
     var nomePlano = NOME_PLANO[plano];
 
-    document.getElementById('limite-box').innerHTML =
+    limiteBox.innerHTML =
       'Plano ' + nomePlano + ': <span class="limite-num">' + usados + ' de ' + limite + '</span> ' +
       (acao === 'cancelar' ? 'cancelamentos' : 'remarcações') + ' usados este mês';
 
-    var aviso = document.getElementById('taxa-aviso');
-    var btn = document.getElementById('btn-enviar-ajuste');
     var aceite = document.getElementById('taxa-aceite');
     var checkWrap = document.getElementById('taxa-check-wrap');
     var pixBox = document.getElementById('pix-box');
@@ -1535,11 +1577,23 @@
     gerarQrPix(valor);
   }
 
+  function mostrarFormSolicitacao(){
+    document.getElementById('painel-nova-solicitacao').classList.remove('hidden');
+    document.getElementById('btn-nova-solicitacao').classList.add('hidden');
+  }
+
+  function esconderFormSolicitacao(){
+    document.getElementById('painel-nova-solicitacao').classList.add('hidden');
+    document.getElementById('btn-nova-solicitacao').classList.remove('hidden');
+  }
+
   function enviarSolicitacao(tipo){
     var item = { tipo: tipo, data: '03/07/2026', status: 'aguardando' };
     if(tipo === 'ajuste'){
       var acao = document.getElementById('ajuste-acao').value;
-      item.titulo = (acao === 'cancelar' ? 'Cancelamento' : 'Remarcação') + ' · Encontro 12';
+      var sessaoSelect = document.getElementById('ajuste-sessao');
+      var sessaoTexto = sessaoSelect.options[sessaoSelect.selectedIndex] ? sessaoSelect.options[sessaoSelect.selectedIndex].text : '';
+      item.titulo = (acao === 'cancelar' ? 'Cancelamento' : 'Remarcação') + ' · ' + sessaoTexto;
       var chaveUso = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
       usoMes[chaveUso]++;
     } else if(tipo === 'financeiro'){
@@ -1549,11 +1603,13 @@
     }
     fakeSolicitacoes.unshift(item);
     renderSolicitacoes();
+    esconderFormSolicitacao();
 
     if(tipo === 'ajuste'){
       document.getElementById('ajuste-justificativa').value = '';
       document.getElementById('taxa-aceite').checked = false;
       document.getElementById('pix-box').classList.remove('show');
+      document.getElementById('ajuste-acao').value = '';
       document.getElementById('btn-enviar-ajuste').disabled = true;
       atualizarLimiteAjuste();
     } else if(tipo === 'financeiro'){
@@ -1621,7 +1677,7 @@
 
   function renderTarefasHistorico(){
     document.getElementById('task-historico-list').innerHTML = fakeTarefasHistorico.map(function(h){
-      return '<div class="task-hist-item"><span class="semana">' + h.semana + '</span><span class="contagem">' + h.concluidas + '/' + h.total + '</span></div>';
+      return '<div class="task-hist-item"><span class="semana">Semana de ' + h.semana + '</span><span class="contagem">' + h.concluidas + ' de ' + h.total + ' concluídas</span></div>';
     }).join('');
   }
 
