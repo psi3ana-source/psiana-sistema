@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerar hash de senha · PsiAna</title>
+<style>
+  body{ font-family:'Segoe UI', Arial, sans-serif; background:#FAF6F5; color:#2C2C2C; padding:2rem 1rem; display:flex; justify-content:center; }
+  .wrap{ max-width:420px; width:100%; }
+  .card{ background:#fff; border:1px solid #EDE4E3; border-radius:12px; padding:1.5rem; }
+  h1{ font-size:18px; color:#2C2C2C; margin:0 0 6px; }
+  p.sub{ font-size:13px; color:#999; margin:0 0 20px; line-height:1.5; }
+  label{ display:block; font-size:12px; color:#785D56; margin-bottom:6px; }
+  input{ width:100%; padding:10px 12px; border:1px solid #DDD; border-radius:8px; font-size:14px; margin-bottom:14px; box-sizing:border-box; }
+  button{ width:100%; padding:11px; border:none; border-radius:8px; background:#785D56; color:#fff; font-size:14px; cursor:pointer; }
+  button:hover{ background:#C89F9D; }
+  .resultado{ margin-top:18px; display:none; }
+  .resultado.show{ display:block; }
+  .resultado label{ color:#999; }
+  .hash-box{ background:#FAF6F5; border:1px solid #EDE4E3; border-radius:8px; padding:10px 12px; font-family:monospace; font-size:12px; word-break:break-all; color:#2C2C2C; margin-bottom:10px; }
+  .copiar{ background:#fff; color:#785D56; border:1px solid #C89F9D; }
+  .copiar:hover{ background:#F0E8E7; }
+  .aviso{ font-size:11.5px; color:#999; margin-top:16px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Gerar hash da sua senha</h1>
+    <p class="sub">Digite a senha que você vai usar para logar no sistema. O hash gerado é o que você deve colar no Supabase — a senha em si nunca é salva ou enviada a nenhum servidor, tudo é calculado aqui no seu navegador.</p>
+    <label for="senha">Sua senha</label>
+    <input type="password" id="senha" placeholder="Digite a senha escolhida">
+    <button onclick="gerarHash()">Gerar hash</button>
+
+    <div class="resultado" id="resultado">
+      <label>Hash SHA-256 (copie e cole no Supabase)</label>
+      <div class="hash-box" id="hashBox"></div>
+      <button class="copiar" onclick="copiarHash()">Copiar hash</button>
+    </div>
+
+    <p class="aviso">Depois de copiar, cole esse valor na coluna <b>senha_hash</b> da tabela <b>psicologa_auth</b> no Supabase, junto com seu CPF (só números) na coluna <b>cpf</b>.</p>
+  </div>
+</div>
+
+<script>
+async function gerarHash(){
+  var senha = document.getElementById('senha').value;
+  if(!senha){ alert('Digite uma senha primeiro.'); return; }
+  var encoder = new TextEncoder();
+  var data = encoder.encode(senha);
+  var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  var hashArray = Array.from(new Uint8Array(hashBuffer));
+  var hashHex = hashArray.map(function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+  document.getElementById('hashBox').textContent = hashHex;
+  document.getElementById('resultado').classList.add('show');
+}
+
+function copiarHash(){
+  var texto = document.getElementById('hashBox').textContent;
+  navigator.clipboard.writeText(texto).then(function(){
+    alert('Hash copiado!');
+  });
+}
+</script>
+</body>
+</html>
