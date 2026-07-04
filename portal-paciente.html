@@ -177,16 +177,16 @@
     display:flex; align-items:center; justify-content: space-between;
     margin-bottom: 22px;
   }
-  .topbar .who{ display:flex; align-items:center; gap: 10px; }
+  .topbar .who{ display:flex; align-items:center; gap: 12px; }
   .topbar .selo-mini{
-    width:38px; height:38px; border-radius:50%;
+    width:52px; height:52px; border-radius:50%;
     background: var(--card); border:1px solid var(--line);
     display:flex; align-items:center; justify-content:center;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow); flex-shrink:0;
   }
-  .topbar .selo-mini img{ width:22px; height:22px; object-fit:contain; }
-  .topbar .greeting{ font-size: 13px; color: var(--ink-soft); }
-  .topbar .greeting b{ color: var(--mocha-deep); font-weight:500; }
+  .topbar .selo-mini img{ width:32px; height:32px; object-fit:contain; }
+  .topbar .greeting{ font-size: 17px; color: var(--ink-soft); }
+  .topbar .greeting b{ color: var(--mocha-deep); font-weight:600; }
   .logout{
     font-size: 12.5px; color: var(--ink-soft); cursor:pointer;
     border: 1px solid var(--line); padding: 7px 14px; border-radius: 20px;
@@ -451,26 +451,22 @@
   .fin-grid{
     display:grid; grid-template-columns: 1fr 1fr; gap: 10px;
   }
-  .fin-grid-single{ grid-template-columns: minmax(0,220px); }
-  .last-pgto{
-    margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
-  }
-  .last-pgto-label{
-    font-size: 11px; color: var(--ink-soft); text-transform: uppercase;
-    letter-spacing: 0.05em; margin-bottom: 6px;
-  }
-  .last-pgto-row{ font-size: 14px; color: var(--ink); }
-  .last-pgto-value{ font-weight: 600; color: var(--mocha-deep); }
-  .last-pgto-sep{ color: var(--ink-soft); margin: 0 6px; }
+  .fin-caption{ font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
 
-  .chip-filters{ display:flex; align-items:center; flex-wrap:wrap; gap: 7px; margin-bottom: 10px; }
+  .filtro-linha{ display:flex; align-items:center; gap: 8px; margin-bottom: 10px; }
   .chip-group-label{ font-size: 11px; color: var(--ink-soft); width: 42px; flex-shrink:0; }
   .chip{
     font-size: 12px; padding: 6px 13px; border-radius: 20px;
     border: 1px solid var(--line); background: #FEFCFB; color: var(--ink-soft);
-    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif;
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; flex-shrink:0;
   }
   .chip.active{ background: var(--mocha); border-color: var(--mocha); color:#FFF6F4; }
+  .filtro-select{
+    flex:1; min-width:0; font-size: 12.5px; padding: 6px 10px;
+    border: 1px solid var(--line); border-radius: 20px; background:#FEFCFB;
+    color: var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .filtro-select:focus{ outline:none; border-color: var(--rose); }
 
   /* --- Documentos --- */
   .doc-lista{ display:flex; flex-direction:column; gap: 10px; }
@@ -858,43 +854,57 @@
       <div class="panel">
         <h2>Resumo financeiro</h2>
         <p class="small">Um panorama dos seus pagamentos até agora.</p>
-        <div class="fin-grid fin-grid-single">
+        <div class="fin-grid">
           <div class="fin-card alerta">
             <div class="fin-label">Pendente</div>
             <div class="fin-value">R$ 220,00</div>
           </div>
-        </div>
-        <div class="last-pgto">
-          <div class="last-pgto-label">Último pagamento</div>
-          <div class="last-pgto-row">
-            <span class="last-pgto-value">R$ 220,00</span>
-            <span class="last-pgto-sep">·</span>
-            <span>30/06/2026</span>
-            <span class="last-pgto-sep">·</span>
-            <span>Pix</span>
+          <div class="fin-card">
+            <div class="fin-label">Último pagamento</div>
+            <div class="fin-value">R$ 220,00</div>
+            <div class="fin-caption">30/06/2026 · Pix</div>
           </div>
         </div>
       </div>
 
       <div class="panel">
         <h2>Histórico de pagamentos</h2>
-        <div class="chip-filters" id="pgto-filtros">
+        <div class="filtro-linha">
           <span class="chip-group-label">Data</span>
-          <button class="chip active" data-group="periodo" data-value="todos" onclick="setFiltroPagamento('periodo','todos')">Tudo</button>
-          <button class="chip" data-group="periodo" data-value="3m" onclick="setFiltroPagamento('periodo','3m')">3 meses</button>
-          <button class="chip" data-group="periodo" data-value="6m" onclick="setFiltroPagamento('periodo','6m')">6 meses</button>
+          <button class="chip active" id="chip-periodo" onclick="setFiltroChip('periodo')">Tudo</button>
+          <select class="filtro-select" id="select-periodo" onchange="setFiltroSelect('periodo', this.value)">
+            <option value="">Escolher mês…</option>
+            <option value="2026-06">Junho/2026</option>
+            <option value="2026-05">Maio/2026</option>
+            <option value="2026-04">Abril/2026</option>
+          </select>
         </div>
-        <div class="chip-filters">
+        <div class="filtro-linha">
           <span class="chip-group-label">Status</span>
-          <button class="chip active" data-group="status" data-value="todos" onclick="setFiltroPagamento('status','todos')">Todos</button>
-          <button class="chip" data-group="status" data-value="pago" onclick="setFiltroPagamento('status','pago')">Pago</button>
-          <button class="chip" data-group="status" data-value="pendente" onclick="setFiltroPagamento('status','pendente')">Pendente</button>
+          <button class="chip active" id="chip-status" onclick="setFiltroChip('status')">Todos</button>
+          <select class="filtro-select" id="select-status" onchange="setFiltroSelect('status', this.value)">
+            <option value="">Escolher status…</option>
+            <option value="pago">Pago</option>
+            <option value="pendente">Pendente</option>
+          </select>
         </div>
-        <div class="chip-filters">
+        <div class="filtro-linha">
           <span class="chip-group-label">Forma</span>
-          <button class="chip active" data-group="forma" data-value="todos" onclick="setFiltroPagamento('forma','todos')">Todas</button>
-          <button class="chip" data-group="forma" data-value="Pix" onclick="setFiltroPagamento('forma','Pix')">Pix</button>
-          <button class="chip" data-group="forma" data-value="Cartão" onclick="setFiltroPagamento('forma','Cartão')">Cartão</button>
+          <button class="chip active" id="chip-forma" onclick="setFiltroChip('forma')">Todas</button>
+          <select class="filtro-select" id="select-forma" onchange="setFiltroSelect('forma', this.value)">
+            <option value="">Escolher forma…</option>
+            <option value="Pix">Pix</option>
+            <option value="Cartão">Cartão</option>
+          </select>
+        </div>
+        <div class="filtro-linha">
+          <span class="chip-group-label">Recibo</span>
+          <button class="chip active" id="chip-recibo" onclick="setFiltroChip('recibo')">Todos</button>
+          <select class="filtro-select" id="select-recibo" onchange="setFiltroSelect('recibo', this.value)">
+            <option value="">Escolher recibo…</option>
+            <option value="emitido">Emitido</option>
+            <option value="pendente">Pendente</option>
+          </select>
         </div>
         <div id="lista-pagamentos"></div>
       </div>
@@ -983,18 +993,27 @@
     { data: "07/04/2026", encontro: 6, valor: "R$ 220,00", status: "pago", forma: "Pix", recibo: "emitido" }
   ];
 
-  var filtroPagamento = { periodo: 'todos', status: 'todos', forma: 'todos' };
+  var filtroPagamento = { periodo: 'todos', status: 'todos', forma: 'todos', recibo: 'todos' };
 
   function parseDataBR(str){
     var partes = str.split('/');
     return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
   }
 
-  function setFiltroPagamento(grupo, valor){
+  function setFiltroChip(grupo){
+    filtroPagamento[grupo] = 'todos';
+    document.getElementById('chip-' + grupo).classList.add('active');
+    document.getElementById('select-' + grupo).value = '';
+    renderPagamentos();
+  }
+
+  function setFiltroSelect(grupo, valor){
+    if(valor === ''){
+      setFiltroChip(grupo);
+      return;
+    }
     filtroPagamento[grupo] = valor;
-    document.querySelectorAll('.chip[data-group="' + grupo + '"]').forEach(function(c){
-      c.classList.toggle('active', c.getAttribute('data-value') === valor);
-    });
+    document.getElementById('chip-' + grupo).classList.remove('active');
     renderPagamentos();
   }
 
@@ -1249,14 +1268,14 @@
 
   function renderPagamentos(){
     var wrap = document.getElementById('lista-pagamentos');
-    var hoje = new Date(2026, 6, 3);
     var lista = fakePagamentos.filter(function(p){
       if(filtroPagamento.status !== 'todos' && p.status !== filtroPagamento.status) return false;
       if(filtroPagamento.forma !== 'todos' && p.forma !== filtroPagamento.forma) return false;
+      if(filtroPagamento.recibo !== 'todos' && p.recibo !== filtroPagamento.recibo) return false;
       if(filtroPagamento.periodo !== 'todos'){
-        var meses = filtroPagamento.periodo === '3m' ? 3 : 6;
-        var limite = new Date(hoje.getFullYear(), hoje.getMonth() - meses, hoje.getDate());
-        if(parseDataBR(p.data) < limite) return false;
+        var d = parseDataBR(p.data);
+        var chave = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        if(chave !== filtroPagamento.periodo) return false;
       }
       return true;
     });
