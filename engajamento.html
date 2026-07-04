@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engajamento · PsiAna</title>
+<style>
+  :root{
+    --bg:#FAF6F5; --card:#fff; --line:#EDE4E3;
+    --mocha:#785D56; --mocha-deep:#5A453F; --rose:#C89F9D; --rose-soft:#F0E8E7;
+    --ink:#2C2C2C; --ink-soft:#999;
+    --ok:#2E7D32; --ok-bg:#E8F5E9; --alerta:#C62828; --alerta-bg:#FFEBEE; --aviso:#F57F17; --aviso-bg:#FFF8E1;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Segoe UI', Arial, sans-serif; background:var(--bg); color:var(--ink); }
+
+  .shell{ display:flex; min-height:100vh; }
+
+  /* --- Sidebar --- */
+  .sidebar{
+    width:224px; background:#fff; border-right:1px solid var(--line);
+    padding:22px 14px; display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
+  }
+  .sidebar-logo{ display:flex; justify-content:center; padding:0 0 20px; }
+  .sidebar-logo img{ width:150px; height:150px; object-fit:contain; }
+  .nav-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; padding:16px 10px 6px; }
+  .nav-label:first-of-type{ padding-top:4px; }
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:8px;
+    color:var(--ink); font-size:13.5px; cursor:pointer; text-decoration:none;
+  }
+  .nav-item svg{ width:17px; height:17px; color:var(--mocha); flex-shrink:0; }
+  .nav-item:hover{ background:var(--rose-soft); }
+  .nav-item.active{ background:var(--mocha); color:#fff; }
+  .nav-item.active svg{ color:#fff; }
+
+  /* --- Main --- */
+  .main{ flex:1; padding:32px 40px; max-width:1240px; }
+  .topo{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+  .topo h1{ font-size:21px; margin:0; color:var(--ink); font-weight:400; }
+  .topo .data{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+
+  .perfil-saudacao{ display:flex; align-items:center; gap:14px; }
+  .avatar-grande{
+    width:54px; height:54px; border-radius:50%; background:var(--rose-soft); color:var(--mocha);
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; flex-shrink:0;
+  }
+  .crp-linha{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .crp-texto{ font-size:11.5px; color:var(--ink-soft); }
+  .btn-config{
+    width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:#fff;
+    color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .btn-config:hover{ color:var(--mocha); border-color:var(--rose); }
+  .btn-config svg{ width:13px; height:13px; }
+
+  .btn-sair{
+    display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha);
+    background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px;
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; font-weight:500; flex-shrink:0;
+  }
+  .btn-sair:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-sair svg{ width:15px; height:15px; }
+
+  .aviso-topo{
+    display:flex; align-items:center; gap:10px; background:var(--aviso-bg); color:#8A5A0F;
+    border-radius:10px; padding:10px 16px; font-size:12.5px; margin-bottom:10px; cursor:pointer; width:fit-content;
+  }
+  .aviso-topo svg{ width:16px; height:16px; flex-shrink:0; }
+  .aviso-detalhe{
+    display:none; background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:12px 16px; font-size:12.5px; color:var(--ink); margin-bottom:20px; max-width:420px;
+  }
+  .aviso-detalhe.show{ display:block; }
+  .aviso-detalhe-item{ display:flex; justify-content:space-between; padding:5px 0; }
+  .aviso-detalhe-item:not(:last-child){ border-bottom:1px solid var(--bg); }
+
+  .cards-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-top:20px; }
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:20px; display:flex; flex-direction:column;
+  }
+  .card-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .card-head .icon{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .card-head .icon svg{ width:17px; height:17px; }
+  .card-head h2{ font-size:14px; margin:0; color:var(--ink); font-weight:600; }
+
+  .ic-financeiro{ background:#E8F5E9; color:#2E7D32; }
+  .ic-engajamento{ background:#F0E8E7; color:#785D56; }
+  .ic-solicitacoes{ background:#FFF8E1; color:#F57F17; }
+  .ic-agenda{ background:#E3E0F5; color:#5B4FBF; }
+  .ic-pacientes{ background:#F3E5F5; color:#8E24AA; }
+  .ic-relatorios{ background:#E1F0F5; color:#0288A8; }
+
+  .card-linha{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; color:var(--ink); padding:6px 0; border-bottom:1px solid var(--bg); }
+  .card-linha:last-of-type{ border-bottom:none; }
+  .card-linha .valor{ font-weight:600; color:var(--mocha-deep); }
+  .card-linha .valor.alerta{ color:var(--alerta); }
+  .card-destaque{ font-size:26px; font-weight:700; color:var(--mocha-deep); margin:2px 0 10px; }
+  .card-sub{ font-size:12px; color:var(--ink-soft); margin:-8px 0 12px; }
+
+  .card-alerta-linha{
+    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--alerta);
+    background:var(--alerta-bg); border-radius:8px; padding:7px 10px; margin-bottom:8px;
+  }
+  .card-alerta-linha svg{ width:14px; height:14px; flex-shrink:0; }
+
+  .card-link{
+    margin-top:auto; padding-top:12px; font-size:12.5px; color:var(--mocha);
+    text-decoration:none; display:flex; align-items:center; gap:5px; font-weight:500;
+  }
+  .card-link:hover{ color:var(--rose); }
+  .card-link svg{ width:13px; height:13px; }
+
+  /* --- Página Engajamento --- */
+  .breadcrumb{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
+  .breadcrumb a{ color:var(--ink-soft); text-decoration:none; }
+  .breadcrumb a:hover{ color:var(--mocha); }
+  .page-titulo{ font-size:20px; margin:0 0 4px; color:var(--ink); font-weight:600; }
+  .page-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px; }
+
+  .resumo-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+  .resumo-card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+  .resumo-label{ font-size:11.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+  .resumo-valor{ font-size:23px; font-weight:700; color:var(--mocha-deep); }
+  .resumo-valor.ok{ color:var(--ok); }
+  .resumo-valor.alerta{ color:var(--alerta); }
+
+  .filtro-grade-solic{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .filtro-campo{ display:flex; flex-direction:column; gap:5px; flex:0 0 220px; }
+  .filtro-campo-largo{ flex:1 1 320px; }
+  .filtro-campo-label{ font-size:11px; color:var(--ink-soft); }
+  .filtro-select-grade{
+    font-size:13px; padding:9px 12px; border-radius:10px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .filtro-select-grade:focus{ outline:none; border-color:var(--rose); }
+
+  .eng-lista{ display:flex; flex-direction:column; gap:12px; }
+  .eng-card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .eng-card .avatar-mini{
+    width:44px; height:44px; border-radius:50%; background:var(--rose-soft); color:var(--mocha);
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; flex-shrink:0;
+  }
+  .eng-card .principal{ flex:1; min-width:200px; }
+  .eng-card .nome{ font-size:14.5px; font-weight:600; color:var(--ink); margin-bottom:4px; }
+  .eng-card .metricas{ display:flex; gap:20px; flex-wrap:wrap; }
+  .eng-metrica{ text-align:center; min-width:70px; }
+  .eng-metrica .valor{ font-size:16px; font-weight:700; color:var(--mocha-deep); }
+  .eng-metrica .rotulo{ font-size:10.5px; color:var(--ink-soft); margin-top:2px; }
+  .nivel-badge{ font-size:10.5px; padding:3px 10px; border-radius:20px; font-weight:600; flex-shrink:0; }
+  .nivel-badge.alto{ background:var(--ok-bg); color:var(--ok); }
+  .nivel-badge.medio{ background:var(--aviso-bg); color:var(--aviso); }
+  .nivel-badge.baixo{ background:var(--alerta-bg); color:var(--alerta); }
+
+  @media (max-width: 980px){
+    .cards-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width: 720px){
+    .sidebar{ display:none; }
+    .main{ padding:24px 18px; }
+    .cards-grid{ grid-template-columns:1fr; }
+    .topo{ flex-direction:column; }
+    .perfil-saudacao{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="selo.png" alt="PsiAna" onerror="this.onerror=null; this.src='icone_selo.png';">
+    </div>
+
+    <div class="nav-label">Rotinas</div>
+    <a class="nav-item" href="visao-geral.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+      Início
+    </a>
+    <a class="nav-item" href="pacientes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
+      Pacientes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
+      Agenda
+    </a>
+    <a class="nav-item" href="solicitacoes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v11H8.5L4 19.5v-15Z"/><path d="M8 9h8M8 12.3h5"/></svg>
+      Solicitações
+    </a>
+
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="financeiro.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h14a3 3 0 0 1 3 3v7a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5v-10Z"/><path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h9"/><circle cx="16.5" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
+      Financeiro
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12V3.5Z"/><path d="M15.5 3.9A8.5 8.5 0 0 1 20.1 8.5H15.5V3.9Z"/></svg>
+      Relatórios
+    </a>
+
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5c2.5-1.3 5-1.3 7.5 0v14c-2.5-1.3-5-1.3-7.5 0v-14Z"/><path d="M19.5 5.5c-2.5-1.3-5-1.3-7.5 0v14c2.5-1.3 5-1.3 7.5 0v-14Z"/></svg>
+      Psicoeducação
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6M8 6.5h8l-1.3 4.3 3.3 6.7a1.5 1.5 0 0 1-1.35 2.15H7.35A1.5 1.5 0 0 1 6 17.5l3.3-6.7L8 6.5Z"/></svg>
+      Testes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>
+      Atividades
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5"/><circle cx="12" cy="15.7" r="0.6" fill="currentColor" stroke="none"/></svg>
+      Apoio
+    </a>
+
+    <div class="nav-label">Clínica Avançada</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.4 3.1L16.5 7l-3.1 1.4L12 11.5l-1.4-3.1L7.5 7l3.1-.9L12 3Z"/><path d="M5.5 14l.8 1.8L8 16.5l-1.7.8-.8 1.8-.8-1.8L3 16.5l1.7-.7.8-1.8Z"/><path d="M17.5 13.5l.9 2 2 .9-2 .9-.9 2-.9-2-2-.9 2-.9.9-2Z"/></svg>
+      Prontuários com IA
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+      Supervisão
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5h11v7H8l-3 3v-3H3v-7Z"/><path d="M11 10.5h10v6h-3v3l-3-3h-4v-6Z"/></svg>
+      Discussão de Casos
+    </a>
+  </div>
+
+  <!-- ===== CONTEÚDO ===== -->
+  <div class="main">
+    <div class="topo">
+      <div class="perfil-saudacao">
+        <div class="avatar-grande">AC</div>
+        <div>
+          <h1 id="saudacao">Bom dia, Ana</h1>
+          <div class="data" id="dataHoje">Sábado, 04 de julho</div>
+          <div class="crp-linha">
+            <span class="crp-texto">CRP 12/28631</span>
+            <button class="btn-config" title="Configurações" onclick="window.location.href='#'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <button class="btn-sair" onclick="sair()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Sair
+      </button>
+    </div>
+
+    <div class="breadcrumb"><a href="visao-geral.html">Início</a> / Engajamento</div>
+    <h2 class="page-titulo">Engajamento</h2>
+    <p class="page-sub">Como os pacientes estão se envolvendo com o acompanhamento, entre uma sessão e outra.</p>
+
+    <div class="resumo-grid">
+      <div class="resumo-card">
+        <div class="resumo-label">Tarefas concluídas</div>
+        <div class="resumo-valor ok">78%</div>
+      </div>
+      <div class="resumo-card">
+        <div class="resumo-label">Humor médio geral</div>
+        <div class="resumo-valor">🙂 Bem</div>
+      </div>
+      <div class="resumo-card">
+        <div class="resumo-label">Sessões avaliadas</div>
+        <div class="resumo-valor">28 de 37</div>
+      </div>
+    </div>
+
+    <div class="filtro-grade-solic" style="margin-top:22px;">
+      <div class="filtro-campo filtro-campo-largo">
+        <label class="filtro-campo-label">Paciente</label>
+        <select class="filtro-select-grade" id="select-paciente-eng" onchange="renderEngajamento()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filtro-campo">
+        <label class="filtro-campo-label">Nível de engajamento</label>
+        <select class="filtro-select-grade" id="select-nivel-eng" onchange="renderEngajamento()">
+          <option value="todos">Todos</option>
+          <option value="alto">Alto</option>
+          <option value="medio">Médio</option>
+          <option value="baixo">Baixo</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="lista-engajamento" class="eng-lista"></div>
+
+  </div>
+</div>
+
+<script>
+  (function(){
+    var agora = new Date();
+    var hora = agora.getHours();
+    var saudacao = hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite');
+    document.getElementById('saudacao').textContent = saudacao + ', Ana';
+
+    var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
+  })();
+
+  var fakeEngajamento = [
+    { nome: "Willian Francisco Caetano Lopes", iniciais: "WL", tarefas: 85, humor: "🙂", sessoesAvaliadas: "5 de 5", nivel: "alto" },
+    { nome: "Anna Clara Oldoni Costa", iniciais: "AC", tarefas: 20, humor: "😐", sessoesAvaliadas: "0 de 1", nivel: "baixo" },
+    { nome: "Catarina Marchi Jasper", iniciais: "CM", tarefas: 60, humor: "🙂", sessoesAvaliadas: "3 de 4", nivel: "medio" },
+    { nome: "Dariana Christina Marcelino Valle", iniciais: "DV", tarefas: 90, humor: "😄", sessoesAvaliadas: "6 de 6", nivel: "alto" },
+    { nome: "Emiliane Clarissa Gomes de Lima", iniciais: "EL", tarefas: 45, humor: "😕", sessoesAvaliadas: "2 de 5", nivel: "medio" },
+    { nome: "Graziela Premoli de Souza", iniciais: "GP", tarefas: 70, humor: "🙂", sessoesAvaliadas: "4 de 5", nivel: "alto" },
+    { nome: "Julia de Paiva Bento", iniciais: "JB", tarefas: 55, humor: "😐", sessoesAvaliadas: "3 de 5", nivel: "medio" },
+    { nome: "Lara Cristina Petry Bueno", iniciais: "LB", tarefas: 10, humor: "😔", sessoesAvaliadas: "1 de 6", nivel: "baixo" },
+    { nome: "Marcos Rosti Martins Filho", iniciais: "MM", tarefas: 75, humor: "🙂", sessoesAvaliadas: "3 de 3", nivel: "alto" },
+    { nome: "Sabrina Mendes Teixeira", iniciais: "ST", tarefas: 65, humor: "🙂", sessoesAvaliadas: "3 de 4", nivel: "medio" }
+  ];
+
+  var NIVEL_LABEL = { alto: 'Alto', medio: 'Médio', baixo: 'Baixo' };
+
+  function popularSelectPacientesEng(){
+    var select = document.getElementById('select-paciente-eng');
+    select.innerHTML = '<option value="">Todos</option>' + fakeEngajamento.map(function(p){
+      return '<option value="' + p.nome + '">' + p.nome + '</option>';
+    }).join('');
+  }
+
+  function renderEngajamento(){
+    var pacienteSel = document.getElementById('select-paciente-eng').value;
+    var nivelSel = document.getElementById('select-nivel-eng').value;
+    var lista = fakeEngajamento.filter(function(p){
+      if(pacienteSel && p.nome !== pacienteSel) return false;
+      if(nivelSel !== 'todos' && p.nivel !== nivelSel) return false;
+      return true;
+    });
+    var wrap = document.getElementById('lista-engajamento');
+    if(lista.length === 0){
+      wrap.innerHTML = '<div style="text-align:center;color:var(--ink-soft);font-size:13px;padding:30px 0;">Nenhum paciente encontrado.</div>';
+      return;
+    }
+    wrap.innerHTML = lista.map(function(p){
+      return '<div class="eng-card">' +
+        '<div class="avatar-mini">' + p.iniciais + '</div>' +
+        '<div class="principal">' +
+          '<div class="nome">' + p.nome + '</div>' +
+        '</div>' +
+        '<div class="metricas">' +
+          '<div class="eng-metrica"><div class="valor">' + p.tarefas + '%</div><div class="rotulo">Tarefas</div></div>' +
+          '<div class="eng-metrica"><div class="valor">' + p.humor + '</div><div class="rotulo">Humor médio</div></div>' +
+          '<div class="eng-metrica"><div class="valor">' + p.sessoesAvaliadas + '</div><div class="rotulo">Avaliadas</div></div>' +
+        '</div>' +
+        '<span class="nivel-badge ' + p.nivel + '">' + NIVEL_LABEL[p.nivel] + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  popularSelectPacientesEng();
+  renderEngajamento();
+
+  function sair(){
+    sessionStorage.removeItem('psiana_admin_logado');
+    window.location.href = 'login-psicologa.html';
+  }
+</script>
+
+</body>
+</html>
