@@ -288,6 +288,12 @@
     min-height: 16px; opacity: 0; transition: opacity .15s ease;
   }
   .mood-label.show{ opacity: 1; }
+
+  .mood-confirmar{ display:none; margin-top: 12px; text-align:center; }
+  .mood-confirmar.show{ display:block; }
+  .mood-confirmar p{ font-size: 13.5px; color: var(--ink); margin: 0 0 12px; }
+  .mood-confirmar-botoes{ display:flex; gap: 10px; }
+  .mood-confirmar-botoes .btn{ margin-top:0; font-size: 13px; padding: 10px; }
   .mood-confirm{ font-size: 12.5px; color: var(--ok); text-align:center; margin-top: 10px; display:none; }
   .mood-confirm.show{ display:block; }
 
@@ -794,7 +800,7 @@
         <p class="mood-confirm" id="avaliacao-confirm">Obrigada por compartilhar. Isso ajuda muito o seu acompanhamento. 🤍</p>
       </div>
 
-      <div class="panel">
+      <div class="panel" id="painel-humor">
         <h2>Como está se sentindo hoje?</h2>
         <p class="small">Registre o seu humor para compreendermos as suas oscilações durante a semana.</p>
         <div class="mood-row" id="mood-row">
@@ -849,6 +855,13 @@
           </button>
         </div>
         <p class="mood-label" id="mood-label">&nbsp;</p>
+        <div class="mood-confirmar" id="mood-confirmar">
+          <p>Confirma que você está se sentindo <b id="mood-confirmar-nome">—</b>?</p>
+          <div class="mood-confirmar-botoes">
+            <button class="btn ghost" onclick="cancelarSelecaoHumor()">Escolher de novo</button>
+            <button class="btn" onclick="confirmarHumor()">Confirmar</button>
+          </div>
+        </div>
         <p class="mood-confirm" id="mood-confirm">Registrado. Obrigada por compartilhar. 🤍</p>
       </div>
 
@@ -1819,12 +1832,27 @@
   }
 
   function selecionarHumor(btn){
-    document.querySelectorAll('.mood-btn').forEach(function(b){ b.classList.remove('selected'); });
+    document.querySelectorAll('#mood-row .mood-btn').forEach(function(b){ b.classList.remove('selected'); });
     btn.classList.add('selected');
-    document.getElementById('mood-confirm').classList.add('show');
     mostrarLabelHumor(btn);
     clearTimeout(window._moodLabelTimeout);
     window._moodLabelTimeout = setTimeout(ocultarLabelHumor, 1800);
+
+    document.getElementById('mood-confirmar-nome').textContent = btn.getAttribute('data-label');
+    document.getElementById('mood-confirmar').classList.add('show');
+  }
+
+  function cancelarSelecaoHumor(){
+    document.querySelectorAll('#mood-row .mood-btn').forEach(function(b){ b.classList.remove('selected'); });
+    document.getElementById('mood-confirmar').classList.remove('show');
+  }
+
+  function confirmarHumor(){
+    document.getElementById('mood-confirmar').classList.remove('show');
+    document.getElementById('mood-confirm').classList.add('show');
+    setTimeout(function(){
+      document.getElementById('painel-humor').style.display = 'none';
+    }, 1800);
   }
 
   var STATUS_ICONS = {
