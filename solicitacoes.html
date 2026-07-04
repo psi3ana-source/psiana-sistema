@@ -127,6 +127,15 @@
   }
   .chip.active{ background:var(--mocha); border-color:var(--mocha); color:#fff; }
 
+  .filtro-grade-solic{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .filtro-campo{ display:flex; flex-direction:column; gap:5px; flex:0 0 220px; }
+  .filtro-campo-label{ font-size:11px; color:var(--ink-soft); }
+  .filtro-select-grade{
+    font-size:13px; padding:9px 12px; border-radius:10px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .filtro-select-grade:focus{ outline:none; border-color:var(--rose); }
+
   .solic-lista{ margin-top:18px; display:flex; flex-direction:column; gap:12px; }
   .solic-card{
     background:var(--card); border:1px solid var(--line); border-radius:14px;
@@ -292,18 +301,24 @@
     <h2 class="page-titulo">Solicitações</h2>
     <p class="page-sub">Acompanhe e responda aos pedidos enviados pelos seus pacientes.</p>
 
-    <div class="filtro-linha">
-      <span class="chip-label">Tipo</span>
-      <button class="chip active" data-grupo="tipo" data-valor="todos" onclick="setFiltro('tipo','todos')">Todos</button>
-      <button class="chip" data-grupo="tipo" data-valor="ajuste" onclick="setFiltro('tipo','ajuste')">Ajuste de sessão</button>
-      <button class="chip" data-grupo="tipo" data-valor="financeiro" onclick="setFiltro('tipo','financeiro')">Financeiro</button>
-      <button class="chip" data-grupo="tipo" data-valor="documento" onclick="setFiltro('tipo','documento')">Documento médico</button>
-    </div>
-    <div class="filtro-linha">
-      <span class="chip-label">Status</span>
-      <button class="chip active" data-grupo="status" data-valor="pendente" onclick="setFiltro('status','pendente')">Pendentes</button>
-      <button class="chip" data-grupo="status" data-valor="todos" onclick="setFiltro('status','todos')">Todas</button>
-      <button class="chip" data-grupo="status" data-valor="resolvida" onclick="setFiltro('status','resolvida')">Resolvidas</button>
+    <div class="filtro-grade-solic">
+      <div class="filtro-campo">
+        <label class="filtro-campo-label">Tipo</label>
+        <select class="filtro-select-grade" id="select-tipo" onchange="setFiltro('tipo', this.value)">
+          <option value="todos">Todos</option>
+          <option value="ajuste">Ajuste de sessão</option>
+          <option value="financeiro">Financeiro</option>
+          <option value="documento">Documento médico</option>
+        </select>
+      </div>
+      <div class="filtro-campo">
+        <label class="filtro-campo-label">Status</label>
+        <select class="filtro-select-grade" id="select-status" onchange="setFiltro('status', this.value)">
+          <option value="pendente" selected>Pendentes</option>
+          <option value="todos">Todas</option>
+          <option value="resolvida">Resolvidas</option>
+        </select>
+      </div>
     </div>
 
     <div id="lista-solicitacoes" class="solic-lista"></div>
@@ -369,9 +384,6 @@
 
   function setFiltro(grupo, valor){
     filtro[grupo] = valor;
-    document.querySelectorAll('.chip[data-grupo="' + grupo + '"]').forEach(function(c){
-      c.classList.toggle('active', c.getAttribute('data-valor') === valor);
-    });
     renderSolicitacoes();
   }
 
