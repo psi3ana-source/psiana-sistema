@@ -220,6 +220,18 @@
   .session-next .info .t{ font-size: 14.5px; color: var(--ink); font-weight: 500; }
   .session-next .info .s{ font-size: 12.5px; color: var(--ink-soft); }
 
+  .task-list{ display:flex; flex-direction:column; gap: 12px; }
+  .task-item{ display:flex; align-items:center; gap: 12px; }
+  .task-check{
+    width: 20px; height:20px; border-radius:6px; border: 1.6px solid var(--line);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    color:#fff;
+  }
+  .task-item.done .task-check{ background: var(--mocha); border-color: var(--mocha); }
+  .task-check svg{ width: 13px; height:13px; }
+  .task-text{ font-size: 13.5px; color: var(--ink); }
+  .task-item.done .task-text{ color: var(--ink-soft); text-decoration: line-through; }
+
   .mood-row{ display:flex; justify-content: space-between; margin-top: 4px; }
   .mood-btn{
     background: none; border: 2px solid transparent; border-radius: 50%;
@@ -279,7 +291,7 @@
   .s-confirmada{ background:#E7F3EA; color:#3E7A54; }
   .s-cancelada{ background:#FBEAEA; color:#B5514A; }
   .s-remarcada{ background:#FCF3DE; color:#A6790F; }
-  .s-realizada{ background:#E6F0FA; color:#2E679E; }
+  .s-realizada{ background:#DCEFEA; color:#1D7A6B; }
   .s-faltou{ background:#EFEFEF; color:#7A7A7A; }
 
   .empty{
@@ -299,10 +311,11 @@
   .prog-value{ font-size: 22px; font-weight: 600; color: var(--mocha-deep); line-height:1; }
   .prog-label{ font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height:1.3; }
 
-  /* --- Manchete de destaque --- */
-  .highlight-panel{
+  /* --- Manchete de destaque (dentro do painel de evolução) --- */
+  .highlight-inline{
     background: linear-gradient(135deg, var(--rose-soft), #FEFCFB);
-    text-align:center;
+    border-radius: 14px; text-align:center;
+    padding: 20px 16px; margin-bottom: 20px;
   }
   .highlight-badge{
     display:inline-block; font-size: 11px; text-transform:uppercase; letter-spacing:0.06em;
@@ -310,13 +323,51 @@
     padding: 5px 14px; border-radius: 20px; margin-bottom: 14px;
   }
   .highlight-stat{
-    font-size: 42px; font-weight: 700; color: var(--mocha-deep); line-height:1;
+    font-size: 38px; font-weight: 700; color: var(--mocha-deep); line-height:1;
   }
   .highlight-desc{
-    font-size: 13.5px; color: var(--ink); margin: 8px 0 0;
+    font-size: 13px; color: var(--ink); margin: 8px 0 0;
   }
 
   /* --- Indicadores de evolução --- */
+  /* --- Filtro de intervalo (slider duplo) --- */
+  .range-filter{ margin-bottom: 20px; }
+  .range-labels{
+    display:flex; justify-content:space-between; font-size: 12.5px;
+    font-weight: 600; color: var(--mocha-deep); margin-bottom: 6px;
+  }
+  .range-slider-wrap{ position:relative; height: 26px; }
+  .range-track{
+    position:absolute; top:50%; left:0; right:0; height:4px;
+    background:#F0E6E4; border-radius:4px; transform:translateY(-50%);
+  }
+  .range-track-fill{
+    position:absolute; top:50%; height:4px; background: var(--mocha);
+    border-radius:4px; transform:translateY(-50%);
+  }
+  .range-input{
+    position:absolute; width:100%; top:0; left:0; margin:0; height:26px;
+    background:transparent; -webkit-appearance:none; appearance:none;
+    pointer-events:none;
+  }
+  .range-input::-webkit-slider-runnable-track{ background:transparent; }
+  .range-input::-moz-range-track{ background:transparent; }
+  .range-input::-webkit-slider-thumb{
+    -webkit-appearance:none; pointer-events:auto;
+    width:18px; height:18px; border-radius:50%;
+    background: var(--mocha); border: 2.5px solid #fff;
+    box-shadow: 0 1px 5px rgba(120,93,86,0.4); cursor:pointer; margin-top: 5px;
+  }
+  .range-input::-moz-range-thumb{
+    pointer-events:auto; width:18px; height:18px; border-radius:50%;
+    background: var(--mocha); border: 2.5px solid #fff;
+    box-shadow: 0 1px 5px rgba(120,93,86,0.4); cursor:pointer;
+  }
+  .range-ticks{
+    display:flex; justify-content:space-between; font-size: 10.5px;
+    color: var(--ink-soft); margin-top: 8px; padding: 0 1px;
+  }
+
   .indic-legend{
     display:flex; gap: 18px; font-size: 11.5px; color: var(--ink-soft);
     margin-bottom: 18px;
@@ -333,7 +384,7 @@
     background: #E7F3EA; color: #2E7D32;
   }
   .indic-track{ position:relative; height: 5px; background: #F0E6E4; border-radius: 4px; }
-  .indic-dot{ position:absolute; top:50%; width: 12px; height:12px; border-radius:50%; transform: translate(-50%,-50%); }
+  .indic-dot{ position:absolute; top:50%; width: 12px; height:12px; border-radius:50%; transform: translate(-50%,-50%); transition: left .2s ease; }
   .indic-dot.inicio{ background:#fff; border: 2px solid var(--ink-soft); }
   .indic-dot.agora{ background: var(--mocha); border: 2px solid var(--mocha); }
 
@@ -362,6 +413,7 @@
   .fin-grid{
     display:grid; grid-template-columns: 1fr 1fr; gap: 10px;
   }
+  .fin-grid-single{ grid-template-columns: minmax(0,220px); }
   .fin-card{
     background: #FEFCFB; border: 1px solid var(--line); border-radius: 12px;
     padding: 14px 16px;
@@ -507,6 +559,25 @@
       </div>
 
       <div class="panel">
+        <h2>Tarefas da semana</h2>
+        <p class="small">O que ficou combinado no nosso último encontro.</p>
+        <div class="task-list">
+          <div class="task-item done">
+            <div class="task-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
+            <span class="task-text">Praticar respiração antes de dormir (3x)</span>
+          </div>
+          <div class="task-item">
+            <div class="task-check"></div>
+            <span class="task-text">Registrar 1 situação em que disse "não"</span>
+          </div>
+          <div class="task-item">
+            <div class="task-check"></div>
+            <span class="task-text">Preencher o RPD de uma situação da semana</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
         <h2>Como está se sentindo hoje?</h2>
         <p class="small">Registre o seu humor para compreendermos as suas oscilações durante a semana.</p>
         <div class="mood-row" id="mood-row">
@@ -576,12 +647,6 @@
 
     <!-- ABA: PROGRESSO -->
     <div id="tab-jornada" class="tab-view hidden">
-      <div class="panel highlight-panel">
-        <div class="highlight-badge">4 meses de jornada · Mar/2026 – Jul/2026</div>
-        <div class="highlight-stat">−60%</div>
-        <p class="highlight-desc">nos sintomas ansiosos desde o início do acompanhamento</p>
-      </div>
-
       <div class="panel">
         <h2>Sua jornada até aqui</h2>
         <p class="small">Aqui está o caminho que você já percorreu comigo.</p>
@@ -619,39 +684,60 @@
 
       <div class="panel">
         <h2>Sua evolução</h2>
-        <p class="small">Como cada área da sua vida mudou desde o início do acompanhamento.</p>
-        <div class="indic-legend">
-          <span><i class="dot-inicio"></i> Mar/2026</span>
-          <span><i class="dot-agora"></i> Jul/2026</span>
+        <p class="small">Arraste para comparar dois momentos da sua jornada.</p>
+
+        <div class="highlight-inline">
+          <div class="highlight-badge" id="highlight-badge">4 meses de jornada · Mar/2026 – Jul/2026</div>
+          <div class="highlight-stat" id="highlight-stat">+4,1</div>
+          <p class="highlight-desc">pontos no seu índice geral de bem-estar</p>
         </div>
 
-        <div class="indic-row">
+        <div class="range-filter">
+          <div class="range-labels">
+            <span id="range-label-start">Mar/2026</span>
+            <span id="range-label-end">Jul/2026</span>
+          </div>
+          <div class="range-slider-wrap">
+            <div class="range-track"></div>
+            <div class="range-track-fill" id="range-track-fill"></div>
+            <input type="range" min="0" max="4" step="1" value="0" id="range-start" class="range-input" oninput="onRangeStartChange()">
+            <input type="range" min="0" max="4" step="1" value="4" id="range-end" class="range-input" oninput="onRangeEndChange()">
+          </div>
+          <div class="range-ticks"><span>Mar</span><span>Abr</span><span>Mai</span><span>Jun</span><span>Jul</span></div>
+        </div>
+
+        <div class="indic-legend">
+          <span><i class="dot-inicio"></i> <span id="legend-inicio">Mar/2026</span></span>
+          <span><i class="dot-agora"></i> <span id="legend-agora">Jul/2026</span></span>
+        </div>
+
+        <div class="indic-row" data-key="humor">
           <div class="indic-head"><span class="indic-name">Humor</span><span class="indic-delta">↑ Melhora</span></div>
-          <div class="indic-track"><div class="indic-dot inicio" style="left:30%"></div><div class="indic-dot agora" style="left:75%"></div></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
         </div>
-        <div class="indic-row">
+        <div class="indic-row" data-key="ansiosos">
           <div class="indic-head"><span class="indic-name">Sintomas ansiosos</span><span class="indic-delta">↑ Melhora</span></div>
-          <div class="indic-track"><div class="indic-dot inicio" style="left:20%"></div><div class="indic-dot agora" style="left:60%"></div></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
         </div>
-        <div class="indic-row">
+        <div class="indic-row" data-key="depressivos">
           <div class="indic-head"><span class="indic-name">Sintomas depressivos</span><span class="indic-delta">↑ Melhora</span></div>
-          <div class="indic-track"><div class="indic-dot inicio" style="left:25%"></div><div class="indic-dot agora" style="left:65%"></div></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
         </div>
-        <div class="indic-row">
+        <div class="indic-row" data-key="insonia">
           <div class="indic-head"><span class="indic-name">Insônia</span><span class="indic-delta">↑ Melhora</span></div>
-          <div class="indic-track"><div class="indic-dot inicio" style="left:30%"></div><div class="indic-dot agora" style="left:70%"></div></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
         </div>
-        <div class="indic-row">
+        <div class="indic-row" data-key="tolerancia">
           <div class="indic-head"><span class="indic-name">Tolerância à frustração</span><span class="indic-delta">↑ Melhora</span></div>
-          <div class="indic-track"><div class="indic-dot inicio" style="left:25%"></div><div class="indic-dot agora" style="left:65%"></div></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
         </div>
-        <div class="indic-row">
+        <div class="indic-row" data-key="limites">
           <div class="indic-head"><span class="indic-name">Posicionamento e limites</span><span class="indic-delta">↑ Melhora</span></div>
-          <div class="indic-track"><div class="indic-dot inicio" style="left:20%"></div><div class="indic-dot agora" style="left:60%"></div></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
         </div>
-        <div class="indic-row" style="margin-bottom:0;">
+        <div class="indic-row" data-key="autocuidado" style="margin-bottom:0;">
           <div class="indic-head"><span class="indic-name">Autocuidado</span><span class="indic-delta">↑ Melhora</span></div>
-          <div class="indic-track"><div class="indic-dot inicio" style="left:15%"></div><div class="indic-dot agora" style="left:55%"></div></div>
+          <div class="indic-track"><div class="indic-dot inicio"></div><div class="indic-dot agora"></div></div>
         </div>
       </div>
 
@@ -673,7 +759,9 @@
             <span>Total investido: R$ 2.420,00</span>
           </div>
         </div>
-        <p class="invest-note">O valor investido caminhou lado a lado com a sua evolução. 🤍</p>
+        <p class="invest-note">O valor investido caminhou lado a lado com a sua evolução.
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;vertical-align:-1px;color:var(--rose);"><path d="M12 21s-7-4.35-9.5-8.5C.6 8.7 2 5 5.5 4.2 8 3.6 10 5 12 7.5 14 5 16 3.6 18.5 4.2 22 5 23.4 8.7 21.5 12.5 19 16.65 12 21 12 21Z"/></svg>
+        </p>
       </div>
     </div>
 
@@ -682,11 +770,7 @@
       <div class="panel">
         <h2>Resumo financeiro</h2>
         <p class="small">Um panorama dos seus pagamentos até agora.</p>
-        <div class="fin-grid">
-          <div class="fin-card">
-            <div class="fin-label">Total pago</div>
-            <div class="fin-value">R$ 1.320,00</div>
-          </div>
+        <div class="fin-grid fin-grid-single">
           <div class="fin-card alerta">
             <div class="fin-label">Pendente</div>
             <div class="fin-value">R$ 220,00</div>
@@ -805,6 +889,7 @@
     document.getElementById('nome-paciente').textContent = sessionStorage.getItem('psiana_portal_nome') || fakePaciente.nome;
     renderSessoes();
     renderPagamentos();
+    renderEvolucao(0, 4);
     goTo('app');
   }
 
@@ -819,6 +904,76 @@
     document.querySelectorAll('.tab-view').forEach(function(v){ v.classList.add('hidden'); });
     document.getElementById('tab-' + tab + '-btn').classList.add('active');
     document.getElementById('tab-' + tab).classList.remove('hidden');
+  }
+
+  var EVOL_MONTHS = ['Mar', 'Abr', 'Mai', 'Jun', 'Jul'];
+  var EVOL_DATA = {
+    humor:       [30, 40, 55, 65, 75],
+    ansiosos:    [20, 30, 40, 50, 60],
+    depressivos: [25, 35, 45, 55, 65],
+    insonia:     [30, 40, 50, 60, 70],
+    tolerancia:  [25, 35, 45, 55, 65],
+    limites:     [20, 30, 40, 50, 60],
+    autocuidado: [15, 25, 35, 45, 55]
+  };
+
+  function onRangeStartChange(){
+    var startInput = document.getElementById('range-start');
+    var endInput = document.getElementById('range-end');
+    var s = parseInt(startInput.value);
+    var e = parseInt(endInput.value);
+    if(s > e){ endInput.value = s; e = s; }
+    renderEvolucao(s, e);
+  }
+
+  function onRangeEndChange(){
+    var startInput = document.getElementById('range-start');
+    var endInput = document.getElementById('range-end');
+    var e = parseInt(endInput.value);
+    var s = parseInt(startInput.value);
+    if(e < s){ startInput.value = e; s = e; }
+    renderEvolucao(s, e);
+  }
+
+  function renderEvolucao(s, e){
+    var pctStart = (s / 4) * 100;
+    var pctEnd = (e / 4) * 100;
+    var fill = document.getElementById('range-track-fill');
+    fill.style.left = pctStart + '%';
+    fill.style.width = (pctEnd - pctStart) + '%';
+
+    var startLabel = EVOL_MONTHS[s] + '/2026';
+    var endLabel = EVOL_MONTHS[e] + '/2026';
+    document.getElementById('range-label-start').textContent = startLabel;
+    document.getElementById('range-label-end').textContent = endLabel;
+    document.getElementById('legend-inicio').textContent = startLabel;
+    document.getElementById('legend-agora').textContent = endLabel;
+
+    Object.keys(EVOL_DATA).forEach(function(key){
+      var row = document.querySelector('.indic-row[data-key="' + key + '"]');
+      if(!row) return;
+      var vs = EVOL_DATA[key][s];
+      var ve = EVOL_DATA[key][e];
+      row.querySelector('.indic-dot.inicio').style.left = vs + '%';
+      row.querySelector('.indic-dot.agora').style.left = ve + '%';
+      var delta = row.querySelector('.indic-delta');
+      if(ve > vs){ delta.textContent = '↑ Melhora'; delta.style.background = '#E7F3EA'; delta.style.color = '#2E7D32'; }
+      else if(ve < vs){ delta.textContent = '↓ Atenção'; delta.style.background = '#FFF1E0'; delta.style.color = '#B5680F'; }
+      else { delta.textContent = 'Estável'; delta.style.background = '#F2ECEC'; delta.style.color = '#8A7A75'; }
+    });
+
+    var keys = Object.keys(EVOL_DATA);
+    var sumS = 0, sumE = 0;
+    keys.forEach(function(k){ sumS += EVOL_DATA[k][s]; sumE += EVOL_DATA[k][e]; });
+    var avgS = (sumS / keys.length) / 10;
+    var avgE = (sumE / keys.length) / 10;
+    var diff = (avgE - avgS);
+    var diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(1).replace('.', ',');
+    document.getElementById('highlight-stat').textContent = diffStr;
+
+    var monthsDiff = e - s;
+    var mesesTexto = monthsDiff === 0 ? 'Mesmo mês' : monthsDiff + (monthsDiff === 1 ? ' mês' : ' meses') + ' de jornada';
+    document.getElementById('highlight-badge').textContent = mesesTexto + ' · ' + startLabel + ' – ' + endLabel;
   }
 
   function toggleInvest(){
