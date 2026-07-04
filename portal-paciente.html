@@ -222,14 +222,20 @@
 
   .mood-row{ display:flex; justify-content: space-between; margin-top: 4px; }
   .mood-btn{
-    background: none; border: 1px solid transparent; border-radius: 50%;
+    background: none; border: 2px solid transparent; border-radius: 50%;
     width: 44px; height:44px; cursor:pointer; padding: 0;
     display:flex; align-items:center; justify-content:center;
-    color: var(--mocha); transition: all .15s ease;
+    transition: all .15s ease; flex-shrink:0;
   }
-  .mood-btn svg{ width: 30px; height: 30px; }
-  .mood-btn:hover{ background: var(--rose-soft); }
-  .mood-btn.selected{ border-color: var(--rose); background: var(--rose-soft); color: var(--mocha-deep); transform: scale(1.08); }
+  .mood-btn svg{ width: 44px; height: 44px; }
+  .mood-btn:hover{ transform: scale(1.06); }
+  .mood-btn.selected{ border-color: var(--mocha); transform: scale(1.1); }
+  .mood-radiante{ color: #E3A06E; }
+  .mood-bem{ color: #D9A99A; }
+  .mood-neutro{ color: #C4A79C; }
+  .mood-cansado{ color: #A78F8A; }
+  .mood-dificil{ color: #8592A3; }
+  .mood-chorando{ color: #6F8CA8; }
   .mood-confirm{ font-size: 12.5px; color: var(--ok); text-align:center; margin-top: 10px; display:none; }
   .mood-confirm.show{ display:block; }
 
@@ -288,31 +294,47 @@
   .prog-value{ font-size: 22px; font-weight: 600; color: var(--mocha-deep); line-height:1; }
   .prog-label{ font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height:1.3; }
 
-  .evol-compare{
-    display:flex; align-items:center; gap: 14px;
+  /* --- Indicadores de evolução --- */
+  .indic-legend{
+    display:flex; gap: 18px; font-size: 11.5px; color: var(--ink-soft);
+    margin-bottom: 18px;
   }
-  .evol-col{ flex:1; }
-  .evol-tag{
-    display:inline-block; font-size: 10.5px; text-transform:uppercase; letter-spacing:0.05em;
-    color: var(--ink-soft); background: #F2ECEC; padding: 3px 10px; border-radius: 20px;
-    margin-bottom: 8px;
-  }
-  .evol-tag-now{ background: var(--rose-soft); color: var(--mocha-deep); }
-  .evol-text{ font-size: 13px; color: var(--ink); line-height: 1.5; margin: 0; }
-  .evol-arrow{ color: var(--rose); flex-shrink:0; }
-  .evol-arrow svg{ width: 20px; height: 20px; }
+  .indic-legend i{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right: 5px; vertical-align: middle; }
+  .indic-legend i.dot-inicio{ background:#fff; border: 2px solid var(--ink-soft); }
+  .indic-legend i.dot-agora{ background: var(--mocha); border: 2px solid var(--mocha); }
 
-  @media (max-width: 480px){
-    .evol-compare{ flex-direction: column; align-items: stretch; }
-    .evol-arrow{ transform: rotate(90deg); align-self:center; }
+  .indic-row{ margin-bottom: 18px; }
+  .indic-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; }
+  .indic-name{ font-size: 13px; color: var(--ink); }
+  .indic-delta{
+    font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+    background: #E7F3EA; color: #2E7D32;
   }
+  .indic-track{ position:relative; height: 5px; background: #F0E6E4; border-radius: 4px; }
+  .indic-dot{ position:absolute; top:50%; width: 12px; height:12px; border-radius:50%; transform: translate(-50%,-50%); }
+  .indic-dot.inicio{ background:#fff; border: 2px solid var(--ink-soft); }
+  .indic-dot.agora{ background: var(--mocha); border: 2px solid var(--mocha); }
 
   .invest-panel{ background: var(--rose-soft); border: none; }
-  .invest-row{ display:flex; align-items:center; justify-content:space-between; }
-  .invest-value{ font-size: 24px; font-weight: 600; color: var(--mocha-deep); }
-  .invest-icon{ color: var(--mocha); opacity: 0.55; }
-  .invest-icon svg{ width: 30px; height: 30px; }
-  .invest-note{ font-size: 12.5px; color: var(--mocha); margin: 12px 0 0; line-height:1.5; }
+  .invest-toggle{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    background:none; border:none; cursor:pointer; padding:0;
+    font-family:'Segoe UI', Arial, sans-serif; color: var(--mocha-deep);
+  }
+  .invest-toggle-label{ display:flex; align-items:center; gap: 10px; font-size: 15px; font-weight: 600; }
+  .invest-toggle-label svg{ width: 20px; height: 20px; color: var(--mocha); }
+  .invest-chevron{ width: 18px; height: 18px; transition: transform .2s ease; }
+  .invest-chevron.open{ transform: rotate(180deg); }
+  .invest-details{
+    max-height: 0; overflow: hidden; transition: max-height .2s ease;
+  }
+  .invest-details.open{ max-height: 120px; }
+  .invest-detail-row{
+    display:flex; align-items:center; gap: 9px;
+    font-size: 12.5px; color: var(--mocha); padding-top: 12px;
+  }
+  .invest-detail-row svg{ width: 16px; height: 16px; flex-shrink:0; opacity: 0.75; }
+  .invest-note{ font-size: 12.5px; color: var(--mocha); margin: 14px 0 0; line-height:1.5; }
 
   /* --- Financeiro --- */
   .fin-grid{
@@ -466,30 +488,56 @@
         <h2>Como está se sentindo hoje?</h2>
         <p class="small">Registre o seu humor para compreendermos as suas oscilações durante a semana.</p>
         <div class="mood-row" id="mood-row">
-          <button class="mood-btn" data-mood="radiante" onclick="selecionarHumor(this)" title="Radiante">
-            <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/><path d="M13 17c0-1.5 1-3 2.5-3s2.5 1.5 2.5 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M22 17c0-1.5 1-3 2.5-3s2.5 1.5 2.5 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12.5 23c1.8 4 4.8 6 7.5 6s5.7-2 7.5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button class="mood-btn" data-mood="bem" onclick="selecionarHumor(this)" title="Bem">
-            <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15.5" cy="17.5" r="1.6" fill="currentColor"/><circle cx="24.5" cy="17.5" r="1.6" fill="currentColor"/><path d="M14 24c2 2.3 4 3.3 6 3.3s4-1 6-3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          </button>
-          <button class="mood-btn" data-mood="neutro" onclick="selecionarHumor(this)" title="Neutro">
-            <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/><circle cx="15.5" cy="17.5" r="1.6" fill="currentColor"/><circle cx="24.5" cy="17.5" r="1.6" fill="currentColor"/><path d="M14.5 25h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          </button>
-          <button class="mood-btn" data-mood="cansado" onclick="selecionarHumor(this)" title="Cansado">
-            <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/><path d="M13.2 16.8h4.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M22.2 16.8h4.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.5 26c2-2 4-3 5.5-3s3.5 1 5.5 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          </button>
-          <button class="mood-btn" data-mood="dificil" onclick="selecionarHumor(this)" title="Difícil">
-            <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/><path d="M12.8 18.5c1-1.3 2.6-2 4.4-1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M22.8 16.8c1.8-.3 3.4.4 4.4 1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.5 27c2-2.3 4-3.3 5.5-3.3s3.5 1 5.5 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          </button>
-          <button class="mood-btn" data-mood="chorando" onclick="selecionarHumor(this)" title="Chorando">
-            <svg viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="17.5" stroke="currentColor" stroke-width="1.6"/>
-              <path d="M12.5 15.5c1.3-1.6 3.2-1.6 4.5 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M23 15.5c1.3-1.6 3.2-1.6 4.5 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M15 27c1.8-2.4 3.6-3.5 5-3.5s3.2 1.1 5 3.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-              <path d="M15.3 18c2.5 3-2.6 5-2.6 8.3a2.6 2.6 0 0 0 5.2 0c0-2.2-1.7-3.4-2.6-8.3Z" fill="#6FA3C9" opacity="0.9"/>
+          <button class="mood-btn mood-radiante" data-mood="radiante" onclick="selecionarHumor(this)" title="Radiante">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14.5 18.5c0-1.8 1.2-3.2 2.8-3.2s2.8 1.4 2.8 3.2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M24 18.5c0-1.8 1.2-3.2 2.8-3.2s2.8 1.4 2.8 3.2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M13.5 25c2 4.3 5.2 6.5 8.5 6.5s6.5-2.2 8.5-6.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
+          <button class="mood-btn mood-bem" data-mood="bem" onclick="selecionarHumor(this)" title="Bem">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1.8" fill="#fff"/>
+              <circle cx="27" cy="19" r="1.8" fill="#fff"/>
+              <path d="M15.5 26.5c2.2 2.5 4.4 3.7 6.5 3.7s4.3-1.2 6.5-3.7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-neutro" data-mood="neutro" onclick="selecionarHumor(this)" title="Neutro">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1.8" fill="#fff"/>
+              <circle cx="27" cy="19" r="1.8" fill="#fff"/>
+              <path d="M15.5 28h13" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-cansado" data-mood="cansado" onclick="selecionarHumor(this)" title="Cansado">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14.5 18.5h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M24.5 18.5h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 29c2.2-2.2 4.3-3.3 6-3.3s3.8 1.1 6 3.3" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-dificil" data-mood="dificil" onclick="selecionarHumor(this)" title="Difícil">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14 20c1.2-1.5 2.9-2.2 4.8-1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25.2 18.2c1.9-.4 3.6.3 4.8 1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 30c2.2-2.6 4.3-3.8 6-3.8s3.8 1.2 6 3.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="mood-btn mood-chorando" data-mood="chorando" onclick="selecionarHumor(this)" title="Chorando">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="21" fill="currentColor"/>
+              <path d="M14 19.5c1.2-1.5 2.9-2.2 4.8-1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25.2 17.7c1.9-.4 3.6.3 4.8 1.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16.5 30.5c2.2-2.6 4.1-3.8 5.8-3.8s3.6 1.2 5.8 3.8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M17.3 21c2.3 3-2.3 4.8-2.3 7.6a2.3 2.3 0 0 0 4.6 0c0-2-1.5-3-2.3-7.6Z" fill="#fff"/>
+            </svg>
+          </button>
+        </div>
         </div>
         <p class="mood-confirm" id="mood-confirm">Registrado. Obrigada por compartilhar. 🤍</p>
       </div>
@@ -543,33 +591,61 @@
 
       <div class="panel">
         <h2>Sua evolução</h2>
-        <p class="small">Um resumo simples de onde você começou e onde está agora.</p>
-        <div class="evol-compare">
-          <div class="evol-col">
-            <div class="evol-tag">Quando você chegou</div>
-            <p class="evol-text">Sobrecarga emocional, autocrítica intensa e dificuldade em dizer não para os outros.</p>
-          </div>
-          <div class="evol-arrow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
-          </div>
-          <div class="evol-col">
-            <div class="evol-tag evol-tag-now">Hoje</div>
-            <p class="evol-text">Mais leveza no dia a dia e mais clareza para colocar limites sem culpa.</p>
-          </div>
+        <p class="small">Como cada área da sua vida mudou desde o início do acompanhamento.</p>
+        <div class="indic-legend">
+          <span><i class="dot-inicio"></i> Início</span>
+          <span><i class="dot-agora"></i> Agora</span>
+        </div>
+
+        <div class="indic-row">
+          <div class="indic-head"><span class="indic-name">Humor</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio" style="left:30%"></div><div class="indic-dot agora" style="left:75%"></div></div>
+        </div>
+        <div class="indic-row">
+          <div class="indic-head"><span class="indic-name">Sintomas ansiosos</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio" style="left:20%"></div><div class="indic-dot agora" style="left:60%"></div></div>
+        </div>
+        <div class="indic-row">
+          <div class="indic-head"><span class="indic-name">Sintomas depressivos</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio" style="left:25%"></div><div class="indic-dot agora" style="left:65%"></div></div>
+        </div>
+        <div class="indic-row">
+          <div class="indic-head"><span class="indic-name">Insônia</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio" style="left:30%"></div><div class="indic-dot agora" style="left:70%"></div></div>
+        </div>
+        <div class="indic-row">
+          <div class="indic-head"><span class="indic-name">Tolerância à frustração</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio" style="left:25%"></div><div class="indic-dot agora" style="left:65%"></div></div>
+        </div>
+        <div class="indic-row">
+          <div class="indic-head"><span class="indic-name">Posicionamento e limites</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio" style="left:20%"></div><div class="indic-dot agora" style="left:60%"></div></div>
+        </div>
+        <div class="indic-row" style="margin-bottom:0;">
+          <div class="indic-head"><span class="indic-name">Autocuidado</span><span class="indic-delta">↑ Melhora</span></div>
+          <div class="indic-track"><div class="indic-dot inicio" style="left:15%"></div><div class="indic-dot agora" style="left:55%"></div></div>
         </div>
       </div>
 
       <div class="panel invest-panel">
-        <div class="invest-row">
-          <div>
-            <div class="prog-label" style="margin-bottom:6px;">Investimento na sua jornada</div>
-            <div class="invest-value">R$ 2.420,00</div>
-          </div>
-          <div class="invest-icon">
+        <button class="invest-toggle" onclick="toggleInvest()">
+          <span class="invest-toggle-label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6M15 7h6"/></svg>
+            Total investido
+          </span>
+          <svg id="invest-chevron" class="invest-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="invest-details" id="invest-details">
+          <div class="invest-detail-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>
+            <span>Primeiro pagamento: 03/03/2026</span>
+          </div>
+          <div class="invest-detail-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v19M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.4-5 3.3c0 4.4 10 2 10 6.4 0 2-2.2 3.3-5 3.3s-5-1.4-5-3.3"/></svg>
+            <span>Total investido: R$ 2.420,00</span>
           </div>
         </div>
-        <p class="invest-note">O valor investido caminhou lado a lado com a sua evolução — da sobrecarga do início até a leveza de hoje. 🤍</p>
+        <p class="invest-note">O valor investido caminhou lado a lado com a sua evolução. 🤍</p>
       </div>
     </div>
 
@@ -715,6 +791,13 @@
     document.querySelectorAll('.tab-view').forEach(function(v){ v.classList.add('hidden'); });
     document.getElementById('tab-' + tab + '-btn').classList.add('active');
     document.getElementById('tab-' + tab).classList.remove('hidden');
+  }
+
+  function toggleInvest(){
+    var details = document.getElementById('invest-details');
+    var chevron = document.getElementById('invest-chevron');
+    details.classList.toggle('open');
+    chevron.classList.toggle('open');
   }
 
   function selecionarHumor(btn){
