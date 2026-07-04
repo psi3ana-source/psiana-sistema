@@ -165,6 +165,19 @@
   .grafico-mensal-barra{ width:100%; max-width:32px; background:var(--mocha); border-radius:4px 4px 0 0; }
   .grafico-mensal-num{ font-size:10.5px; color:var(--ink-soft); margin-bottom:4px; }
   .grafico-mensal-mes{ font-size:10.5px; color:var(--ink-soft); margin-top:6px; }
+  .legenda-mensal{ display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; font-size:11px; color:var(--ink-soft); }
+  .legenda-mensal span{ display:flex; align-items:center; gap:5px; }
+  .legenda-mensal i{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+  .btn-atualizar-ia{
+    font-size:12px; padding:7px 14px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; color:var(--mocha); cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; white-space:nowrap;
+  }
+  .btn-atualizar-ia:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-atualizar-ia:disabled{ opacity:0.5; cursor:not-allowed; }
+  .analise-ia-placeholder{ font-size:13px; color:var(--ink-soft); }
+  .analise-ia-erro{ font-size:12.5px; color:var(--alerta); background:var(--alerta-bg); border-radius:8px; padding:10px 12px; }
+  .analise-ia-texto{ font-size:13.5px; color:var(--ink); line-height:1.7; white-space:pre-line; }
 
   @media (max-width: 980px){
     .kpi-grid{ grid-template-columns:repeat(2, 1fr); }
@@ -311,10 +324,13 @@
     </div>
 
     <div class="rel-painel">
-      <h2 class="rel-painel-titulo">O que isso significa</h2>
-      <div class="insight-linha"><span class="insight-dot ok"></span>Sua taxa de realização (94%) está bem acima da média — poucas faltas ou cancelamentos no período.</div>
-      <div class="insight-linha"><span class="insight-dot aviso"></span>A interação média (63%) tem espaço pra melhorar — vale revisar com as pacientes de baixa interação na aba Engajamento.</div>
-      <div class="insight-linha"><span class="insight-dot ok"></span>70% das pacientes ativas mostraram melhora clínica no período — um bom indicador geral do acompanhamento.</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 class="rel-painel-titulo" style="margin:0;">Análise da IA</h2>
+        <button class="btn-atualizar-ia" onclick="gerarAnaliseIA()">↻ Atualizar análise</button>
+      </div>
+      <div id="analise-ia-conteudo">
+        <p class="analise-ia-placeholder">Clique em "Atualizar análise" para gerar uma leitura dos dados deste período.</p>
+      </div>
     </div>
 
     <div class="rel-grid-2">
@@ -390,7 +406,9 @@
         { nome: 'Faltou', valor: 2, cor: STATUS_CORES.faltou }
       ],
       sessoesPorMes: [
-        { mes: 'Mai', valor: 9 }, { mes: 'Jun', valor: 12 }, { mes: 'Jul', valor: 11 }
+        { mes: 'Mai', realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0 },
+        { mes: 'Jun', realizadas: 11, canceladas: 1, remarcadas: 1, faltou: 1 },
+        { mes: 'Jul', realizadas: 10, canceladas: 0, remarcadas: 2, faltou: 1 }
       ],
       confirmadas: 29,
       pacientes: { novos: 2, desistencias: 1, ativos: 10 },
@@ -411,8 +429,12 @@
         { nome: 'Faltou', valor: 3, cor: STATUS_CORES.faltou }
       ],
       sessoesPorMes: [
-        { mes: 'Fev', valor: 8 }, { mes: 'Mar', valor: 10 }, { mes: 'Abr', valor: 9 },
-        { mes: 'Mai', valor: 9 }, { mes: 'Jun', valor: 12 }, { mes: 'Jul', valor: 11 }
+        { mes: 'Fev', realizadas: 7, canceladas: 0, remarcadas: 1, faltou: 0 },
+        { mes: 'Mar', realizadas: 9, canceladas: 0, remarcadas: 1, faltou: 0 },
+        { mes: 'Abr', realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0 },
+        { mes: 'Mai', realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0 },
+        { mes: 'Jun', realizadas: 11, canceladas: 1, remarcadas: 1, faltou: 1 },
+        { mes: 'Jul', realizadas: 10, canceladas: 1, remarcadas: 1, faltou: 2 }
       ],
       confirmadas: 54,
       pacientes: { novos: 4, desistencias: 2, ativos: 10 },
@@ -459,17 +481,35 @@
       '</div>';
     }).join('');
 
-    var maxMensal = Math.max.apply(null, dados.sessoesPorMes.map(function(m){ return m.valor; }));
+    var totaisMensais = dados.sessoesPorMes.map(function(m){ return m.realizadas + m.canceladas + m.remarcadas + m.faltou; });
+    var maxMensal = Math.max.apply(null, totaisMensais);
     document.getElementById('grafico-mensal').innerHTML =
       '<div class="grafico-mensal-wrap">' +
         dados.sessoesPorMes.map(function(m){
-          var alturaPct = Math.round((m.valor / maxMensal) * 100);
+          var total = m.realizadas + m.canceladas + m.remarcadas + m.faltou;
+          var alturaTotalPct = Math.round((total / maxMensal) * 100);
+          var segmentos = [
+            { valor: m.realizadas, cor: STATUS_CORES.realizadas },
+            { valor: m.remarcadas, cor: STATUS_CORES.remarcadas },
+            { valor: m.canceladas, cor: STATUS_CORES.canceladas },
+            { valor: m.faltou, cor: STATUS_CORES.faltou }
+          ];
+          var barrasHtml = segmentos.map(function(s){
+            var altSegPct = total ? Math.round((s.valor / total) * 100) : 0;
+            return '<div style="width:100%; height:' + altSegPct + '%; background:' + s.cor + ';" title="' + s.valor + '"></div>';
+          }).join('');
           return '<div class="grafico-mensal-col">' +
-            '<span class="grafico-mensal-num">' + m.valor + '</span>' +
-            '<div class="grafico-mensal-barra" style="height:' + alturaPct + '%;"></div>' +
+            '<span class="grafico-mensal-num">' + total + '</span>' +
+            '<div class="grafico-mensal-barra" style="height:' + alturaTotalPct + '%; display:flex; flex-direction:column-reverse; overflow:hidden; background:none;">' + barrasHtml + '</div>' +
             '<span class="grafico-mensal-mes">' + m.mes + '</span>' +
           '</div>';
         }).join('') +
+      '</div>' +
+      '<div class="legenda-mensal">' +
+        '<span><i style="background:' + STATUS_CORES.realizadas + ';"></i>Realizadas</span>' +
+        '<span><i style="background:' + STATUS_CORES.remarcadas + ';"></i>Remarcadas</span>' +
+        '<span><i style="background:' + STATUS_CORES.canceladas + ';"></i>Canceladas</span>' +
+        '<span><i style="background:' + STATUS_CORES.faltou + ';"></i>Faltas</span>' +
       '</div>';
 
     function acharValor(nome){
@@ -506,6 +546,53 @@
     }
     desenharBarras('grafico-solic-tipo', dados.solicPorTipo, SOLIC_CORES_TIPO);
     desenharBarras('grafico-solic-status', dados.solicPorStatus, SOLIC_CORES_STATUS);
+  }
+
+  var N8N_WEBHOOK_ANALISE_IA = 'https://psi3ana.app.n8n.cloud/webhook/relatorio-analise-ia';
+
+  async function gerarAnaliseIA(){
+    var periodo = document.getElementById('select-periodo-rel').value;
+    var dados = fakeRelatorios[periodo];
+    var btn = document.querySelector('.btn-atualizar-ia');
+    var wrap = document.getElementById('analise-ia-conteudo');
+
+    btn.disabled = true;
+    wrap.innerHTML = '<p class="analise-ia-placeholder">Analisando os dados do período…</p>';
+
+    var payload = {
+      periodo_dias: periodo,
+      kpis: {
+        taxa_realizacao: document.querySelectorAll('.kpi-valor')[0].textContent,
+        receita_periodo: document.querySelectorAll('.kpi-valor')[1].textContent,
+        interacao_media: document.querySelectorAll('.kpi-valor')[2].textContent,
+        melhora_clinica: document.querySelectorAll('.kpi-valor')[3].textContent
+      },
+      sessoes_por_status: dados.statusSessoes,
+      sessoes_por_mes: dados.sessoesPorMes,
+      confirmadas: dados.confirmadas,
+      pacientes: dados.pacientes,
+      financeiro: dados.financeiro,
+      solicitacoes_por_tipo: dados.solicPorTipo,
+      solicitacoes_por_status: dados.solicPorStatus
+    };
+
+    try{
+      var resposta = await fetch(N8N_WEBHOOK_ANALISE_IA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var json = await resposta.json();
+      if(json && json.analise){
+        wrap.innerHTML = '<div class="analise-ia-texto">' + json.analise.replace(/\n/g, '<br>') + '</div>';
+      } else {
+        wrap.innerHTML = '<p class="analise-ia-erro">Não foi possível gerar a análise agora. Tente novamente.</p>';
+      }
+    } catch(e){
+      wrap.innerHTML = '<p class="analise-ia-erro">Não foi possível conectar ao serviço de análise. Verifique sua conexão e tente novamente.</p>';
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   renderRelatorios();
