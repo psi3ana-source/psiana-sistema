@@ -22,7 +22,7 @@
     padding:22px 14px; display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
   }
   .sidebar-logo{ display:flex; justify-content:center; padding:0 0 20px; }
-  .sidebar-logo img{ width:80px; height:80px; object-fit:contain; }
+  .sidebar-logo img{ width:150px; height:150px; object-fit:contain; }
   .nav-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; padding:16px 10px 6px; }
   .nav-label:first-of-type{ padding-top:4px; }
   .nav-item{
@@ -40,23 +40,27 @@
   .topo h1{ font-size:21px; margin:0; color:var(--ink); font-weight:400; }
   .topo .data{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
 
-  .user-box{ text-align:right; }
-  .btn-sair{
-    font-size:12px; color:var(--ink-soft); background:none; border:none; cursor:pointer;
-    padding:0 0 8px; display:block; margin-left:auto; text-decoration:underline;
+  .perfil-saudacao{ display:flex; align-items:center; gap:14px; }
+  .avatar-grande{
+    width:54px; height:54px; border-radius:50%; background:var(--rose-soft); color:var(--mocha);
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; flex-shrink:0;
   }
-  .btn-sair:hover{ color:var(--mocha); }
-  .user-chip{ display:flex; align-items:center; gap:9px; }
-  .user-chip .avatar{ width:34px; height:34px; border-radius:50%; background:var(--rose-soft); color:var(--mocha); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12.5px; flex-shrink:0; }
-  .user-chip .info{ text-align:left; }
-  .user-chip .nome{ font-size:12.5px; font-weight:600; color:var(--ink); }
-  .user-chip .crp{ font-size:11px; color:var(--ink-soft); }
+  .crp-linha{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .crp-texto{ font-size:11.5px; color:var(--ink-soft); }
   .btn-config{
-    width:28px; height:28px; border-radius:50%; border:1px solid var(--line); background:#fff;
+    width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:#fff;
     color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
   }
   .btn-config:hover{ color:var(--mocha); border-color:var(--rose); }
-  .btn-config svg{ width:15px; height:15px; }
+  .btn-config svg{ width:13px; height:13px; }
+
+  .btn-sair{
+    display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha);
+    background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px;
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; font-weight:500; flex-shrink:0;
+  }
+  .btn-sair:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-sair svg{ width:15px; height:15px; }
 
   .aviso-topo{
     display:flex; align-items:center; gap:10px; background:var(--aviso-bg); color:#8A5A0F;
@@ -116,8 +120,7 @@
     .main{ padding:24px 18px; }
     .cards-grid{ grid-template-columns:1fr; }
     .topo{ flex-direction:column; }
-    .user-box{ text-align:left; }
-    .btn-sair{ margin-left:0; }
+    .perfil-saudacao{ width:100%; }
   }
 </style>
 </head>
@@ -130,13 +133,13 @@
       <img src="selo.png" alt="PsiAna" onerror="this.onerror=null; this.src='icone_selo.png';">
     </div>
 
-    <div class="nav-label">Consultório</div>
+    <div class="nav-label">Rotinas</div>
     <a class="nav-item active" href="visao-geral.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
       Início
     </a>
     <a class="nav-item" href="#">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3.2-8-6.6-8-11A5 5 0 0 1 12 7a5 5 0 0 1 8 3c0 4.4-4 7.8-8 11Z"/><path d="M9.5 11.5h5M12 9v5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
       Pacientes
     </a>
     <a class="nav-item" href="#">
@@ -194,23 +197,23 @@
   <!-- ===== CONTEÚDO ===== -->
   <div class="main">
     <div class="topo">
-      <div>
-        <h1 id="saudacao">Bom dia</h1>
-        <div class="data" id="dataHoje">sábado, 04 de julho</div>
-      </div>
-      <div class="user-box">
-        <button class="btn-sair" onclick="sair()">Sair</button>
-        <div class="user-chip">
-          <div class="info">
-            <div class="nome">Ana Caroline</div>
-            <div class="crp">CRP 12/28631</div>
+      <div class="perfil-saudacao">
+        <div class="avatar-grande">AC</div>
+        <div>
+          <h1 id="saudacao">Bom dia, Ana</h1>
+          <div class="data" id="dataHoje">Sábado, 04 de julho</div>
+          <div class="crp-linha">
+            <span class="crp-texto">CRP 12/28631</span>
+            <button class="btn-config" title="Configurações" onclick="window.location.href='#'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
+            </button>
           </div>
-          <div class="avatar">AC</div>
-          <button class="btn-config" title="Configurações" onclick="window.location.href='#'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
-          </button>
         </div>
       </div>
+      <button class="btn-sair" onclick="sair()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Sair
+      </button>
     </div>
 
     <div class="aviso-topo" onclick="toggleAviso()">
@@ -237,7 +240,7 @@
 
       <!-- PACIENTES -->
       <div class="card">
-        <div class="card-head"><div class="icon ic-pacientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3.2-8-6.6-8-11A5 5 0 0 1 12 7a5 5 0 0 1 8 3c0 4.4-4 7.8-8 11Z"/></svg></div><h2>Pacientes</h2></div>
+        <div class="card-head"><div class="icon ic-pacientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg></div><h2>Pacientes</h2></div>
         <div class="card-destaque">10</div>
         <div class="card-sub">Pacientes ativos</div>
         <div class="card-alerta-linha">
@@ -299,9 +302,9 @@
     var agora = new Date();
     var hora = agora.getHours();
     var saudacao = hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite');
-    document.getElementById('saudacao').textContent = saudacao;
+    document.getElementById('saudacao').textContent = saudacao + ', Ana';
 
-    var dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+    var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
     var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
     document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
   })();
