@@ -160,6 +160,17 @@
   .barra-preenchida{ height:100%; border-radius:6px; }
   .barra-valor{ font-size:12px; color:var(--ink-soft); width:34px; text-align:right; flex-shrink:0; }
 
+  .donut-wrap{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+  .donut{ width:120px; height:120px; border-radius:50%; flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center; }
+  .donut-centro{ width:74px; height:74px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .donut-centro b{ font-size:17px; color:var(--mocha-deep); }
+  .donut-centro span{ font-size:9.5px; color:var(--ink-soft); }
+  .donut-legenda{ display:flex; flex-direction:column; gap:7px; }
+  .donut-legenda-item{ font-size:12.5px; color:var(--ink); display:flex; align-items:center; gap:7px; }
+  .donut-legenda-item i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }
+  .donut-legenda-item b{ color:var(--mocha-deep); }
+  .donut-legenda-item span{ color:var(--ink-soft); font-size:11.5px; }
+
   .grafico-mensal-wrap{ display:flex; align-items:flex-end; gap:10px; height:140px; padding-top:10px; }
   .grafico-mensal-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
   .grafico-mensal-barra{ width:100%; max-width:32px; background:var(--mocha); border-radius:4px 4px 0 0; }
@@ -178,6 +189,23 @@
   .analise-ia-placeholder{ font-size:13px; color:var(--ink-soft); }
   .analise-ia-erro{ font-size:12.5px; color:var(--alerta); background:var(--alerta-bg); border-radius:8px; padding:10px 12px; }
   .analise-ia-texto{ font-size:13.5px; color:var(--ink); line-height:1.7; white-space:pre-line; }
+
+  .insights-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .insight-card{ border-radius:12px; padding:14px 16px; border:1px solid var(--line); }
+  .insight-card.positivo{ background:var(--ok-bg); border-color:#C8E6C9; }
+  .insight-card.atencao{ background:var(--aviso-bg); border-color:#F5DDB8; }
+  .insight-card.alerta{ background:var(--alerta-bg); border-color:#F0D3D0; }
+  .insight-card-topo{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .insight-icone{ width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+  .insight-card.positivo .insight-icone{ background:var(--ok); color:#fff; }
+  .insight-card.atencao .insight-icone{ background:var(--aviso); color:#fff; }
+  .insight-card.alerta .insight-icone{ background:var(--alerta); color:#fff; }
+  .insight-categoria{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:600; }
+  .insight-card-texto{ font-size:13px; color:var(--ink); line-height:1.5; margin:0; }
+
+  @media (max-width: 700px){
+    .insights-grid{ grid-template-columns:1fr; }
+  }
 
   @media (max-width: 980px){
     .kpi-grid{ grid-template-columns:repeat(2, 1fr); }
@@ -396,75 +424,89 @@
   var SOLIC_CORES_TIPO = { 'Ajuste de sessão': '#5B4FBF', 'Financeiro': '#2E7D32', 'Documento médico': '#B5680F' };
   var SOLIC_CORES_STATUS = { 'Pendente': '#A6790F', 'Aprovada': '#2E7D32', 'Recusada': '#B5514A' };
 
-  var fakeRelatorios = {
-    90: {
-      statusSessoes: [
-        { nome: 'Realizadas', valor: 32, cor: STATUS_CORES.realizadas },
-        { nome: 'Agendadas', valor: 3, cor: STATUS_CORES.agendadas },
-        { nome: 'Remarcadas', valor: 4, cor: STATUS_CORES.remarcadas },
-        { nome: 'Canceladas', valor: 1, cor: STATUS_CORES.canceladas },
-        { nome: 'Faltou', valor: 2, cor: STATUS_CORES.faltou }
-      ],
-      sessoesPorMes: [
-        { mes: 'Mai', realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0 },
-        { mes: 'Jun', realizadas: 11, canceladas: 1, remarcadas: 1, faltou: 1 },
-        { mes: 'Jul', realizadas: 10, canceladas: 0, remarcadas: 2, faltou: 1 }
-      ],
-      confirmadas: 29,
-      pacientes: { novos: 2, desistencias: 1, ativos: 10 },
-      financeiro: { recebido: 1980, pendente: 220, atrasado: 220 },
-      solicPorTipo: [
-        { nome: 'Ajuste de sessão', valor: 5 }, { nome: 'Financeiro', valor: 3 }, { nome: 'Documento médico', valor: 2 }
-      ],
-      solicPorStatus: [
-        { nome: 'Pendente', valor: 3 }, { nome: 'Aprovada', valor: 6 }, { nome: 'Recusada', valor: 1 }
-      ]
-    },
-    180: {
-      statusSessoes: [
-        { nome: 'Realizadas', valor: 58, cor: STATUS_CORES.realizadas },
-        { nome: 'Agendadas', valor: 3, cor: STATUS_CORES.agendadas },
-        { nome: 'Remarcadas', valor: 6, cor: STATUS_CORES.remarcadas },
-        { nome: 'Canceladas', valor: 2, cor: STATUS_CORES.canceladas },
-        { nome: 'Faltou', valor: 3, cor: STATUS_CORES.faltou }
-      ],
-      sessoesPorMes: [
-        { mes: 'Fev', realizadas: 7, canceladas: 0, remarcadas: 1, faltou: 0 },
-        { mes: 'Mar', realizadas: 9, canceladas: 0, remarcadas: 1, faltou: 0 },
-        { mes: 'Abr', realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0 },
-        { mes: 'Mai', realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0 },
-        { mes: 'Jun', realizadas: 11, canceladas: 1, remarcadas: 1, faltou: 1 },
-        { mes: 'Jul', realizadas: 10, canceladas: 1, remarcadas: 1, faltou: 2 }
-      ],
-      confirmadas: 54,
-      pacientes: { novos: 4, desistencias: 2, ativos: 10 },
-      financeiro: { recebido: 3960, pendente: 220, atrasado: 440 },
-      solicPorTipo: [
-        { nome: 'Ajuste de sessão', valor: 9 }, { nome: 'Financeiro', valor: 5 }, { nome: 'Documento médico', valor: 4 }
-      ],
-      solicPorStatus: [
-        { nome: 'Pendente', valor: 3 }, { nome: 'Aprovada', valor: 12 }, { nome: 'Recusada', valor: 3 }
-      ]
-    }
-  };
+  // Base única com granularidade mensal — tudo deriva daqui
+  var MESES_BASE = [
+    { mes: 'Fev', sessoes: { realizadas: 7, canceladas: 0, remarcadas: 1, faltou: 0, confirmadas: 7 },
+      financeiro: { recebido: 1540, pendente: 0, atrasado: 0 },
+      solic: { ajuste: 1, financeiro: 1, documento: 0, pendente: 0, aprovada: 2, recusada: 0 },
+      pacientes: { ativos: 8, novos: 1, desistencias: 0 },
+      avaliacoes: { positivas: 6, neutras: 1, negativas: 0 },
+      humor: { bem: 20, neutro: 8, dificil: 2 },
+      tarefas: { concluidas: 24, incompletas: 6, atrasadas: 2 } },
+    { mes: 'Mar', sessoes: { realizadas: 9, canceladas: 0, remarcadas: 1, faltou: 0, confirmadas: 9 },
+      financeiro: { recebido: 1980, pendente: 0, atrasado: 0 },
+      solic: { ajuste: 1, financeiro: 1, documento: 1, pendente: 0, aprovada: 3, recusada: 0 },
+      pacientes: { ativos: 9, novos: 1, desistencias: 0 },
+      avaliacoes: { positivas: 8, neutras: 1, negativas: 0 },
+      humor: { bem: 24, neutro: 7, dificil: 1 },
+      tarefas: { concluidas: 28, incompletas: 5, atrasadas: 1 } },
+    { mes: 'Abr', sessoes: { realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0, confirmadas: 8 },
+      financeiro: { recebido: 1760, pendente: 0, atrasado: 0 },
+      solic: { ajuste: 2, financeiro: 1, documento: 1, pendente: 0, aprovada: 3, recusada: 1 },
+      pacientes: { ativos: 9, novos: 0, desistencias: 0 },
+      avaliacoes: { positivas: 6, neutras: 2, negativas: 0 },
+      humor: { bem: 20, neutro: 9, dificil: 2 },
+      tarefas: { concluidas: 22, incompletas: 8, atrasadas: 3 } },
+    { mes: 'Mai', sessoes: { realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0, confirmadas: 8 },
+      financeiro: { recebido: 1760, pendente: 0, atrasado: 0 },
+      solic: { ajuste: 2, financeiro: 1, documento: 1, pendente: 0, aprovada: 4, recusada: 0 },
+      pacientes: { ativos: 10, novos: 1, desistencias: 0 },
+      avaliacoes: { positivas: 7, neutras: 1, negativas: 0 },
+      humor: { bem: 22, neutro: 8, dificil: 1 },
+      tarefas: { concluidas: 26, incompletas: 6, atrasadas: 2 } },
+    { mes: 'Jun', sessoes: { realizadas: 11, canceladas: 1, remarcadas: 1, faltou: 1, confirmadas: 12 },
+      financeiro: { recebido: 2420, pendente: 220, atrasado: 0 },
+      solic: { ajuste: 3, financeiro: 1, documento: 1, pendente: 1, aprovada: 3, recusada: 1 },
+      pacientes: { ativos: 10, novos: 1, desistencias: 1 },
+      avaliacoes: { positivas: 8, neutras: 2, negativas: 1 },
+      humor: { bem: 21, neutro: 10, dificil: 4 },
+      tarefas: { concluidas: 24, incompletas: 9, atrasadas: 4 } },
+    { mes: 'Jul', sessoes: { realizadas: 10, canceladas: 1, remarcadas: 1, faltou: 2, confirmadas: 10 },
+      financeiro: { recebido: 2200, pendente: 220, atrasado: 220 },
+      solic: { ajuste: 3, financeiro: 1, documento: 0, pendente: 2, aprovada: 2, recusada: 1 },
+      pacientes: { ativos: 10, novos: 0, desistencias: 1 },
+      avaliacoes: { positivas: 5, neutras: 2, negativas: 2 },
+      humor: { bem: 18, neutro: 10, dificil: 6 },
+      tarefas: { concluidas: 20, incompletas: 10, atrasadas: 6 } }
+  ];
 
-  fakeRelatorios[30] = {
-    statusSessoes: fakeRelatorios[90].statusSessoes.map(function(s){ return { nome: s.nome, valor: Math.max(1, Math.round(s.valor / 3)), cor: s.cor }; }),
-    sessoesPorMes: fakeRelatorios[90].sessoesPorMes.slice(-1),
-    confirmadas: 10,
-    pacientes: { novos: 1, desistencias: 0, ativos: 10 },
-    financeiro: { recebido: 660, pendente: 220, atrasado: 0 },
-    solicPorTipo: [ { nome: 'Ajuste de sessão', valor: 2 }, { nome: 'Financeiro', valor: 1 }, { nome: 'Documento médico', valor: 1 } ],
-    solicPorStatus: [ { nome: 'Pendente', valor: 2 }, { nome: 'Aprovada', valor: 2 }, { nome: 'Recusada', valor: 0 } ]
-  };
-  fakeRelatorios[365] = {
-    statusSessoes: fakeRelatorios[180].statusSessoes.map(function(s){ return { nome: s.nome, valor: Math.round(s.valor * 1.8), cor: s.cor }; }),
-    sessoesPorMes: fakeRelatorios[180].sessoesPorMes,
-    confirmadas: 97,
-    pacientes: { novos: 7, desistencias: 3, ativos: 10 },
-    financeiro: { recebido: 7480, pendente: 220, atrasado: 440 },
-    solicPorTipo: [ { nome: 'Ajuste de sessão', valor: 16 }, { nome: 'Financeiro', valor: 9 }, { nome: 'Documento médico', valor: 7 } ],
-    solicPorStatus: [ { nome: 'Pendente', valor: 3 }, { nome: 'Aprovada', valor: 24 }, { nome: 'Recusada', valor: 5 } ]
+  function montarPeriodo(meses){
+    var soma = function(campo, sub){ return meses.reduce(function(s, m){ return s + m[campo][sub]; }, 0); };
+    var statusSessoes = [
+      { nome: 'Realizadas', valor: soma('sessoes','realizadas'), cor: STATUS_CORES.realizadas },
+      { nome: 'Remarcadas', valor: soma('sessoes','remarcadas'), cor: STATUS_CORES.remarcadas },
+      { nome: 'Canceladas', valor: soma('sessoes','canceladas'), cor: STATUS_CORES.canceladas },
+      { nome: 'Faltou', valor: soma('sessoes','faltou'), cor: STATUS_CORES.faltou }
+    ];
+    return {
+      statusSessoes: statusSessoes,
+      sessoesPorMes: meses.map(function(m){ return { mes: m.mes, realizadas: m.sessoes.realizadas, canceladas: m.sessoes.canceladas, remarcadas: m.sessoes.remarcadas, faltou: m.sessoes.faltou }; }),
+      confirmadas: soma('sessoes','confirmadas'),
+      pacientes: { novos: soma('pacientes','novos'), desistencias: soma('pacientes','desistencias'), ativos: meses[meses.length-1].pacientes.ativos },
+      pacientesPorMes: meses.map(function(m){ return { mes: m.mes, ativos: m.pacientes.ativos, novos: m.pacientes.novos, desistencias: m.pacientes.desistencias }; }),
+      financeiro: { recebido: soma('financeiro','recebido'), pendente: meses[meses.length-1].financeiro.pendente, atrasado: meses[meses.length-1].financeiro.atrasado },
+      financeiroPorMes: meses.map(function(m){ return { mes: m.mes, recebido: m.financeiro.recebido, pendente: m.financeiro.pendente, atrasado: m.financeiro.atrasado }; }),
+      solicPorTipo: [
+        { nome: 'Ajuste de sessão', valor: soma('solic','ajuste') },
+        { nome: 'Financeiro', valor: soma('solic','financeiro') },
+        { nome: 'Documento médico', valor: soma('solic','documento') }
+      ],
+      solicPorStatus: [
+        { nome: 'Pendente', valor: soma('solic','pendente') },
+        { nome: 'Aprovada', valor: soma('solic','aprovada') },
+        { nome: 'Recusada', valor: soma('solic','recusada') }
+      ],
+      solicPorMes: meses.map(function(m){ return { mes: m.mes, ajuste: m.solic.ajuste, financeiro: m.solic.financeiro, documento: m.solic.documento, pendente: m.solic.pendente, aprovada: m.solic.aprovada, recusada: m.solic.recusada }; }),
+      tarefas: { concluidas: soma('tarefas','concluidas'), incompletas: soma('tarefas','incompletas'), atrasadas: soma('tarefas','atrasadas') },
+      avaliacoesPorMesHumor: meses.map(function(m){ return { mes: m.mes, avaliacoes: m.avaliacoes, humor: m.humor }; })
+    };
+  }
+
+  var fakeRelatorios = {
+    30: montarPeriodo(MESES_BASE.slice(-1)),
+    90: montarPeriodo(MESES_BASE.slice(-3)),
+    180: montarPeriodo(MESES_BASE.slice(-6)),
+    365: montarPeriodo(MESES_BASE)
   };
 
   function renderRelatorios(){
@@ -472,14 +514,33 @@
     var dados = fakeRelatorios[periodo];
 
     var totalStatus = dados.statusSessoes.reduce(function(s, i){ return s + i.valor; }, 0);
-    document.getElementById('grafico-status').innerHTML = dados.statusSessoes.map(function(s){
-      var pct = Math.round((s.valor / totalStatus) * 100);
-      return '<div class="barra-linha">' +
-        '<span class="barra-nome">' + s.nome + '</span>' +
-        '<div class="barra-trilho"><div class="barra-preenchida" style="width:' + pct + '%; background:' + s.cor + ';"></div></div>' +
-        '<span class="barra-valor">' + s.valor + '</span>' +
+    var realizadas = dados.statusSessoes.find(function(s){ return s.nome === 'Realizadas'; }).valor;
+    var taxaRealizacao = totalStatus ? Math.round((realizadas / totalStatus) * 100) : 0;
+    var totalTarefas = dados.tarefas.concluidas + dados.tarefas.incompletas + dados.tarefas.atrasadas;
+    var interacaoMedia = totalTarefas ? Math.round((dados.tarefas.concluidas / totalTarefas) * 100) : 0;
+
+    var kpiEls = document.querySelectorAll('.kpi-valor');
+    kpiEls[0].textContent = taxaRealizacao + '%';
+    kpiEls[1].textContent = 'R$ ' + dados.financeiro.recebido.toLocaleString('pt-BR');
+    kpiEls[2].textContent = interacaoMedia + '%';
+    kpiEls[3].textContent = '70%';
+
+    // Gráfico de rosca (donut) — sessões por status
+    var acumulado = 0;
+    var stops = dados.statusSessoes.map(function(s){
+      var pct = totalStatus ? (s.valor / totalStatus) * 100 : 0;
+      var inicio = acumulado;
+      acumulado += pct;
+      return s.cor + ' ' + inicio.toFixed(1) + '% ' + acumulado.toFixed(1) + '%';
+    }).join(', ');
+    document.getElementById('grafico-status').innerHTML =
+      '<div class="donut-wrap">' +
+        '<div class="donut" style="background: conic-gradient(' + stops + ');"><div class="donut-centro"><b>' + totalStatus + '</b><span>sessões</span></div></div>' +
+        '<div class="donut-legenda">' + dados.statusSessoes.map(function(s){
+          var pct = totalStatus ? Math.round((s.valor/totalStatus)*100) : 0;
+          return '<div class="donut-legenda-item"><i style="background:' + s.cor + ';"></i>' + s.nome + ' <b>' + s.valor + '</b> <span>(' + pct + '%)</span></div>';
+        }).join('') + '</div>' +
       '</div>';
-    }).join('');
 
     var totaisMensais = dados.sessoesPorMes.map(function(m){ return m.realizadas + m.canceladas + m.remarcadas + m.faltou; });
     var maxMensal = Math.max.apply(null, totaisMensais);
@@ -567,13 +628,18 @@
         interacao_media: document.querySelectorAll('.kpi-valor')[2].textContent,
         melhora_clinica: document.querySelectorAll('.kpi-valor')[3].textContent
       },
-      sessoes_por_status: dados.statusSessoes,
+      sessoes_por_status_total: dados.statusSessoes,
       sessoes_por_mes: dados.sessoesPorMes,
-      confirmadas: dados.confirmadas,
-      pacientes: dados.pacientes,
-      financeiro: dados.financeiro,
-      solicitacoes_por_tipo: dados.solicPorTipo,
-      solicitacoes_por_status: dados.solicPorStatus
+      confirmadas_total: dados.confirmadas,
+      pacientes_total: dados.pacientes,
+      pacientes_por_mes: dados.pacientesPorMes,
+      financeiro_total: dados.financeiro,
+      financeiro_por_mes: dados.financeiroPorMes,
+      solicitacoes_por_tipo_total: dados.solicPorTipo,
+      solicitacoes_por_status_total: dados.solicPorStatus,
+      solicitacoes_por_mes: dados.solicPorMes,
+      tarefas_total: dados.tarefas,
+      avaliacoes_e_humor_por_mes: dados.avaliacoesPorMesHumor
     };
 
     try{
@@ -583,7 +649,16 @@
         body: JSON.stringify(payload)
       });
       var json = await resposta.json();
-      if(json && json.analise){
+      if(json && Array.isArray(json.insights) && json.insights.length > 0){
+        var iconePorTipo = { positivo: '✓', atencao: '!', alerta: '⚠' };
+        wrap.innerHTML = '<div class="insights-grid">' + json.insights.map(function(item){
+          var tipo = item.tipo || 'atencao';
+          return '<div class="insight-card ' + tipo + '">' +
+            '<div class="insight-card-topo"><span class="insight-icone">' + (iconePorTipo[tipo] || '•') + '</span><span class="insight-categoria">' + (item.categoria || '') + '</span></div>' +
+            '<p class="insight-card-texto">' + item.texto + '</p>' +
+          '</div>';
+        }).join('') + '</div>';
+      } else if(json && json.analise){
         wrap.innerHTML = '<div class="analise-ia-texto">' + json.analise.replace(/\n/g, '<br>') + '</div>';
       } else {
         wrap.innerHTML = '<p class="analise-ia-erro">Não foi possível gerar a análise agora. Tente novamente.</p>';
