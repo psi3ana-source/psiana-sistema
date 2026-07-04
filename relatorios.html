@@ -132,6 +132,17 @@
   .kpi-card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; text-align:center; }
   .kpi-valor{ font-size:26px; font-weight:700; color:var(--mocha-deep); }
   .kpi-label{ font-size:12px; color:var(--ink-soft); margin-top:6px; line-height:1.4; }
+  .mini-titulo{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); margin:0 0 10px; }
+
+  .mini-kpi-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+  .mini-kpi{ background:#FEFCFB; border:1px solid var(--line); border-radius:10px; padding:14px 10px; text-align:center; }
+  .mini-kpi-valor{ font-size:19px; font-weight:700; color:var(--mocha-deep); }
+  .mini-kpi-valor.alerta{ color:var(--alerta); }
+  .mini-kpi-label{ font-size:10.5px; color:var(--ink-soft); margin-top:4px; line-height:1.3; }
+
+  @media (max-width: 700px){
+    .mini-kpi-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
 
   .rel-painel{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:18px; }
   .rel-painel-titulo{ font-size:15px; font-weight:600; color:var(--ink); margin:0 0 14px; }
@@ -317,6 +328,37 @@
       </div>
     </div>
 
+    <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Sessões — detalhamento</h2>
+      <div class="mini-kpi-grid" id="mini-sessoes"></div>
+    </div>
+
+    <div class="rel-grid-2">
+      <div class="rel-painel">
+        <h2 class="rel-painel-titulo">Pacientes</h2>
+        <div class="mini-kpi-grid" id="mini-pacientes"></div>
+      </div>
+      <div class="rel-painel">
+        <h2 class="rel-painel-titulo">Financeiro</h2>
+        <div class="mini-kpi-grid" id="mini-financeiro"></div>
+      </div>
+    </div>
+
+    <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Solicitações</h2>
+      <p class="page-sub" style="margin-bottom:14px;">Por tipo e por status, no período selecionado.</p>
+      <div class="rel-grid-2">
+        <div>
+          <p class="mini-titulo">Por tipo</p>
+          <div id="grafico-solic-tipo"></div>
+        </div>
+        <div>
+          <p class="mini-titulo">Por status</p>
+          <div id="grafico-solic-status"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -335,6 +377,8 @@
   var STATUS_CORES = {
     realizadas: '#1D7A6B', agendadas: '#6B57A8', canceladas: '#B5514A', remarcadas: '#A6790F', faltou: '#7A7A7A'
   };
+  var SOLIC_CORES_TIPO = { 'Ajuste de sessão': '#5B4FBF', 'Financeiro': '#2E7D32', 'Documento médico': '#B5680F' };
+  var SOLIC_CORES_STATUS = { 'Pendente': '#A6790F', 'Aprovada': '#2E7D32', 'Recusada': '#B5514A' };
 
   var fakeRelatorios = {
     90: {
@@ -347,6 +391,15 @@
       ],
       sessoesPorMes: [
         { mes: 'Mai', valor: 9 }, { mes: 'Jun', valor: 12 }, { mes: 'Jul', valor: 11 }
+      ],
+      confirmadas: 29,
+      pacientes: { novos: 2, desistencias: 1, ativos: 10 },
+      financeiro: { recebido: 1980, pendente: 220, atrasado: 220 },
+      solicPorTipo: [
+        { nome: 'Ajuste de sessão', valor: 5 }, { nome: 'Financeiro', valor: 3 }, { nome: 'Documento médico', valor: 2 }
+      ],
+      solicPorStatus: [
+        { nome: 'Pendente', valor: 3 }, { nome: 'Aprovada', valor: 6 }, { nome: 'Recusada', valor: 1 }
       ]
     },
     180: {
@@ -360,11 +413,37 @@
       sessoesPorMes: [
         { mes: 'Fev', valor: 8 }, { mes: 'Mar', valor: 10 }, { mes: 'Abr', valor: 9 },
         { mes: 'Mai', valor: 9 }, { mes: 'Jun', valor: 12 }, { mes: 'Jul', valor: 11 }
+      ],
+      confirmadas: 54,
+      pacientes: { novos: 4, desistencias: 2, ativos: 10 },
+      financeiro: { recebido: 3960, pendente: 220, atrasado: 440 },
+      solicPorTipo: [
+        { nome: 'Ajuste de sessão', valor: 9 }, { nome: 'Financeiro', valor: 5 }, { nome: 'Documento médico', valor: 4 }
+      ],
+      solicPorStatus: [
+        { nome: 'Pendente', valor: 3 }, { nome: 'Aprovada', valor: 12 }, { nome: 'Recusada', valor: 3 }
       ]
     }
   };
-  fakeRelatorios[30] = { statusSessoes: fakeRelatorios[90].statusSessoes.map(function(s){ return { nome: s.nome, valor: Math.max(1, Math.round(s.valor / 3)), cor: s.cor }; }), sessoesPorMes: fakeRelatorios[90].sessoesPorMes.slice(-1) };
-  fakeRelatorios[365] = { statusSessoes: fakeRelatorios[180].statusSessoes.map(function(s){ return { nome: s.nome, valor: Math.round(s.valor * 1.8), cor: s.cor }; }), sessoesPorMes: fakeRelatorios[180].sessoesPorMes };
+
+  fakeRelatorios[30] = {
+    statusSessoes: fakeRelatorios[90].statusSessoes.map(function(s){ return { nome: s.nome, valor: Math.max(1, Math.round(s.valor / 3)), cor: s.cor }; }),
+    sessoesPorMes: fakeRelatorios[90].sessoesPorMes.slice(-1),
+    confirmadas: 10,
+    pacientes: { novos: 1, desistencias: 0, ativos: 10 },
+    financeiro: { recebido: 660, pendente: 220, atrasado: 0 },
+    solicPorTipo: [ { nome: 'Ajuste de sessão', valor: 2 }, { nome: 'Financeiro', valor: 1 }, { nome: 'Documento médico', valor: 1 } ],
+    solicPorStatus: [ { nome: 'Pendente', valor: 2 }, { nome: 'Aprovada', valor: 2 }, { nome: 'Recusada', valor: 0 } ]
+  };
+  fakeRelatorios[365] = {
+    statusSessoes: fakeRelatorios[180].statusSessoes.map(function(s){ return { nome: s.nome, valor: Math.round(s.valor * 1.8), cor: s.cor }; }),
+    sessoesPorMes: fakeRelatorios[180].sessoesPorMes,
+    confirmadas: 97,
+    pacientes: { novos: 7, desistencias: 3, ativos: 10 },
+    financeiro: { recebido: 7480, pendente: 220, atrasado: 440 },
+    solicPorTipo: [ { nome: 'Ajuste de sessão', valor: 16 }, { nome: 'Financeiro', valor: 9 }, { nome: 'Documento médico', valor: 7 } ],
+    solicPorStatus: [ { nome: 'Pendente', valor: 3 }, { nome: 'Aprovada', valor: 24 }, { nome: 'Recusada', valor: 5 } ]
+  };
 
   function renderRelatorios(){
     var periodo = document.getElementById('select-periodo-rel').value;
@@ -392,6 +471,41 @@
           '</div>';
         }).join('') +
       '</div>';
+
+    function acharValor(nome){
+      var item = dados.statusSessoes.find(function(s){ return s.nome === nome; });
+      return item ? item.valor : 0;
+    }
+
+    document.getElementById('mini-sessoes').innerHTML =
+      '<div class="mini-kpi"><div class="mini-kpi-valor">' + dados.confirmadas + '</div><div class="mini-kpi-label">Confirmações</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor">' + acharValor('Remarcadas') + '</div><div class="mini-kpi-label">Remarcações</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">' + acharValor('Canceladas') + '</div><div class="mini-kpi-label">Cancelamentos</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">' + acharValor('Faltou') + '</div><div class="mini-kpi-label">Faltas</div></div>';
+
+    document.getElementById('mini-pacientes').innerHTML =
+      '<div class="mini-kpi"><div class="mini-kpi-valor">' + dados.pacientes.ativos + '</div><div class="mini-kpi-label">Ativos</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor">' + dados.pacientes.novos + '</div><div class="mini-kpi-label">Novos no período</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">' + dados.pacientes.desistencias + '</div><div class="mini-kpi-label">Desistências</div></div>';
+
+    document.getElementById('mini-financeiro').innerHTML =
+      '<div class="mini-kpi"><div class="mini-kpi-valor">R$ ' + dados.financeiro.recebido.toLocaleString('pt-BR') + '</div><div class="mini-kpi-label">Recebido</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">R$ ' + dados.financeiro.pendente.toLocaleString('pt-BR') + '</div><div class="mini-kpi-label">Pendente</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">R$ ' + dados.financeiro.atrasado.toLocaleString('pt-BR') + '</div><div class="mini-kpi-label">Atrasado</div></div>';
+
+    function desenharBarras(elId, lista, coresMap){
+      var total = lista.reduce(function(s, i){ return s + i.valor; }, 0);
+      document.getElementById(elId).innerHTML = lista.map(function(item){
+        var pct = total ? Math.round((item.valor / total) * 100) : 0;
+        return '<div class="barra-linha">' +
+          '<span class="barra-nome">' + item.nome + '</span>' +
+          '<div class="barra-trilho"><div class="barra-preenchida" style="width:' + pct + '%; background:' + coresMap[item.nome] + ';"></div></div>' +
+          '<span class="barra-valor">' + item.valor + '</span>' +
+        '</div>';
+      }).join('');
+    }
+    desenharBarras('grafico-solic-tipo', dados.solicPorTipo, SOLIC_CORES_TIPO);
+    desenharBarras('grafico-solic-status', dados.solicPorStatus, SOLIC_CORES_STATUS);
   }
 
   renderRelatorios();
