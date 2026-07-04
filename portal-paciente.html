@@ -294,6 +294,44 @@
   .s-realizada{ background:#DCEFEA; color:#1D7A6B; }
   .s-faltou{ background:#EFEFEF; color:#7A7A7A; }
 
+  /* --- Cards de status (Sessões) --- */
+  .status-card{
+    border: 1px solid var(--line); border-radius: 14px; margin-bottom: 10px;
+    overflow: hidden; background: #FEFCFB;
+  }
+  .status-card-header{
+    width:100%; display:flex; align-items:center; gap: 12px;
+    padding: 14px 14px; border:none; background:none; cursor:pointer;
+    border-left: 4px solid transparent; font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .status-card[data-status="agendada"] .status-card-header{ border-left-color:#6B57A8; }
+  .status-card[data-status="realizada"] .status-card-header{ border-left-color:#1D7A6B; }
+  .status-card[data-status="cancelada"] .status-card-header{ border-left-color:#B5514A; }
+  .status-card[data-status="remarcada"] .status-card-header{ border-left-color:#A6790F; }
+  .status-card[data-status="faltou"] .status-card-header{ border-left-color:#7A7A7A; }
+
+  .status-icon{
+    width: 34px; height:34px; border-radius: 50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .status-icon svg{ width: 17px; height:17px; }
+  .status-card[data-status="agendada"] .status-icon{ background:#EFEAFB; color:#6B57A8; }
+  .status-card[data-status="realizada"] .status-icon{ background:#DCEFEA; color:#1D7A6B; }
+  .status-card[data-status="cancelada"] .status-icon{ background:#FBEAEA; color:#B5514A; }
+  .status-card[data-status="remarcada"] .status-icon{ background:#FCF3DE; color:#A6790F; }
+  .status-card[data-status="faltou"] .status-icon{ background:#EFEFEF; color:#7A7A7A; }
+
+  .status-name{ flex:1; text-align:left; font-size: 14px; color: var(--ink); }
+  .status-count{ font-size: 15px; font-weight: 600; color: var(--mocha-deep); margin-right: 4px; }
+  .status-chevron{ width: 16px; height:16px; color: var(--ink-soft); transition: transform .2s ease; flex-shrink:0; }
+  .status-chevron.open{ transform: rotate(180deg); }
+
+  .status-card-body{ max-height:0; overflow:hidden; transition: max-height .25s ease; }
+  .status-card-body.open{ max-height: 600px; }
+  .status-card-body .sess-item{ padding: 12px 14px; border-top: 1px solid var(--line); border-bottom:none; }
+  .status-card-body .sess-item:first-child{ border-top: 1px solid var(--line); }
+  .status-card-empty{ padding: 14px; font-size: 12.5px; color: var(--ink-soft); text-align:center; }
+
   .empty{
     text-align:center; padding: 30px 10px; color: var(--ink-soft); font-size: 13.5px;
   }
@@ -414,6 +452,25 @@
     display:grid; grid-template-columns: 1fr 1fr; gap: 10px;
   }
   .fin-grid-single{ grid-template-columns: minmax(0,220px); }
+  .last-pgto{
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+  }
+  .last-pgto-label{
+    font-size: 11px; color: var(--ink-soft); text-transform: uppercase;
+    letter-spacing: 0.05em; margin-bottom: 6px;
+  }
+  .last-pgto-row{ font-size: 14px; color: var(--ink); }
+  .last-pgto-value{ font-weight: 600; color: var(--mocha-deep); }
+  .last-pgto-sep{ color: var(--ink-soft); margin: 0 6px; }
+
+  .chip-filters{ display:flex; align-items:center; flex-wrap:wrap; gap: 7px; margin-bottom: 10px; }
+  .chip-group-label{ font-size: 11px; color: var(--ink-soft); width: 42px; flex-shrink:0; }
+  .chip{
+    font-size: 12px; padding: 6px 13px; border-radius: 20px;
+    border: 1px solid var(--line); background: #FEFCFB; color: var(--ink-soft);
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .chip.active{ background: var(--mocha); border-color: var(--mocha); color:#FFF6F4; }
   .fin-card{
     background: #FEFCFB; border: 1px solid var(--line); border-radius: 12px;
     padding: 14px 16px;
@@ -640,8 +697,8 @@
     <div id="tab-sessoes" class="tab-view hidden">
       <div class="panel">
         <h2>Histórico de sessões</h2>
-        <p class="small">Acompanhe as suas últimas sessões.</p>
-        <div id="lista-sessoes"></div>
+        <p class="small">Toque em um status para ver o detalhe.</p>
+        <div id="status-cards"></div>
       </div>
     </div>
 
@@ -776,11 +833,38 @@
             <div class="fin-value">R$ 220,00</div>
           </div>
         </div>
+        <div class="last-pgto">
+          <div class="last-pgto-label">Último pagamento</div>
+          <div class="last-pgto-row">
+            <span class="last-pgto-value">R$ 220,00</span>
+            <span class="last-pgto-sep">·</span>
+            <span>30/06/2026</span>
+            <span class="last-pgto-sep">·</span>
+            <span>Pix</span>
+          </div>
+        </div>
       </div>
 
       <div class="panel">
         <h2>Histórico de pagamentos</h2>
-        <p class="small">Valor, status e recibo de cada sessão.</p>
+        <div class="chip-filters" id="pgto-filtros">
+          <span class="chip-group-label">Data</span>
+          <button class="chip active" data-group="periodo" data-value="todos" onclick="setFiltroPagamento('periodo','todos')">Tudo</button>
+          <button class="chip" data-group="periodo" data-value="3m" onclick="setFiltroPagamento('periodo','3m')">3 meses</button>
+          <button class="chip" data-group="periodo" data-value="6m" onclick="setFiltroPagamento('periodo','6m')">6 meses</button>
+        </div>
+        <div class="chip-filters">
+          <span class="chip-group-label">Status</span>
+          <button class="chip active" data-group="status" data-value="todos" onclick="setFiltroPagamento('status','todos')">Todos</button>
+          <button class="chip" data-group="status" data-value="pago" onclick="setFiltroPagamento('status','pago')">Pago</button>
+          <button class="chip" data-group="status" data-value="pendente" onclick="setFiltroPagamento('status','pendente')">Pendente</button>
+        </div>
+        <div class="chip-filters">
+          <span class="chip-group-label">Forma</span>
+          <button class="chip active" data-group="forma" data-value="todos" onclick="setFiltroPagamento('forma','todos')">Todas</button>
+          <button class="chip" data-group="forma" data-value="Pix" onclick="setFiltroPagamento('forma','Pix')">Pix</button>
+          <button class="chip" data-group="forma" data-value="Cartão" onclick="setFiltroPagamento('forma','Cartão')">Cartão</button>
+        </div>
         <div id="lista-pagamentos"></div>
       </div>
     </div>
@@ -814,6 +898,21 @@
     { data: "21/04/2026", encontro: 7, valor: "R$ 220,00", status: "pago", forma: "Pix", recibo: "emitido" },
     { data: "07/04/2026", encontro: 6, valor: "R$ 220,00", status: "pago", forma: "Pix", recibo: "emitido" }
   ];
+
+  var filtroPagamento = { periodo: 'todos', status: 'todos', forma: 'todos' };
+
+  function parseDataBR(str){
+    var partes = str.split('/');
+    return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+  }
+
+  function setFiltroPagamento(grupo, valor){
+    filtroPagamento[grupo] = valor;
+    document.querySelectorAll('.chip[data-group="' + grupo + '"]').forEach(function(c){
+      c.classList.toggle('active', c.getAttribute('data-value') === valor);
+    });
+    renderPagamentos();
+  }
 
   function goTo(view){
     document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
@@ -1002,35 +1101,82 @@
     window._moodLabelTimeout = setTimeout(ocultarLabelHumor, 1800);
   }
 
+  var STATUS_ICONS = {
+    agendada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>',
+    realizada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+    cancelada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    remarcada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 21v-5h5"/></svg>',
+    faltou: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor"/><circle cx="12" cy="12" r="9.5"/></svg>'
+  };
+  var STATUS_ORDER = ['agendada', 'realizada', 'cancelada', 'remarcada', 'faltou'];
+  var STATUS_LABEL_PLURAL = {
+    agendada: 'Agendadas', realizada: 'Realizadas', cancelada: 'Canceladas',
+    remarcada: 'Remarcadas', faltou: 'Ausentes'
+  };
+
   function renderSessoes(){
-    var wrap = document.getElementById('lista-sessoes');
-    if(fakeSessoes.length === 0){
-      wrap.innerHTML = '<div class="empty">Nenhuma sessão registrada ainda.</div>';
-      return;
-    }
-    wrap.innerHTML = fakeSessoes.map(function(s){
-      return '<div class="sess-item">' +
-        '<div class="sess-dot s-' + s.status + '" style="background:currentColor;"></div>' +
-        '<div class="info">' +
-          '<div class="t">Encontro ' + s.encontro + ' &middot; ' + s.data + '</div>' +
-          '<div class="s">' + s.hora + '</div>' +
+    var wrap = document.getElementById('status-cards');
+    wrap.innerHTML = STATUS_ORDER.map(function(status){
+      var items = fakeSessoes.filter(function(s){ return s.status === status; });
+      return '<div class="status-card" data-status="' + status + '">' +
+        '<button class="status-card-header" onclick="toggleStatusCard(\'' + status + '\')">' +
+          '<span class="status-icon">' + STATUS_ICONS[status] + '</span>' +
+          '<span class="status-name">' + STATUS_LABEL_PLURAL[status] + '</span>' +
+          '<span class="status-count">' + items.length + '</span>' +
+          '<svg class="status-chevron" id="chevron-' + status + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</button>' +
+        '<div class="status-card-body" id="body-' + status + '">' +
+          (items.length === 0
+            ? '<div class="status-card-empty">Nenhuma sessão neste status.</div>'
+            : items.map(function(s){
+                return '<div class="sess-item">' +
+                  '<div class="sess-dot s-' + s.status + '" style="background:currentColor;"></div>' +
+                  '<div class="info">' +
+                    '<div class="t">Encontro ' + s.encontro + ' &middot; ' + s.data + '</div>' +
+                    '<div class="s">' + s.hora + '</div>' +
+                  '</div>' +
+                  '<div class="sess-status s-' + s.status + '">' + statusLabel[s.status] + '</div>' +
+                '</div>';
+              }).join('')
+          ) +
         '</div>' +
-        '<div class="sess-status s-' + s.status + '">' + statusLabel[s.status] + '</div>' +
       '</div>';
     }).join('');
   }
 
+  function toggleStatusCard(status){
+    var body = document.getElementById('body-' + status);
+    var chevron = document.getElementById('chevron-' + status);
+    var isOpen = body.classList.contains('open');
+    document.querySelectorAll('.status-card-body').forEach(function(b){ b.classList.remove('open'); });
+    document.querySelectorAll('.status-chevron').forEach(function(c){ c.classList.remove('open'); });
+    if(!isOpen){
+      body.classList.add('open');
+      chevron.classList.add('open');
+    }
+  }
+
   function renderPagamentos(){
     var wrap = document.getElementById('lista-pagamentos');
-    if(fakePagamentos.length === 0){
-      wrap.innerHTML = '<div class="empty">Nenhum pagamento registrado ainda.</div>';
+    var hoje = new Date(2026, 6, 3);
+    var lista = fakePagamentos.filter(function(p){
+      if(filtroPagamento.status !== 'todos' && p.status !== filtroPagamento.status) return false;
+      if(filtroPagamento.forma !== 'todos' && p.forma !== filtroPagamento.forma) return false;
+      if(filtroPagamento.periodo !== 'todos'){
+        var meses = filtroPagamento.periodo === '3m' ? 3 : 6;
+        var limite = new Date(hoje.getFullYear(), hoje.getMonth() - meses, hoje.getDate());
+        if(parseDataBR(p.data) < limite) return false;
+      }
+      return true;
+    });
+    if(lista.length === 0){
+      wrap.innerHTML = '<div class="empty">Nenhum pagamento encontrado para esse filtro.</div>';
       return;
     }
-    wrap.innerHTML = fakePagamentos.map(function(p){
+    wrap.innerHTML = lista.map(function(p){
       return '<div class="pgto-item">' +
         '<div class="info">' +
           '<div class="t">Encontro ' + p.encontro + ' &middot; ' + p.data + '</div>' +
-          '<div class="s">' + p.forma + '</div>' +
         '</div>' +
         '<div class="valor">' + p.valor + '</div>' +
         '<div class="pgto-badges">' +
