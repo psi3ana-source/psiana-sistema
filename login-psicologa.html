@@ -8,7 +8,16 @@
   body{ font-family:'Segoe UI', Arial, sans-serif; background:#FAF6F5; color:#2C2C2C; padding:2rem 1rem; margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; }
   .wrap{ max-width:380px; width:100%; }
   .card{ background:#fff; border:1px solid #EDE4E3; border-radius:12px; padding:2rem 1.75rem; text-align:center; }
-  .logo{ width:110px; margin:0 auto 18px; display:block; }
+  .selo-frame{
+    width:78px; height:78px; margin:0 auto 16px; border-radius:50%;
+    background:#fff; border:1px solid #EDE4E3; display:flex; align-items:center; justify-content:center;
+    position:relative; box-shadow:0 8px 20px -8px rgba(120,93,86,0.3);
+  }
+  .selo-frame::before{
+    content:''; position:absolute; inset:-6px; border-radius:50%;
+    border:1px dashed #C89F9D; opacity:0.45;
+  }
+  .selo-frame img{ width:42px; height:42px; object-fit:contain; }
   h1{ font-size:19px; color:#2C2C2C; margin:0 0 6px; font-weight:600; }
   p.sub{ font-size:13px; color:#999; margin:0 0 24px; }
   .field{ text-align:left; margin-bottom:16px; position:relative; }
@@ -29,8 +38,10 @@
 <body>
 <div class="wrap">
   <div class="card">
-    <img class="logo" src="selo.png" alt="PsiAna" onerror="this.style.display='none';">
-    <h1>Área da psicóloga</h1>
+    <div class="selo-frame">
+      <img src="selo.png" alt="PsiAna" onerror="this.onerror=null; this.src='icone_selo.png';">
+    </div>
+    <h1>Cantinho da Psi</h1>
     <p class="sub">Acesse com seu CPF e senha.</p>
 
     <div class="erro" id="erro">CPF ou senha incorretos.</div>
@@ -56,7 +67,7 @@
 <script>
   // ===== Configuração =====
   var N8N_WEBHOOK_LOGIN = 'https://psi3ana.app.n8n.cloud/webhook/login-psicologa';
-  var REDIRECT_APOS_LOGIN = 'ficha-paciente_1_29_5.html'; // troque aqui se quiser redirecionar para outra tela
+  var REDIRECT_APOS_LOGIN = 'visao-geral.html';
 
   var EYE_OPEN = '<path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/>';
   var EYE_CLOSED = '<path d="M3 3l18 18"/><path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c7 0 10.5 7 10.5 7a13.6 13.6 0 0 1-3.1 3.9M6.5 6.5C3.6 8.3 1.5 12 1.5 12s3.5 7 10.5 7a10.4 10.4 0 0 0 4.3-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
