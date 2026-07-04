@@ -156,6 +156,50 @@
   .nivel-badge.medio{ background:var(--aviso-bg); color:var(--aviso); }
   .nivel-badge.baixo{ background:var(--alerta-bg); color:var(--alerta); }
 
+  /* --- Card de destaque: Progresso Clínico --- */
+  .highlight-clinico{
+    background: linear-gradient(135deg, var(--rose-soft), #fff);
+    border: 1px solid var(--line); border-radius: 16px;
+    padding: 22px 24px; margin-bottom: 18px;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
+  }
+  .highlight-clinico-label{
+    font-size: 11px; text-transform:uppercase; letter-spacing:0.06em; color: var(--mocha);
+    background:#fff; border:1px solid var(--line); padding:4px 12px; border-radius:20px;
+  }
+  .highlight-clinico-valor{ font-size: 28px; font-weight:700; color: var(--mocha-deep); margin-top:10px; }
+  .highlight-clinico-sub{ font-size: 12.5px; color: var(--ink-soft); margin-top:2px; }
+  .highlight-clinico-breakdown{ display:flex; gap:18px; flex-wrap:wrap; }
+  .hc-item{ font-size:12.5px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+  .hc-item b{ color:var(--mocha-deep); }
+  .hc-dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .hc-dot.melhora{ background:var(--ok); }
+  .hc-dot.estavel{ background:var(--aviso); }
+  .hc-dot.piora{ background:var(--alerta); }
+
+  .dica-clique{ font-size:12px; color:var(--ink-soft); margin: 0 0 8px; }
+
+  /* --- Detalhamento expansível --- */
+  .eng-card{ cursor:pointer; flex-direction:column; align-items:stretch; }
+  .eng-card-topo{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .eng-chevron{ width:16px; height:16px; color:var(--ink-soft); transition: transform .2s ease; flex-shrink:0; margin-left:auto; }
+  .eng-chevron.open{ transform: rotate(180deg); }
+  .eng-detalhe{ max-height:0; overflow:hidden; transition: max-height .25s ease; }
+  .eng-detalhe.open{ max-height: 400px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
+  .eng-detalhe-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+  .eng-detalhe-bloco{ background:#FEFCFB; border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .eng-detalhe-titulo{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); margin-bottom:8px; }
+  .eng-detalhe-linha{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink); padding:3px 0; }
+  .eng-detalhe-linha b{ color:var(--mocha-deep); }
+  .eng-clinico-tag{ display:inline-block; font-size:11px; padding:3px 10px; border-radius:20px; font-weight:600; margin-top:10px; }
+  .eng-clinico-tag.melhora{ background:var(--ok-bg); color:var(--ok); }
+  .eng-clinico-tag.estavel{ background:var(--aviso-bg); color:var(--aviso); }
+  .eng-clinico-tag.piora{ background:var(--alerta-bg); color:var(--alerta); }
+
+  @media (max-width: 700px){
+    .eng-detalhe-grid{ grid-template-columns:1fr; }
+  }
+
   @media (max-width: 980px){
     .cards-grid{ grid-template-columns:repeat(2, 1fr); }
   }
@@ -264,6 +308,19 @@
     <h2 class="page-titulo">Engajamento</h2>
     <p class="page-sub">Como os pacientes estão se envolvendo com o acompanhamento, entre uma sessão e outra.</p>
 
+    <div class="highlight-clinico">
+      <div class="highlight-clinico-topo">
+        <span class="highlight-clinico-label">Progresso Clínico</span>
+        <div class="highlight-clinico-valor">7 de 10 pacientes</div>
+        <div class="highlight-clinico-sub">com melhora nos indicadores clínicos no período</div>
+      </div>
+      <div class="highlight-clinico-breakdown">
+        <div class="hc-item"><span class="hc-dot melhora"></span>Melhora <b>7</b></div>
+        <div class="hc-item"><span class="hc-dot estavel"></span>Estável <b>2</b></div>
+        <div class="hc-item"><span class="hc-dot piora"></span>Atenção <b>1</b></div>
+      </div>
+    </div>
+
     <div class="resumo-grid">
       <div class="resumo-card">
         <div class="resumo-label">Tarefas concluídas</div>
@@ -297,6 +354,7 @@
       </div>
     </div>
 
+    <p class="dica-clique">Toque em um paciente para ver o detalhamento.</p>
     <div id="lista-engajamento" class="eng-lista"></div>
 
   </div>
@@ -315,17 +373,39 @@
   })();
 
   var fakeEngajamento = [
-    { nome: "Willian Francisco Caetano Lopes", iniciais: "WL", tarefas: 85, humor: "🙂", sessoesAvaliadas: "5 de 5", nivel: "alto" },
-    { nome: "Anna Clara Oldoni Costa", iniciais: "AC", tarefas: 20, humor: "😐", sessoesAvaliadas: "0 de 1", nivel: "baixo" },
-    { nome: "Catarina Marchi Jasper", iniciais: "CM", tarefas: 60, humor: "🙂", sessoesAvaliadas: "3 de 4", nivel: "medio" },
-    { nome: "Dariana Christina Marcelino Valle", iniciais: "DV", tarefas: 90, humor: "😄", sessoesAvaliadas: "6 de 6", nivel: "alto" },
-    { nome: "Emiliane Clarissa Gomes de Lima", iniciais: "EL", tarefas: 45, humor: "😕", sessoesAvaliadas: "2 de 5", nivel: "medio" },
-    { nome: "Graziela Premoli de Souza", iniciais: "GP", tarefas: 70, humor: "🙂", sessoesAvaliadas: "4 de 5", nivel: "alto" },
-    { nome: "Julia de Paiva Bento", iniciais: "JB", tarefas: 55, humor: "😐", sessoesAvaliadas: "3 de 5", nivel: "medio" },
-    { nome: "Lara Cristina Petry Bueno", iniciais: "LB", tarefas: 10, humor: "😔", sessoesAvaliadas: "1 de 6", nivel: "baixo" },
-    { nome: "Marcos Rosti Martins Filho", iniciais: "MM", tarefas: 75, humor: "🙂", sessoesAvaliadas: "3 de 3", nivel: "alto" },
-    { nome: "Sabrina Mendes Teixeira", iniciais: "ST", tarefas: 65, humor: "🙂", sessoesAvaliadas: "3 de 4", nivel: "medio" }
+    { nome: "Willian Francisco Caetano Lopes", iniciais: "WL", tarefas: 85, humor: "🙂", sessoesAvaliadas: "5 de 5", nivel: "alto",
+      tarefasDet: { concluidas: 6, pendentes: 1, atrasadas: 0 }, humorDet: { bem: 4, neutro: 2, dificil: 0 },
+      sessoesDet: { avaliadas: 5, realizadas: 5, positivas: 5, neutras: 0, negativas: 0 }, clinico: "melhora" },
+    { nome: "Anna Clara Oldoni Costa", iniciais: "AC", tarefas: 20, humor: "😐", sessoesAvaliadas: "0 de 1", nivel: "baixo",
+      tarefasDet: { concluidas: 1, pendentes: 2, atrasadas: 2 }, humorDet: { bem: 0, neutro: 3, dificil: 1 },
+      sessoesDet: { avaliadas: 0, realizadas: 1, positivas: 0, neutras: 0, negativas: 0 }, clinico: "estavel" },
+    { nome: "Catarina Marchi Jasper", iniciais: "CM", tarefas: 60, humor: "🙂", sessoesAvaliadas: "3 de 4", nivel: "medio",
+      tarefasDet: { concluidas: 3, pendentes: 2, atrasadas: 0 }, humorDet: { bem: 3, neutro: 2, dificil: 1 },
+      sessoesDet: { avaliadas: 3, realizadas: 4, positivas: 3, neutras: 0, negativas: 0 }, clinico: "melhora" },
+    { nome: "Dariana Christina Marcelino Valle", iniciais: "DV", tarefas: 90, humor: "😄", sessoesAvaliadas: "6 de 6", nivel: "alto",
+      tarefasDet: { concluidas: 9, pendentes: 1, atrasadas: 0 }, humorDet: { bem: 6, neutro: 1, dificil: 0 },
+      sessoesDet: { avaliadas: 6, realizadas: 6, positivas: 6, neutras: 0, negativas: 0 }, clinico: "melhora" },
+    { nome: "Emiliane Clarissa Gomes de Lima", iniciais: "EL", tarefas: 45, humor: "😕", sessoesAvaliadas: "2 de 5", nivel: "medio",
+      tarefasDet: { concluidas: 4, pendentes: 3, atrasadas: 2 }, humorDet: { bem: 1, neutro: 3, dificil: 3 },
+      sessoesDet: { avaliadas: 2, realizadas: 5, positivas: 1, neutras: 1, negativas: 0 }, clinico: "piora" },
+    { nome: "Graziela Premoli de Souza", iniciais: "GP", tarefas: 70, humor: "🙂", sessoesAvaliadas: "4 de 5", nivel: "alto",
+      tarefasDet: { concluidas: 7, pendentes: 2, atrasadas: 1 }, humorDet: { bem: 4, neutro: 2, dificil: 0 },
+      sessoesDet: { avaliadas: 4, realizadas: 5, positivas: 4, neutras: 0, negativas: 0 }, clinico: "melhora" },
+    { nome: "Julia de Paiva Bento", iniciais: "JB", tarefas: 55, humor: "😐", sessoesAvaliadas: "3 de 5", nivel: "medio",
+      tarefasDet: { concluidas: 5, pendentes: 3, atrasadas: 1 }, humorDet: { bem: 2, neutro: 4, dificil: 1 },
+      sessoesDet: { avaliadas: 3, realizadas: 5, positivas: 2, neutras: 1, negativas: 0 }, clinico: "estavel" },
+    { nome: "Lara Cristina Petry Bueno", iniciais: "LB", tarefas: 10, humor: "😔", sessoesAvaliadas: "1 de 6", nivel: "baixo",
+      tarefasDet: { concluidas: 1, pendentes: 4, atrasadas: 5 }, humorDet: { bem: 0, neutro: 2, dificil: 4 },
+      sessoesDet: { avaliadas: 1, realizadas: 6, positivas: 0, neutras: 0, negativas: 1 }, clinico: "melhora" },
+    { nome: "Marcos Rosti Martins Filho", iniciais: "MM", tarefas: 75, humor: "🙂", sessoesAvaliadas: "3 de 3", nivel: "alto",
+      tarefasDet: { concluidas: 6, pendentes: 1, atrasadas: 1 }, humorDet: { bem: 5, neutro: 2, dificil: 0 },
+      sessoesDet: { avaliadas: 3, realizadas: 3, positivas: 3, neutras: 0, negativas: 0 }, clinico: "melhora" },
+    { nome: "Sabrina Mendes Teixeira", iniciais: "ST", tarefas: 65, humor: "🙂", sessoesAvaliadas: "3 de 4", nivel: "medio",
+      tarefasDet: { concluidas: 5, pendentes: 2, atrasadas: 0 }, humorDet: { bem: 3, neutro: 3, dificil: 0 },
+      sessoesDet: { avaliadas: 3, realizadas: 4, positivas: 3, neutras: 0, negativas: 0 }, clinico: "melhora" }
   ];
+
+  var CLINICO_LABEL = { melhora: 'Melhora clínica', estavel: 'Estável', piora: 'Requer atenção' };
 
   var NIVEL_LABEL = { alto: 'Alto', medio: 'Médio', baixo: 'Baixo' };
 
@@ -349,20 +429,58 @@
       wrap.innerHTML = '<div style="text-align:center;color:var(--ink-soft);font-size:13px;padding:30px 0;">Nenhum paciente encontrado.</div>';
       return;
     }
-    wrap.innerHTML = lista.map(function(p){
-      return '<div class="eng-card">' +
-        '<div class="avatar-mini">' + p.iniciais + '</div>' +
-        '<div class="principal">' +
-          '<div class="nome">' + p.nome + '</div>' +
+    wrap.innerHTML = lista.map(function(p, idx){
+      return '<div class="eng-card" onclick="toggleDetalheEng(' + idx + ')">' +
+        '<div class="eng-card-topo">' +
+          '<div class="avatar-mini">' + p.iniciais + '</div>' +
+          '<div class="principal">' +
+            '<div class="nome">' + p.nome + '</div>' +
+          '</div>' +
+          '<div class="metricas">' +
+            '<div class="eng-metrica"><div class="valor">' + p.tarefas + '%</div><div class="rotulo">Tarefas</div></div>' +
+            '<div class="eng-metrica"><div class="valor">' + p.humor + '</div><div class="rotulo">Humor médio</div></div>' +
+            '<div class="eng-metrica"><div class="valor">' + p.sessoesAvaliadas + '</div><div class="rotulo">Avaliadas</div></div>' +
+          '</div>' +
+          '<span class="nivel-badge ' + p.nivel + '">' + NIVEL_LABEL[p.nivel] + '</span>' +
+          '<svg class="eng-chevron" id="eng-chevron-' + idx + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
         '</div>' +
-        '<div class="metricas">' +
-          '<div class="eng-metrica"><div class="valor">' + p.tarefas + '%</div><div class="rotulo">Tarefas</div></div>' +
-          '<div class="eng-metrica"><div class="valor">' + p.humor + '</div><div class="rotulo">Humor médio</div></div>' +
-          '<div class="eng-metrica"><div class="valor">' + p.sessoesAvaliadas + '</div><div class="rotulo">Avaliadas</div></div>' +
+        '<div class="eng-detalhe" id="eng-detalhe-' + idx + '">' +
+          '<div class="eng-detalhe-grid">' +
+            '<div class="eng-detalhe-bloco">' +
+              '<div class="eng-detalhe-titulo">Tarefas</div>' +
+              '<div class="eng-detalhe-linha"><span>Concluídas</span><b>' + p.tarefasDet.concluidas + '</b></div>' +
+              '<div class="eng-detalhe-linha"><span>Pendentes</span><b>' + p.tarefasDet.pendentes + '</b></div>' +
+              '<div class="eng-detalhe-linha"><span>Atrasadas</span><b>' + p.tarefasDet.atrasadas + '</b></div>' +
+            '</div>' +
+            '<div class="eng-detalhe-bloco">' +
+              '<div class="eng-detalhe-titulo">Humor da semana</div>' +
+              '<div class="eng-detalhe-linha"><span>Dias bem</span><b>' + p.humorDet.bem + '</b></div>' +
+              '<div class="eng-detalhe-linha"><span>Dias neutro</span><b>' + p.humorDet.neutro + '</b></div>' +
+              '<div class="eng-detalhe-linha"><span>Dias difícil</span><b>' + p.humorDet.dificil + '</b></div>' +
+            '</div>' +
+            '<div class="eng-detalhe-bloco">' +
+              '<div class="eng-detalhe-titulo">Sessões</div>' +
+              '<div class="eng-detalhe-linha"><span>Avaliadas × Realizadas</span><b>' + p.sessoesDet.avaliadas + ' / ' + p.sessoesDet.realizadas + '</b></div>' +
+              '<div class="eng-detalhe-linha"><span>Avaliações positivas</span><b>' + p.sessoesDet.positivas + '</b></div>' +
+              '<div class="eng-detalhe-linha"><span>Avaliações negativas</span><b>' + p.sessoesDet.negativas + '</b></div>' +
+            '</div>' +
+          '</div>' +
+          '<span class="eng-clinico-tag ' + p.clinico + '">' + CLINICO_LABEL[p.clinico] + '</span>' +
         '</div>' +
-        '<span class="nivel-badge ' + p.nivel + '">' + NIVEL_LABEL[p.nivel] + '</span>' +
       '</div>';
     }).join('');
+  }
+
+  function toggleDetalheEng(idx){
+    var detalhe = document.getElementById('eng-detalhe-' + idx);
+    var chevron = document.getElementById('eng-chevron-' + idx);
+    var estavaAberto = detalhe.classList.contains('open');
+    document.querySelectorAll('.eng-detalhe').forEach(function(d){ d.classList.remove('open'); });
+    document.querySelectorAll('.eng-chevron').forEach(function(c){ c.classList.remove('open'); });
+    if(!estavaAberto){
+      detalhe.classList.add('open');
+      chevron.classList.add('open');
+    }
   }
 
   popularSelectPacientesEng();
