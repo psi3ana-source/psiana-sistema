@@ -288,6 +288,25 @@
   .prog-value{ font-size: 22px; font-weight: 600; color: var(--mocha-deep); line-height:1; }
   .prog-label{ font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; line-height:1.3; }
 
+  .evol-compare{
+    display:flex; align-items:center; gap: 14px;
+  }
+  .evol-col{ flex:1; }
+  .evol-tag{
+    display:inline-block; font-size: 10.5px; text-transform:uppercase; letter-spacing:0.05em;
+    color: var(--ink-soft); background: #F2ECEC; padding: 3px 10px; border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .evol-tag-now{ background: var(--rose-soft); color: var(--mocha-deep); }
+  .evol-text{ font-size: 13px; color: var(--ink); line-height: 1.5; margin: 0; }
+  .evol-arrow{ color: var(--rose); flex-shrink:0; }
+  .evol-arrow svg{ width: 20px; height: 20px; }
+
+  @media (max-width: 480px){
+    .evol-compare{ flex-direction: column; align-items: stretch; }
+    .evol-arrow{ transform: rotate(90deg); align-self:center; }
+  }
+
   .invest-panel{ background: var(--rose-soft); border: none; }
   .invest-row{ display:flex; align-items:center; justify-content:space-between; }
   .invest-value{ font-size: 24px; font-weight: 600; color: var(--mocha-deep); }
@@ -489,11 +508,11 @@
     <div id="tab-jornada" class="tab-view hidden">
       <div class="panel">
         <h2>Sua jornada até aqui</h2>
-        <p class="small">Cada encontro é um passo. Aqui está o caminho que você já percorreu com a gente.</p>
+        <p class="small">Aqui está o caminho que você já percorreu comigo.</p>
         <div class="prog-grid">
           <div class="prog-card">
             <div class="prog-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-9.5-8.5C.6 8.7 2 5 5.5 4.2 8 3.6 10 5 12 7.5 14 5 16 3.6 18.5 4.2 22 5 23.4 8.7 21.5 12.5 19 16.65 12 21 12 21Z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="13" rx="2"/><path d="M8 21h8M12 17.5V21"/></svg>
             </div>
             <div class="prog-value">11</div>
             <div class="prog-label">Encontros realizados</div>
@@ -522,6 +541,24 @@
         </div>
       </div>
 
+      <div class="panel">
+        <h2>Sua evolução</h2>
+        <p class="small">Um resumo simples de onde você começou e onde está agora.</p>
+        <div class="evol-compare">
+          <div class="evol-col">
+            <div class="evol-tag">Quando você chegou</div>
+            <p class="evol-text">Sobrecarga emocional, autocrítica intensa e dificuldade em dizer não para os outros.</p>
+          </div>
+          <div class="evol-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+          </div>
+          <div class="evol-col">
+            <div class="evol-tag evol-tag-now">Hoje</div>
+            <p class="evol-text">Mais leveza no dia a dia e mais clareza para colocar limites sem culpa.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="panel invest-panel">
         <div class="invest-row">
           <div>
@@ -532,7 +569,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6M15 7h6"/></svg>
           </div>
         </div>
-        <p class="invest-note">Cada sessão foi um investimento em você — e olha até onde você já chegou. 🤍</p>
+        <p class="invest-note">O valor investido caminhou lado a lado com a sua evolução — da sobrecarga do início até a leveza de hoje. 🤍</p>
       </div>
     </div>
 
