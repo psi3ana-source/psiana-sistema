@@ -511,6 +511,18 @@
   }
   .filtro-select:focus{ outline:none; border-color: var(--rose); }
 
+  .filtro-grade{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+  }
+  .filtro-campo{ display:flex; flex-direction:column; gap: 5px; }
+  .filtro-campo-label{ font-size: 11px; color: var(--ink-soft); }
+  .filtro-select-grade{
+    font-size: 12.5px; padding: 9px 10px;
+    border: 1px solid var(--line); border-radius: 10px; background:#FEFCFB;
+    color: var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .filtro-select-grade:focus{ outline:none; border-color: var(--rose); }
+
   /* --- Documentos --- */
   .doc-lista{ display:flex; flex-direction:column; gap: 10px; }
   .doc-item{
@@ -1042,42 +1054,40 @@
 
       <div class="panel">
         <h2>Histórico de pagamentos</h2>
-        <div class="filtro-linha">
-          <span class="chip-group-label">Data</span>
-          <button class="chip active" id="chip-periodo" onclick="setFiltroChip('periodo')">Tudo</button>
-          <select class="filtro-select" id="select-periodo" onchange="setFiltroSelect('periodo', this.value)">
-            <option value="">Escolher mês…</option>
-            <option value="2026-06">Junho/2026</option>
-            <option value="2026-05">Maio/2026</option>
-            <option value="2026-04">Abril/2026</option>
-          </select>
-        </div>
-        <div class="filtro-linha">
-          <span class="chip-group-label">Status</span>
-          <button class="chip active" id="chip-status" onclick="setFiltroChip('status')">Todos</button>
-          <select class="filtro-select" id="select-status" onchange="setFiltroSelect('status', this.value)">
-            <option value="">Escolher status…</option>
-            <option value="pago">Pago</option>
-            <option value="pendente">Pendente</option>
-          </select>
-        </div>
-        <div class="filtro-linha">
-          <span class="chip-group-label">Forma</span>
-          <button class="chip active" id="chip-forma" onclick="setFiltroChip('forma')">Todas</button>
-          <select class="filtro-select" id="select-forma" onchange="setFiltroSelect('forma', this.value)">
-            <option value="">Escolher forma…</option>
-            <option value="Pix">Pix</option>
-            <option value="Cartão">Cartão</option>
-          </select>
-        </div>
-        <div class="filtro-linha">
-          <span class="chip-group-label">Recibo</span>
-          <button class="chip active" id="chip-recibo" onclick="setFiltroChip('recibo')">Todos</button>
-          <select class="filtro-select" id="select-recibo" onchange="setFiltroSelect('recibo', this.value)">
-            <option value="">Escolher recibo…</option>
-            <option value="emitido">Emitido</option>
-            <option value="pendente">Pendente</option>
-          </select>
+        <div class="filtro-grade">
+          <div class="filtro-campo">
+            <label class="filtro-campo-label">Data</label>
+            <select class="filtro-select-grade" id="select-periodo" onchange="setFiltroSelect('periodo', this.value)">
+              <option value="">Tudo</option>
+              <option value="2026-06">Junho/2026</option>
+              <option value="2026-05">Maio/2026</option>
+              <option value="2026-04">Abril/2026</option>
+            </select>
+          </div>
+          <div class="filtro-campo">
+            <label class="filtro-campo-label">Status</label>
+            <select class="filtro-select-grade" id="select-status" onchange="setFiltroSelect('status', this.value)">
+              <option value="">Todos</option>
+              <option value="pago">Pago</option>
+              <option value="pendente">Pendente</option>
+            </select>
+          </div>
+          <div class="filtro-campo">
+            <label class="filtro-campo-label">Forma</label>
+            <select class="filtro-select-grade" id="select-forma" onchange="setFiltroSelect('forma', this.value)">
+              <option value="">Todas</option>
+              <option value="Pix">Pix</option>
+              <option value="Cartão">Cartão</option>
+            </select>
+          </div>
+          <div class="filtro-campo">
+            <label class="filtro-campo-label">Recibo</label>
+            <select class="filtro-select-grade" id="select-recibo" onchange="setFiltroSelect('recibo', this.value)">
+              <option value="">Todos</option>
+              <option value="emitido">Emitido</option>
+              <option value="pendente">Pendente</option>
+            </select>
+          </div>
         </div>
         <div id="lista-pagamentos"></div>
       </div>
@@ -1310,20 +1320,8 @@
     return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
   }
 
-  function setFiltroChip(grupo){
-    filtroPagamento[grupo] = 'todos';
-    document.getElementById('chip-' + grupo).classList.add('active');
-    document.getElementById('select-' + grupo).value = '';
-    renderPagamentos();
-  }
-
   function setFiltroSelect(grupo, valor){
-    if(valor === ''){
-      setFiltroChip(grupo);
-      return;
-    }
-    filtroPagamento[grupo] = valor;
-    document.getElementById('chip-' + grupo).classList.remove('active');
+    filtroPagamento[grupo] = valor === '' ? 'todos' : valor;
     renderPagamentos();
   }
 
