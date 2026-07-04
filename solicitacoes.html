@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solicitações · PsiAna</title>
+<style>
+  :root{
+    --bg:#FAF6F5; --card:#fff; --line:#EDE4E3;
+    --mocha:#785D56; --mocha-deep:#5A453F; --rose:#C89F9D; --rose-soft:#F0E8E7;
+    --ink:#2C2C2C; --ink-soft:#999;
+    --ok:#2E7D32; --ok-bg:#E8F5E9; --alerta:#C62828; --alerta-bg:#FFEBEE; --aviso:#F57F17; --aviso-bg:#FFF8E1;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Segoe UI', Arial, sans-serif; background:var(--bg); color:var(--ink); }
+
+  .shell{ display:flex; min-height:100vh; }
+
+  /* --- Sidebar --- */
+  .sidebar{
+    width:224px; background:#fff; border-right:1px solid var(--line);
+    padding:22px 14px; display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
+  }
+  .sidebar-logo{ display:flex; justify-content:center; padding:0 0 20px; }
+  .sidebar-logo img{ width:150px; height:150px; object-fit:contain; }
+  .nav-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; padding:16px 10px 6px; }
+  .nav-label:first-of-type{ padding-top:4px; }
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:8px;
+    color:var(--ink); font-size:13.5px; cursor:pointer; text-decoration:none;
+  }
+  .nav-item svg{ width:17px; height:17px; color:var(--mocha); flex-shrink:0; }
+  .nav-item:hover{ background:var(--rose-soft); }
+  .nav-item.active{ background:var(--mocha); color:#fff; }
+  .nav-item.active svg{ color:#fff; }
+
+  /* --- Main --- */
+  .main{ flex:1; padding:32px 40px; max-width:1240px; }
+  .topo{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+  .topo h1{ font-size:21px; margin:0; color:var(--ink); font-weight:400; }
+  .topo .data{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+
+  .perfil-saudacao{ display:flex; align-items:center; gap:14px; }
+  .avatar-grande{
+    width:54px; height:54px; border-radius:50%; background:var(--rose-soft); color:var(--mocha);
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; flex-shrink:0;
+  }
+  .crp-linha{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .crp-texto{ font-size:11.5px; color:var(--ink-soft); }
+  .btn-config{
+    width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:#fff;
+    color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .btn-config:hover{ color:var(--mocha); border-color:var(--rose); }
+  .btn-config svg{ width:13px; height:13px; }
+
+  .btn-sair{
+    display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha);
+    background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px;
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; font-weight:500; flex-shrink:0;
+  }
+  .btn-sair:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-sair svg{ width:15px; height:15px; }
+
+  .aviso-topo{
+    display:flex; align-items:center; gap:10px; background:var(--aviso-bg); color:#8A5A0F;
+    border-radius:10px; padding:10px 16px; font-size:12.5px; margin-bottom:10px; cursor:pointer; width:fit-content;
+  }
+  .aviso-topo svg{ width:16px; height:16px; flex-shrink:0; }
+  .aviso-detalhe{
+    display:none; background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:12px 16px; font-size:12.5px; color:var(--ink); margin-bottom:20px; max-width:420px;
+  }
+  .aviso-detalhe.show{ display:block; }
+  .aviso-detalhe-item{ display:flex; justify-content:space-between; padding:5px 0; }
+  .aviso-detalhe-item:not(:last-child){ border-bottom:1px solid var(--bg); }
+
+  .cards-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-top:20px; }
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:20px; display:flex; flex-direction:column;
+  }
+  .card-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .card-head .icon{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .card-head .icon svg{ width:17px; height:17px; }
+  .card-head h2{ font-size:14px; margin:0; color:var(--ink); font-weight:600; }
+
+  .ic-financeiro{ background:#E8F5E9; color:#2E7D32; }
+  .ic-engajamento{ background:#F0E8E7; color:#785D56; }
+  .ic-solicitacoes{ background:#FFF8E1; color:#F57F17; }
+  .ic-agenda{ background:#E3E0F5; color:#5B4FBF; }
+  .ic-pacientes{ background:#F3E5F5; color:#8E24AA; }
+  .ic-relatorios{ background:#E1F0F5; color:#0288A8; }
+
+  .card-linha{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; color:var(--ink); padding:6px 0; border-bottom:1px solid var(--bg); }
+  .card-linha:last-of-type{ border-bottom:none; }
+  .card-linha .valor{ font-weight:600; color:var(--mocha-deep); }
+  .card-linha .valor.alerta{ color:var(--alerta); }
+  .card-destaque{ font-size:26px; font-weight:700; color:var(--mocha-deep); margin:2px 0 10px; }
+  .card-sub{ font-size:12px; color:var(--ink-soft); margin:-8px 0 12px; }
+
+  .card-alerta-linha{
+    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--alerta);
+    background:var(--alerta-bg); border-radius:8px; padding:7px 10px; margin-bottom:8px;
+  }
+  .card-alerta-linha svg{ width:14px; height:14px; flex-shrink:0; }
+
+  .card-link{
+    margin-top:auto; padding-top:12px; font-size:12.5px; color:var(--mocha);
+    text-decoration:none; display:flex; align-items:center; gap:5px; font-weight:500;
+  }
+  .card-link:hover{ color:var(--rose); }
+  .card-link svg{ width:13px; height:13px; }
+
+  /* --- Página Solicitações --- */
+  .breadcrumb{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
+  .breadcrumb a{ color:var(--ink-soft); text-decoration:none; }
+  .breadcrumb a:hover{ color:var(--mocha); }
+  .page-titulo{ font-size:20px; margin:0 0 4px; color:var(--ink); font-weight:600; }
+  .page-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px; }
+
+  .filtro-linha{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .chip-label{ font-size:11px; color:var(--ink-soft); width:46px; flex-shrink:0; }
+  .chip{
+    font-size:12px; padding:6px 13px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; color:var(--ink-soft); cursor:pointer; font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .chip.active{ background:var(--mocha); border-color:var(--mocha); color:#fff; }
+
+  .solic-lista{ margin-top:18px; display:flex; flex-direction:column; gap:12px; }
+  .solic-card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; display:flex; align-items:flex-start; gap:14px;
+  }
+  .solic-card .avatar-mini{
+    width:38px; height:38px; border-radius:50%; background:var(--rose-soft); color:var(--mocha);
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex-shrink:0;
+  }
+  .solic-card .corpo{ flex:1; min-width:0; }
+  .solic-card .linha-topo{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+  .solic-card .paciente-nome{ font-size:14px; font-weight:600; color:var(--ink); }
+  .tipo-badge{ font-size:10.5px; padding:3px 9px; border-radius:20px; font-weight:600; }
+  .tipo-ajuste{ background:#E3E0F5; color:#5B4FBF; }
+  .tipo-financeiro{ background:#E8F5E9; color:#2E7D32; }
+  .tipo-documento{ background:#FFF8E1; color:#B5680F; }
+  .solic-card .data-envio{ font-size:11.5px; color:var(--ink-soft); margin-left:auto; }
+  .solic-card .assunto{ font-size:13px; color:var(--ink); margin:2px 0 4px; }
+  .solic-card .mensagem{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+  .taxa-tag{
+    display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:#8A5A0F;
+    background:#FFF8E1; border-radius:8px; padding:4px 9px; margin-top:8px;
+  }
+  .solic-card .acoes{ display:flex; gap:8px; margin-top:12px; }
+  .btn-mini{
+    font-size:12px; padding:7px 15px; border-radius:20px; cursor:pointer;
+    font-family:'Segoe UI', Arial, sans-serif; border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  .btn-mini.aprovar{ background:var(--mocha); color:#fff; border-color:var(--mocha); }
+  .btn-mini.aprovar:hover{ background:var(--mocha-deep); }
+  .btn-mini.recusar:hover{ background:var(--alerta-bg); border-color:var(--alerta); color:var(--alerta); }
+  .status-badge{
+    font-size:11px; padding:4px 11px; border-radius:20px; font-weight:600; flex-shrink:0;
+  }
+  .status-pendente{ background:var(--aviso-bg); color:var(--aviso); }
+  .status-aprovada{ background:var(--ok-bg); color:var(--ok); }
+  .status-recusada{ background:var(--alerta-bg); color:var(--alerta); }
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(62,50,46,0.45);
+    align-items:center; justify-content:center; padding:20px; z-index:100;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-card{
+    background:#fff; border-radius:18px; padding:26px 24px; width:100%; max-width:420px;
+    max-height:85vh; overflow-y:auto; box-shadow:0 20px 50px -12px rgba(62,50,46,0.35);
+  }
+  .modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .modal-head h2{ font-size:16px; margin:0; color:var(--ink); }
+  .modal-close{ border:none; background:none; font-size:15px; color:var(--ink-soft); cursor:pointer; }
+  .modal-corpo-linha{ font-size:13px; color:var(--ink); margin-bottom:10px; line-height:1.5; }
+  .modal-corpo-linha b{ color:var(--mocha-deep); }
+  .modal-textarea{
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+    font-family:inherit; font-size:13px; margin:10px 0 14px; resize:vertical;
+  }
+
+  @media (max-width: 980px){
+    .cards-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width: 720px){
+    .sidebar{ display:none; }
+    .main{ padding:24px 18px; }
+    .cards-grid{ grid-template-columns:1fr; }
+    .topo{ flex-direction:column; }
+    .perfil-saudacao{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="selo.png" alt="PsiAna" onerror="this.onerror=null; this.src='icone_selo.png';">
+    </div>
+
+    <div class="nav-label">Rotinas</div>
+    <a class="nav-item" href="visao-geral.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+      Início
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
+      Pacientes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
+      Agenda
+    </a>
+    <a class="nav-item active" href="solicitacoes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v11H8.5L4 19.5v-15Z"/><path d="M8 9h8M8 12.3h5"/></svg>
+      Solicitações
+    </a>
+
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h14a3 3 0 0 1 3 3v7a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5v-10Z"/><path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h9"/><circle cx="16.5" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
+      Financeiro
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12V3.5Z"/><path d="M15.5 3.9A8.5 8.5 0 0 1 20.1 8.5H15.5V3.9Z"/></svg>
+      Relatórios
+    </a>
+
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5c2.5-1.3 5-1.3 7.5 0v14c-2.5-1.3-5-1.3-7.5 0v-14Z"/><path d="M19.5 5.5c-2.5-1.3-5-1.3-7.5 0v14c2.5-1.3 5-1.3 7.5 0v-14Z"/></svg>
+      Psicoeducação
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6M8 6.5h8l-1.3 4.3 3.3 6.7a1.5 1.5 0 0 1-1.35 2.15H7.35A1.5 1.5 0 0 1 6 17.5l3.3-6.7L8 6.5Z"/></svg>
+      Testes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>
+      Atividades
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5"/><circle cx="12" cy="15.7" r="0.6" fill="currentColor" stroke="none"/></svg>
+      Apoio
+    </a>
+
+    <div class="nav-label">Clínica Avançada</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.4 3.1L16.5 7l-3.1 1.4L12 11.5l-1.4-3.1L7.5 7l3.1-.9L12 3Z"/><path d="M5.5 14l.8 1.8L8 16.5l-1.7.8-.8 1.8-.8-1.8L3 16.5l1.7-.7.8-1.8Z"/><path d="M17.5 13.5l.9 2 2 .9-2 .9-.9 2-.9-2-2-.9 2-.9.9-2Z"/></svg>
+      Prontuários com IA
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+      Supervisão
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5h11v7H8l-3 3v-3H3v-7Z"/><path d="M11 10.5h10v6h-3v3l-3-3h-4v-6Z"/></svg>
+      Discussão de Casos
+    </a>
+  </div>
+
+  <!-- ===== CONTEÚDO ===== -->
+  <div class="main">
+    <div class="topo">
+      <div class="perfil-saudacao">
+        <div class="avatar-grande">AC</div>
+        <div>
+          <h1 id="saudacao">Bom dia, Ana</h1>
+          <div class="data" id="dataHoje">Sábado, 04 de julho</div>
+          <div class="crp-linha">
+            <span class="crp-texto">CRP 12/28631</span>
+            <button class="btn-config" title="Configurações" onclick="window.location.href='#'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <button class="btn-sair" onclick="sair()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Sair
+      </button>
+    </div>
+
+    <div class="breadcrumb"><a href="visao-geral.html">Início</a> / Solicitações</div>
+    <h2 class="page-titulo">Solicitações</h2>
+    <p class="page-sub">Acompanhe e responda aos pedidos enviados pelos seus pacientes.</p>
+
+    <div class="filtro-linha">
+      <span class="chip-label">Tipo</span>
+      <button class="chip active" data-grupo="tipo" data-valor="todos" onclick="setFiltro('tipo','todos')">Todos</button>
+      <button class="chip" data-grupo="tipo" data-valor="ajuste" onclick="setFiltro('tipo','ajuste')">Ajuste de sessão</button>
+      <button class="chip" data-grupo="tipo" data-valor="financeiro" onclick="setFiltro('tipo','financeiro')">Financeiro</button>
+      <button class="chip" data-grupo="tipo" data-valor="documento" onclick="setFiltro('tipo','documento')">Documento médico</button>
+    </div>
+    <div class="filtro-linha">
+      <span class="chip-label">Status</span>
+      <button class="chip active" data-grupo="status" data-valor="pendente" onclick="setFiltro('status','pendente')">Pendentes</button>
+      <button class="chip" data-grupo="status" data-valor="todos" onclick="setFiltro('status','todos')">Todas</button>
+      <button class="chip" data-grupo="status" data-valor="resolvida" onclick="setFiltro('status','resolvida')">Resolvidas</button>
+    </div>
+
+    <div id="lista-solicitacoes" class="solic-lista"></div>
+
+    <!-- Modal de detalhe / resposta -->
+    <div class="modal-overlay" id="modal-solic">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h2 id="modal-titulo">Solicitação</h2>
+          <button class="modal-close" onclick="fecharModal()">✕</button>
+        </div>
+        <div id="modal-corpo"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function(){
+    var agora = new Date();
+    var hora = agora.getHours();
+    var saudacao = hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite');
+    document.getElementById('saudacao').textContent = saudacao + ', Ana';
+
+    var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
+  })();
+
+  var fakeSolicitacoes = [
+    {
+      id: 1, paciente: "Willian Francisco Caetano Lopes", iniciais: "WL", tipo: "ajuste",
+      titulo: "Remarcação · Encontro 12 · 14/07/2026", data: "03/07/2026", status: "pendente",
+      justificativa: "Terei uma viagem de trabalho nesse dia e não vou conseguir comparecer.",
+      taxa: 150.00, planoInfo: "Plano Integral · avulso"
+    },
+    {
+      id: 2, paciente: "Graziela Premoli de Souza", iniciais: "GP", tipo: "financeiro",
+      titulo: "Segunda via de recibo", data: "02/07/2026", status: "pendente",
+      justificativa: "Preciso do recibo do mês de junho para reembolso no convênio."
+    },
+    {
+      id: 3, paciente: "Lara Cristina Petry Bueno", iniciais: "LB", tipo: "documento",
+      titulo: "Declaração", data: "01/07/2026", status: "pendente",
+      justificativa: "Para apresentar na faculdade, comprovando acompanhamento psicológico."
+    },
+    {
+      id: 4, paciente: "Julia de Paiva Bento", iniciais: "JB", tipo: "ajuste",
+      titulo: "Cancelamento · Encontro 8 · 25/06/2026", data: "24/06/2026", status: "aprovada",
+      justificativa: "Tive um imprevisto médico."
+    },
+    {
+      id: 5, paciente: "Marcos Rosti Martins Filho", iniciais: "MM", tipo: "documento",
+      titulo: "Encaminhamento", data: "20/06/2026", status: "recusada",
+      justificativa: "Solicito encaminhamento para psiquiatra."
+    }
+  ];
+
+  var TIPO_LABEL = { ajuste: 'Ajuste de sessão', financeiro: 'Financeiro', documento: 'Documento médico' };
+  var STATUS_LABEL = { pendente: 'Pendente', aprovada: 'Aprovada', recusada: 'Recusada' };
+  var filtro = { tipo: 'todos', status: 'pendente' };
+
+  function setFiltro(grupo, valor){
+    filtro[grupo] = valor;
+    document.querySelectorAll('.chip[data-grupo="' + grupo + '"]').forEach(function(c){
+      c.classList.toggle('active', c.getAttribute('data-valor') === valor);
+    });
+    renderSolicitacoes();
+  }
+
+  function renderSolicitacoes(){
+    var wrap = document.getElementById('lista-solicitacoes');
+    var lista = fakeSolicitacoes.filter(function(s){
+      if(filtro.tipo !== 'todos' && s.tipo !== filtro.tipo) return false;
+      if(filtro.status !== 'todos' && s.status !== filtro.status) return false;
+      return true;
+    });
+    if(lista.length === 0){
+      wrap.innerHTML = '<div class="empty" style="text-align:center;color:var(--ink-soft);font-size:13px;padding:30px 0;">Nenhuma solicitação encontrada para esse filtro.</div>';
+      return;
+    }
+    wrap.innerHTML = lista.map(function(s){
+      var acoesHtml = s.status === 'pendente'
+        ? '<div class="acoes">' +
+            '<button class="btn-mini aprovar" onclick="abrirModal(' + s.id + ', \'aprovar\')">Aprovar</button>' +
+            '<button class="btn-mini recusar" onclick="abrirModal(' + s.id + ', \'recusar\')">Recusar</button>' +
+          '</div>'
+        : '';
+      var taxaHtml = s.taxa
+        ? '<div class="taxa-tag">💲 Taxa de R$ ' + s.taxa.toFixed(2).replace('.', ',') + ' · ' + s.planoInfo + '</div>'
+        : '';
+      return '<div class="solic-card">' +
+        '<div class="avatar-mini">' + s.iniciais + '</div>' +
+        '<div class="corpo">' +
+          '<div class="linha-topo">' +
+            '<span class="paciente-nome">' + s.paciente + '</span>' +
+            '<span class="tipo-badge tipo-' + s.tipo + '">' + TIPO_LABEL[s.tipo] + '</span>' +
+            '<span class="data-envio">' + s.data + '</span>' +
+          '</div>' +
+          '<div class="assunto">' + s.titulo + '</div>' +
+          '<div class="mensagem">' + s.justificativa + '</div>' +
+          taxaHtml +
+          acoesHtml +
+        '</div>' +
+        '<span class="status-badge status-' + s.status + '">' + STATUS_LABEL[s.status] + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  var modalContexto = null;
+
+  function abrirModal(id, acao){
+    var s = fakeSolicitacoes.find(function(x){ return x.id === id; });
+    modalContexto = { id: id, acao: acao };
+    document.getElementById('modal-titulo').textContent = (acao === 'aprovar' ? 'Aprovar' : 'Recusar') + ' solicitação';
+    var corpo =
+      '<div class="modal-corpo-linha"><b>' + s.paciente + '</b><br>' + s.titulo + '</div>' +
+      '<div class="modal-corpo-linha">' + s.justificativa + '</div>' +
+      (s.taxa ? '<div class="modal-corpo-linha">Taxa aplicável: <b>R$ ' + s.taxa.toFixed(2).replace('.', ',') + '</b></div>' : '') +
+      '<label style="font-size:12px;color:var(--mocha);">Observação (opcional)</label>' +
+      '<textarea class="modal-textarea" id="modal-obs" rows="3" placeholder="Escreva uma mensagem para a paciente, se quiser..."></textarea>' +
+      '<button class="btn-mini ' + (acao === 'aprovar' ? 'aprovar' : 'recusar') + '" style="width:100%;" onclick="confirmarAcao()">Confirmar ' + (acao === 'aprovar' ? 'aprovação' : 'recusa') + '</button>';
+    document.getElementById('modal-corpo').innerHTML = corpo;
+    document.getElementById('modal-solic').classList.add('open');
+  }
+
+  function fecharModal(){
+    document.getElementById('modal-solic').classList.remove('open');
+    modalContexto = null;
+  }
+
+  function confirmarAcao(){
+    if(!modalContexto) return;
+    var s = fakeSolicitacoes.find(function(x){ return x.id === modalContexto.id; });
+    s.status = modalContexto.acao === 'aprovar' ? 'aprovada' : 'recusada';
+    fecharModal();
+    renderSolicitacoes();
+  }
+
+  function sair(){
+    sessionStorage.removeItem('psiana_admin_logado');
+    window.location.href = 'login-psicologa.html';
+  }
+
+  renderSolicitacoes();
+</script>
+
+</body>
+</html>
