@@ -561,6 +561,16 @@
     font-size: 12.5px; color: var(--mocha-deep); margin-bottom: 16px;
   }
   .limite-box .limite-num{ font-weight: 600; }
+
+  .novo-horario-slots{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .slot-horario{
+    font-size:12.5px; padding:8px 14px; border-radius:20px; border:1px solid var(--line);
+    background:#FEFCFB; color:var(--ink); cursor:pointer; font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .slot-horario:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .slot-horario.selecionado{ background:var(--mocha); border-color:var(--mocha); color:#fff; }
+  .hint-horario{ font-size:11px; color:var(--ink-soft); font-style:italic; display:block; margin-top:8px; }
+
   .taxa-aviso{
     display:none; background:#FFF1E0; border: 1px solid #F5DDB8; border-radius: 12px;
     padding: 12px 14px; margin-bottom: 16px;
@@ -1189,6 +1199,12 @@
               <option value="cancelar">Cancelar</option>
             </select>
           </div>
+          <div class="field" id="novo-horario-box" style="display:none;">
+            <label for="novo-horario-data">Nova data</label>
+            <input type="date" id="novo-horario-data" onchange="buscarHorariosDisponiveis()">
+            <div id="novo-horario-slots" class="novo-horario-slots"></div>
+            <span class="hint-horario">A remarcação continua sujeita à sua aprovação, mesmo após escolher um horário.</span>
+          </div>
           <div class="limite-box" id="limite-box"></div>
           <div class="field">
             <label for="ajuste-justificativa">Justificativa</label>
@@ -1273,6 +1289,9 @@
   </div>
 
 <script>
+  var SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
+
   var fakePaciente = { nome: "Camila", cpf: "123.456.789-00", plano: "integral", tipoContratacao: "avulso" };
 
   var LIMITES_PLANO = {
@@ -1607,6 +1626,19 @@
     var aviso = document.getElementById('taxa-aviso');
     var btn = document.getElementById('btn-enviar-ajuste');
     var limiteBox = document.getElementById('limite-box');
+    var novoHorarioBox = document.getElementById('novo-horario-box');
+
+    novoHorarioBox.style.display = (acao === 'remarcar') ? 'block' : 'none';
+    if(acao === 'remarcar'){
+      var amanha = new Date();
+      amanha.setDate(amanha.getDate() + 1);
+      document.getElementById('novo-horario-data').min = amanha.toISOString().split('T')[0];
+    }
+    if(acao !== 'remarcar'){
+      document.getElementById('novo-horario-data').value = '';
+      document.getElementById('novo-horario-slots').innerHTML = '';
+      horarioEscolhido = null;
+    }
 
     if(acao === ''){
       limiteBox.innerHTML = '';
@@ -1659,6 +1691,59 @@
     gerarQrPix(valor);
   }
 
+  var horarioEscolhido = null;
+
+  async function buscarHorariosDisponiveis(){
+    var dataEscolhida = document.getElementById('novo-horario-data').value;
+    var wrap = document.getElementById('novo-horario-slots');
+    horarioEscolhido = null;
+    if(!dataEscolhida){ wrap.innerHTML = ''; return; }
+
+    wrap.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);">Buscando horários…</span>';
+
+    // JS getDay(): 0=domingo, 1=segunda ... 6=sábado — mesma numeração usada na coluna dia_semana
+    var diaSemana = new Date(dataEscolhida + 'T12:00:00').getDay();
+
+    try{
+      var [rDisp, rSes] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/disponibilidade?dia_semana=eq.' + diaSemana + '&disponivel=eq.true&select=horario_inicio,horario_fim&order=horario_inicio.asc', {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        }),
+        fetch(SUPABASE_URL + '/rest/v1/sessoes?data_sessao=eq.' + dataEscolhida + '&status=not.eq.cancelada&select=horario_inicio', {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        })
+      ]);
+      var slotsBase = await rDisp.json();
+      var sessoesData = await rSes.json();
+
+      var horasOcupadas = sessoesData.map(function(s){
+        return new Date(s.horario_inicio).toISOString().substring(11,16);
+      });
+
+      var livres = slotsBase.filter(function(s){
+        return horasOcupadas.indexOf(s.horario_inicio.substring(0,5)) === -1;
+      });
+
+      if(livres.length === 0){
+        wrap.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);">Nenhum horário livre nesse dia. Tente outra data.</span>';
+        return;
+      }
+
+      wrap.innerHTML = livres.map(function(s){
+        var hIni = s.horario_inicio.substring(0,5);
+        return '<button type="button" class="slot-horario" data-hora="' + hIni + '" onclick="escolherHorario(this, \'' + hIni + '\')">' + hIni + '</button>';
+      }).join('');
+    } catch(e){
+      wrap.innerHTML = '<span style="font-size:12px;color:var(--alerta);">Não foi possível buscar os horários agora.</span>';
+    }
+  }
+
+  function escolherHorario(botao, hora){
+    document.querySelectorAll('.slot-horario').forEach(function(b){ b.classList.remove('selecionado'); });
+    botao.classList.add('selecionado');
+    horarioEscolhido = { data: document.getElementById('novo-horario-data').value, hora: hora };
+  }
+
   function mostrarFormSolicitacao(){
     document.getElementById('painel-nova-solicitacao').classList.remove('hidden');
     document.getElementById('btn-nova-solicitacao').classList.add('hidden');
@@ -1670,12 +1755,23 @@
   }
 
   function enviarSolicitacao(tipo){
+    if(tipo === 'ajuste'){
+      var acaoCheck = document.getElementById('ajuste-acao').value;
+      if(acaoCheck === 'remarcar' && !horarioEscolhido){
+        alert('Escolha um novo horário disponível antes de enviar.');
+        return;
+      }
+    }
     var item = { tipo: tipo, data: '03/07/2026', status: 'aguardando' };
     if(tipo === 'ajuste'){
       var acao = document.getElementById('ajuste-acao').value;
       var sessaoSelect = document.getElementById('ajuste-sessao');
       var sessaoTexto = sessaoSelect.options[sessaoSelect.selectedIndex] ? sessaoSelect.options[sessaoSelect.selectedIndex].text : '';
       item.titulo = (acao === 'cancelar' ? 'Cancelamento' : 'Remarcação') + ' · ' + sessaoTexto;
+      if(acao === 'remarcar' && horarioEscolhido){
+        var dataFmt = horarioEscolhido.data.split('-').reverse().join('/');
+        item.titulo += ' → novo horário sugerido: ' + dataFmt + ' às ' + horarioEscolhido.hora;
+      }
       var chaveUso = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
       usoMes[chaveUso]++;
     } else if(tipo === 'financeiro'){
