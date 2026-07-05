@@ -24,6 +24,8 @@
   .badge-ativo { background: #E8F5E9; color: #2E7D32; }
   .badge-pausado { background: #FFF8E1; color: #F57F17; }
   .badge-encerrado { background: #FFEBEE; color: #C62828; }
+  .badge-desistente { background: #FFEBEE; color: #AD1457; }
+  .badge-alta { background: #E3E0F5; color: #5B4FBF; }
   .badge-rose { background: #F0E8E7; color: #785D56; }
   .perfil-acoes { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
   .btn-acao { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; }
@@ -267,8 +269,8 @@ function calcIdade(data) {
 }
 
 function renderPerfil() {
-  const badgeMap = { ativo:'badge-ativo', pausado:'badge-pausado', encerrado:'badge-encerrado' };
-  const badgeLabel = { ativo:'Ativa', pausado:'Em pausa', encerrado:'Encerrada', 'lista de espera':'Lista de espera' };
+  const badgeMap = { ativo:'badge-ativo', pausado:'badge-pausado', encerrado:'badge-encerrado', desistente:'badge-desistente', alta:'badge-alta' };
+  const badgeLabel = { ativo:'Ativo', pausado:'Pausado', encerrado:'Encerrado', desistente:'Desistente', alta:'Alta', 'lista de espera':'Lista de espera' };
   document.getElementById('perfil-box').innerHTML = `
     <div class="avatar-grande">${iniciais(paciente.nome_completo)}</div>
     <div class="perfil-info">
