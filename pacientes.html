@@ -144,7 +144,9 @@
   .status-pac{ font-size:10.5px; padding:3px 9px; border-radius:20px; font-weight:600; }
   .status-pac.ativo{ background:var(--ok-bg); color:var(--ok); }
   .status-pac.pausado{ background:var(--aviso-bg); color:var(--aviso); }
-  .status-pac.desistente{ background:var(--alerta-bg); color:var(--alerta); }
+  .status-pac.encerrado{ background:var(--alerta-bg); color:var(--alerta); }
+  .status-pac.lista-de-espera{ background:#E3E0F5; color:#5B4FBF; }
+  .status-pac.desistente{ background:#FFEBEE; color:#AD1457; }
   .status-pac.alta{ background:#E3E0F5; color:#5B4FBF; }
   .pac-card .contato{ font-size:12px; color:var(--ink-soft); }
   .pac-card .sessoes{ font-size:12px; color:var(--ink-soft); min-width:170px; }
@@ -278,9 +280,11 @@
         <label class="filtro-campo-label">Status</label>
         <select class="filtro-select-grade" id="select-status-pac" onchange="renderPacientes()">
           <option value="todos">Todos</option>
-          <option value="ativo">Ativos</option>
-          <option value="pausado">Pausados</option>
-          <option value="desistente">Desistentes</option>
+          <option value="ativo">Ativo</option>
+          <option value="pausado">Pausado</option>
+          <option value="lista de espera">Lista de espera</option>
+          <option value="encerrado">Encerrado</option>
+          <option value="desistente">Desistente</option>
           <option value="alta">Alta</option>
         </select>
       </div>
@@ -303,25 +307,74 @@
     document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
   })();
 
-  var fakePacientes = [
-    { nome: "Willian Francisco Caetano Lopes", iniciais: "WL", status: "ativo", email: "willianlopes@gmail.com", telefone: "(48) 99123-4567", idade: 29, ultima: "30/06/2026", proxima: "14/07/2026", portal: "ativo" },
-    { nome: "Anna Clara Oldoni Costa", iniciais: "AC", status: "ativo", email: "oldonianaclara@gmail.com", telefone: "(41) 99736-1776", idade: 21, ultima: "—", proxima: "—", portal: "sem_conta" },
-    { nome: "Catarina Marchi Jasper", iniciais: "CM", status: "ativo", email: "marchicaty@gmail.com", telefone: "(48) 99647-8047", idade: 24, ultima: "23/06/2026", proxima: "—", portal: "sem_conta" },
-    { nome: "Dariana Christina Marcelino Valle", iniciais: "DV", status: "ativo", email: "ariavalle2001@gmail.com", telefone: "(21) 97667-3827", idade: 24, ultima: "30/06/2026", proxima: "07/07/2026", portal: "enviado" },
-    { nome: "Emiliane Clarissa Gomes de Lima", iniciais: "EL", status: "pausado", email: "emilegomesgomes@gmail.com", telefone: "(84) 98855-6131", idade: 22, ultima: "02/07/2026", proxima: "09/07/2026", portal: "sem_conta" },
-    { nome: "Graziela Premoli de Souza", iniciais: "GP", status: "ativo", email: "grazy78premoli@hotmail.com", telefone: "(48) 99838-0395", idade: 48, ultima: "29/06/2026", proxima: "06/07/2026", portal: "sem_conta" },
-    { nome: "Julia de Paiva Bento", iniciais: "JB", status: "ativo", email: "julialetras10@yahoo.com.br", telefone: "(32) 98853-1779", idade: 42, ultima: "30/06/2026", proxima: "07/07/2026", portal: "sem_conta" },
-    { nome: "Lara Cristina Petry Bueno", iniciais: "LB", status: "desistente", email: "lpbiologa@gmail.com", telefone: "(51) 99829-9037", idade: 41, ultima: "01/07/2026", proxima: "08/07/2026", portal: "sem_conta" },
-    { nome: "Marcos Rosti Martins Filho", iniciais: "MM", status: "ativo", email: "marcosrosti@gmail.com", telefone: "(11) 98123-4432", idade: 35, ultima: "29/06/2026", proxima: "—", portal: "sem_conta" },
-    { nome: "Sabrina Mendes Teixeira", iniciais: "ST", status: "alta", email: "sabrinamendes@gmail.com", telefone: "(48) 99911-2233", idade: 31, ultima: "25/06/2026", proxima: "—", portal: "sem_conta" }
-  ];
+  const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
+  const N8N_PORTAL_GERAR_TOKEN = 'https://psi3ana.app.n8n.cloud/webhook/portal-gerar-token';
 
-  var STATUS_LABEL_PAC = { ativo: 'Ativo', pausado: 'Pausado', desistente: 'Desistente', alta: 'Alta' };
+  var todosPacientes = [];
+  var STATUS_LABEL_PAC = { ativo: 'Ativo', pausado: 'Pausado', encerrado: 'Encerrado', 'lista de espera': 'Lista de espera', desistente: 'Desistente', alta: 'Alta' };
+
+  function iniciaisDe(nome){
+    if(!nome) return '—';
+    var partes = nome.trim().split(' ');
+    return (partes[0][0] + (partes[partes.length - 1][0] || '')).toUpperCase();
+  }
+
+  function fmtDataBR(iso){
+    if(!iso) return '—';
+    var p = iso.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+
+  async function carregarPacientes(){
+    var wrap = document.getElementById('lista-pacientes');
+    wrap.innerHTML = '<div style="text-align:center;color:var(--ink-soft);font-size:13px;padding:30px 0;">Carregando pacientes…</div>';
+
+    try{
+      var [rPac, rSes] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/pacientes?select=id,nome_completo,email,telefone,status,portal_ativo&order=nome_completo', {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        }),
+        fetch(SUPABASE_URL + '/rest/v1/sessoes?select=paciente_id,data_sessao,status&order=data_sessao.asc', {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        })
+      ]);
+      var pacientes = await rPac.json();
+      var sessoes = await rSes.json();
+
+      var hoje = new Date().toISOString().slice(0, 10);
+
+      todosPacientes = pacientes.map(function(p){
+        var sessoesPaciente = sessoes.filter(function(s){ return s.paciente_id === p.id; });
+        var realizadas = sessoesPaciente.filter(function(s){ return s.status === 'realizada' && s.data_sessao <= hoje; });
+        var futuras = sessoesPaciente.filter(function(s){ return s.status !== 'cancelada' && s.data_sessao >= hoje; });
+        var ultima = realizadas.length ? realizadas[realizadas.length - 1].data_sessao : null;
+        var proxima = futuras.length ? futuras[0].data_sessao : null;
+
+        return {
+          id: p.id,
+          nome: p.nome_completo || '—',
+          iniciais: iniciaisDe(p.nome_completo),
+          status: p.status || 'ativo',
+          email: p.email || '—',
+          telefone: p.telefone || '—',
+          ultima: fmtDataBR(ultima),
+          proxima: fmtDataBR(proxima),
+          portalAtivo: !!p.portal_ativo,
+          convidando: false
+        };
+      });
+
+      renderPacientes();
+    } catch(e){
+      wrap.innerHTML = '<div style="text-align:center;color:var(--alerta);font-size:13px;padding:30px 0;">Não foi possível carregar os pacientes. Verifique sua conexão.</div>';
+    }
+  }
 
   function renderPacientes(){
     var busca = document.getElementById('busca-pac').value.toLowerCase();
     var status = document.getElementById('select-status-pac').value;
-    var lista = fakePacientes.filter(function(p){
+    var lista = todosPacientes.filter(function(p){
       if(status !== 'todos' && p.status !== status) return false;
       if(busca){
         var alvo = (p.nome + ' ' + p.email + ' ' + p.telefone).toLowerCase();
@@ -334,50 +387,60 @@
       wrap.innerHTML = '<div style="text-align:center;color:var(--ink-soft);font-size:13px;padding:30px 0;">Nenhum paciente encontrado.</div>';
       return;
     }
-    wrap.innerHTML = lista.map(function(p, idx){
+    wrap.innerHTML = lista.map(function(p){
       var acaoPortal = '';
-      if(p.portal === 'sem_conta'){
-        acaoPortal = '<button class="btn-convidar" onclick="convidarPaciente(' + idx + ')">Convidar</button>';
-      } else if(p.portal === 'enviado'){
+      if(p.portalAtivo){
+        acaoPortal = '<span class="badge-portal ativo">Portal ativo</span>';
+      } else if(p.convidando === 'enviado'){
         acaoPortal = '<span class="badge-portal enviado">Convite enviado</span>';
       } else {
-        acaoPortal = '<span class="badge-portal ativo">Portal ativo</span>';
+        acaoPortal = '<button class="btn-convidar" onclick="convidarPaciente(' + p.id + ')">Convidar</button>';
       }
+      var statusClasse = p.status.replace(/\s+/g, '-');
       return '<div class="pac-card">' +
         '<div class="avatar-mini">' + p.iniciais + '</div>' +
         '<div class="principal">' +
           '<div class="linha-nome">' +
             '<span class="nome">' + p.nome + '</span>' +
-            '<span class="status-pac ' + p.status + '">' + STATUS_LABEL_PAC[p.status] + '</span>' +
+            '<span class="status-pac ' + statusClasse + '">' + (STATUS_LABEL_PAC[p.status] || p.status) + '</span>' +
           '</div>' +
-          '<div class="contato">' + p.email + ' · ' + p.telefone + ' · ' + p.idade + ' anos</div>' +
+          '<div class="contato">' + p.email + ' · ' + p.telefone + '</div>' +
         '</div>' +
         '<div class="sessoes">Última: <b>' + p.ultima + '</b><br>Próxima: <b>' + p.proxima + '</b></div>' +
         '<div class="acoes-pac">' +
           acaoPortal +
-          '<a class="link-ficha" href="ficha-paciente_1.html">Ver ficha</a>' +
+          '<a class="link-ficha" href="ficha-paciente_1.html?id=' + p.id + '">Ver ficha</a>' +
         '</div>' +
       '</div>';
     }).join('');
   }
 
-  function convidarPaciente(idx){
-    var busca = document.getElementById('busca-pac').value.toLowerCase();
-    var status = document.getElementById('select-status-pac').value;
-    var listaFiltrada = fakePacientes.filter(function(p){
-      if(status !== 'todos' && p.status !== status) return false;
-      if(busca){
-        var alvo = (p.nome + ' ' + p.email + ' ' + p.telefone).toLowerCase();
-        if(alvo.indexOf(busca) === -1) return false;
+  async function convidarPaciente(id){
+    var paciente = todosPacientes.find(function(p){ return p.id === id; });
+    if(!paciente) return;
+    paciente.convidando = 'enviando';
+    renderPacientes();
+
+    try{
+      var resposta = await fetch(N8N_PORTAL_GERAR_TOKEN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paciente_id: id })
+      });
+      if(resposta.ok){
+        paciente.convidando = 'enviado';
+      } else {
+        paciente.convidando = false;
+        alert('Não foi possível gerar o convite. Tente novamente.');
       }
-      return true;
-    });
-    var alvo = listaFiltrada[idx];
-    alvo.portal = 'enviado';
+    } catch(e){
+      paciente.convidando = false;
+      alert('Não foi possível conectar ao servidor. Tente novamente.');
+    }
     renderPacientes();
   }
 
-  renderPacientes();
+  carregarPacientes();
 
   function sair(){
     sessionStorage.removeItem('psiana_admin_logado');
