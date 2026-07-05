@@ -159,6 +159,11 @@
     font-size:10px; color:var(--aviso); background:#FFF8E9; border:1px dashed #E8CB8A;
     border-radius:6px; padding:3px 5px; text-align:center; cursor:default;
   }
+  .agenda-alerta-solicitacao{
+    font-size:10px; color:#fff; background:var(--alerta); border-radius:6px;
+    padding:3px 5px; text-align:center; cursor:pointer; font-weight:600;
+  }
+  .agenda-alerta-solicitacao:hover{ filter:brightness(0.92); }
   .agenda-sessao{
     border-radius:8px; padding:5px 7px; font-size:11px; color:#fff; cursor:pointer;
     line-height:1.35; margin-bottom:2px; overflow:hidden;
@@ -322,6 +327,7 @@
       <span><i style="background:#F5E6C8;"></i>Remarcada</span>
       <span><i style="background:#fff; border:1px solid var(--line);"></i>Livre</span>
       <span><i style="background:#FFF8E9; border:1px dashed #E8CB8A;"></i>⚠ Reservado, sem sessão</span>
+      <span><i style="background:var(--alerta);"></i>⚠ Pedido de remarcação pendente</span>
     </div>
 
     <div class="agenda-wrap">
@@ -430,7 +436,7 @@
     try{
       var dataIni = fmtISO(dias[0]);
       var dataFim = fmtISO(dias[6]);
-      var [rSes, rDisp] = await Promise.all([
+      var [rSes, rDisp, rSolic] = await Promise.all([
         fetch(
           SUPABASE_URL + '/rest/v1/sessoes?select=id,paciente_id,data_sessao,horario_inicio,status,pacientes(nome_completo,link_meet)' +
           '&data_sessao=gte.' + dataIni + '&data_sessao=lte.' + dataFim + '&order=horario_inicio.asc',
@@ -439,11 +445,17 @@
         fetch(
           SUPABASE_URL + '/rest/v1/disponibilidade?select=dia_semana,horario_inicio,horario_fim,disponivel',
           { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
+        ),
+        fetch(
+          SUPABASE_URL + '/rest/v1/solicitacoes?select=id,paciente_id,nova_data,novo_horario,pacientes(nome_completo)' +
+          '&tipo=eq.ajuste&acao=eq.remarcar&status=eq.pendente&nova_data=gte.' + dataIni + '&nova_data=lte.' + dataFim,
+          { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
         )
       ]);
       var sessoes = await rSes.json();
       var disponibilidade = await rDisp.json();
-      montarGrade(dias, Array.isArray(sessoes) ? sessoes : [], Array.isArray(disponibilidade) ? disponibilidade : []);
+      var solicitacoesPendentes = await rSolic.json();
+      montarGrade(dias, Array.isArray(sessoes) ? sessoes : [], Array.isArray(disponibilidade) ? disponibilidade : [], Array.isArray(solicitacoesPendentes) ? solicitacoesPendentes : []);
     } catch(e){
       grade.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--alerta); font-size:13px; padding:40px 0;">Não foi possível carregar a agenda.</div>';
     }
@@ -451,7 +463,7 @@
 
   var sessoesDaSemana = [];
 
-  function montarGrade(dias, sessoes, disponibilidade){
+  function montarGrade(dias, sessoes, disponibilidade, solicitacoesPendentes){
     sessoesDaSemana = sessoes;
     var grade = document.getElementById('agenda-grade');
     var html = '<div></div>';
@@ -477,6 +489,7 @@
       dias.forEach(function(d){
         var isoData = fmtISO(d);
         var diaSemana = d.getDay();
+        var horaAlvoStr = String(hAlvo).padStart(2,'0') + ':' + String(mAlvo).padStart(2,'0');
 
         var sessoesHora = sessoes.filter(function(s){
           if(s.data_sessao !== isoData) return false;
@@ -497,8 +510,17 @@
           return;
         }
 
+        // Existe pedido de remarcação pendente pra esse dia/horário específico?
+        var solicPendente = solicitacoesPendentes.find(function(sol){
+          return sol.nova_data === isoData && sol.novo_horario && sol.novo_horario.substring(0,5) === horaAlvoStr;
+        });
+        if(solicPendente){
+          var nomeSolic = (solicPendente.pacientes && solicPendente.pacientes.nome_completo) || 'Paciente';
+          html += '<div class="agenda-celula"><div class="agenda-alerta-solicitacao" title="' + nomeSolic + ' pediu esse horário — aguardando sua aprovação" onclick="window.location.href=\'solicitacoes.html\'">⚠ ' + nomeSolic.split(' ')[0] + '</div></div>';
+          return;
+        }
+
         // Sem sessão real — verificar disponibilidade cadastrada pra esse dia/horário
-        var horaAlvoStr = String(hAlvo).padStart(2,'0') + ':' + String(mAlvo).padStart(2,'0');
         var dispCorrespondente = disponibilidade.find(function(disp){
           return disp.dia_semana === diaSemana && disp.horario_inicio.substring(0,5) === horaAlvoStr;
         });
