@@ -3,344 +3,810 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PsiAna — Editar Paciente</title>
+<title>Relatórios · PsiAna</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: #FAF6F5; color: #2C2C2C; }
-  .header { background: #fff; border-bottom: 1px solid #EDE4E3; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
-  .header h1 { font-size: 17px; font-weight: 700; color: #785D56; }
-  .btn-voltar { padding: 7px 14px; border: 1px solid #DDD; border-radius: 8px; background: #fff; color: #785D56; font-size: 13px; cursor: pointer; }
-  .btn-voltar:hover { background: #F0E8E7; }
-  .container { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
-  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #EDE4E3; }
-  .section-title { font-size: 13px; font-weight: 700; color: #C89F9D; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-  .field input, .field select, .field textarea { font-size: 14px; padding: 10px 12px; border: 1px solid #DDD; border-radius: 8px; background: #FAFAFA; color: #2C2C2C; width: 100%; }
-  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #C89F9D; }
-  .field textarea { resize: vertical; min-height: 80px; }
-  .consent-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #F0E8E7; }
-  .consent-row:last-child { border-bottom: none; }
-  .consent-row input[type="checkbox"] { margin-top: 3px; width: 17px; height: 17px; accent-color: #785D56; cursor: pointer; flex-shrink: 0; }
-  .consent-row label { font-size: 13.5px; color: #2C2C2C; text-transform: none; letter-spacing: normal; font-weight: 400; cursor: pointer; line-height: 1.5; }
-  .consent-row .consent-sub { display: block; font-size: 11.5px; color: #999; margin-top: 3px; font-weight: 400; }
-  .footer { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #EDE4E3; padding: 14px 24px; display: flex; justify-content: flex-end; gap: 10px; }
-  .btn-salvar { padding: 12px 28px; background: #785D56; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn-salvar:hover { background: #C89F9D; }
-  .btn-cancelar { padding: 12px 20px; background: #fff; border: 1px solid #DDD; border-radius: 8px; font-size: 14px; color: #999; cursor: pointer; }
-  .toast { position: fixed; bottom: 80px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 999; display: none; }
-  .toast.ok { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
-  .toast.erro { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
-  .loading { text-align: center; padding: 40px; color: #999; }
+  :root{
+    --bg:#FAF6F5; --card:#fff; --line:#EDE4E3;
+    --mocha:#785D56; --mocha-deep:#5A453F; --rose:#C89F9D; --rose-soft:#F0E8E7;
+    --ink:#2C2C2C; --ink-soft:#999;
+    --ok:#2E7D32; --ok-bg:#E8F5E9; --alerta:#C62828; --alerta-bg:#FFEBEE; --aviso:#F57F17; --aviso-bg:#FFF8E1;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Segoe UI', Arial, sans-serif; background:var(--bg); color:var(--ink); }
+
+  .shell{ display:flex; min-height:100vh; }
+
+  /* --- Sidebar --- */
+  .sidebar{
+    width:224px; background:#fff; border-right:1px solid var(--line);
+    padding:22px 14px; display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
+  }
+  .sidebar-logo{ display:flex; justify-content:center; padding:0 0 20px; }
+  .sidebar-logo img{ width:150px; height:150px; object-fit:contain; }
+  .nav-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; padding:16px 10px 6px; }
+  .nav-label:first-of-type{ padding-top:4px; }
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:8px;
+    color:var(--ink); font-size:13.5px; cursor:pointer; text-decoration:none;
+  }
+  .nav-item svg{ width:17px; height:17px; color:var(--mocha); flex-shrink:0; }
+  .nav-item:hover{ background:var(--rose-soft); }
+  .nav-item.active{ background:var(--mocha); color:#fff; }
+  .nav-item.active svg{ color:#fff; }
+
+  /* --- Main --- */
+  .main{ flex:1; padding:32px 40px; max-width:1240px; }
+  .topo{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+  .topo h1{ font-size:21px; margin:0; color:var(--ink); font-weight:400; }
+  .topo .data{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+
+  .perfil-saudacao{ display:flex; align-items:center; gap:14px; }
+  .avatar-grande{
+    width:54px; height:54px; border-radius:50%; background:var(--rose-soft); color:var(--mocha);
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; flex-shrink:0;
+  }
+  .crp-linha{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .crp-texto{ font-size:11.5px; color:var(--ink-soft); }
+  .btn-config{
+    width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:#fff;
+    color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .btn-config:hover{ color:var(--mocha); border-color:var(--rose); }
+  .btn-config svg{ width:13px; height:13px; }
+
+  .btn-sair{
+    display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha);
+    background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px;
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; font-weight:500; flex-shrink:0;
+  }
+  .btn-sair:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-sair svg{ width:15px; height:15px; }
+
+  .aviso-topo{
+    display:flex; align-items:center; gap:10px; background:var(--aviso-bg); color:#8A5A0F;
+    border-radius:10px; padding:10px 16px; font-size:12.5px; margin-bottom:10px; cursor:pointer; width:fit-content;
+  }
+  .aviso-topo svg{ width:16px; height:16px; flex-shrink:0; }
+  .aviso-detalhe{
+    display:none; background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:12px 16px; font-size:12.5px; color:var(--ink); margin-bottom:20px; max-width:420px;
+  }
+  .aviso-detalhe.show{ display:block; }
+  .aviso-detalhe-item{ display:flex; justify-content:space-between; padding:5px 0; }
+  .aviso-detalhe-item:not(:last-child){ border-bottom:1px solid var(--bg); }
+
+  .cards-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-top:20px; }
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:20px; display:flex; flex-direction:column;
+  }
+  .card-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .card-head .icon{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .card-head .icon svg{ width:17px; height:17px; }
+  .card-head h2{ font-size:14px; margin:0; color:var(--ink); font-weight:600; }
+
+  .ic-financeiro{ background:#E8F5E9; color:#2E7D32; }
+  .ic-engajamento{ background:#F0E8E7; color:#785D56; }
+  .ic-solicitacoes{ background:#FFF8E1; color:#F57F17; }
+  .ic-agenda{ background:#E3E0F5; color:#5B4FBF; }
+  .ic-pacientes{ background:#F3E5F5; color:#8E24AA; }
+  .ic-relatorios{ background:#E1F0F5; color:#0288A8; }
+
+  .card-linha{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; color:var(--ink); padding:6px 0; border-bottom:1px solid var(--bg); }
+  .card-linha:last-of-type{ border-bottom:none; }
+  .card-linha .valor{ font-weight:600; color:var(--mocha-deep); }
+  .card-linha .valor.alerta{ color:var(--alerta); }
+  .card-destaque{ font-size:26px; font-weight:700; color:var(--mocha-deep); margin:2px 0 10px; }
+  .card-sub{ font-size:12px; color:var(--ink-soft); margin:-8px 0 12px; }
+
+  .card-alerta-linha{
+    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--alerta);
+    background:var(--alerta-bg); border-radius:8px; padding:7px 10px; margin-bottom:8px;
+  }
+  .card-alerta-linha svg{ width:14px; height:14px; flex-shrink:0; }
+
+  .card-link{
+    margin-top:auto; padding-top:12px; font-size:12.5px; color:var(--mocha);
+    text-decoration:none; display:flex; align-items:center; gap:5px; font-weight:500;
+  }
+  .card-link:hover{ color:var(--rose); }
+  .card-link svg{ width:13px; height:13px; }
+
+  /* --- Página Relatórios --- */
+  .breadcrumb{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
+  .breadcrumb a{ color:var(--ink-soft); text-decoration:none; }
+  .breadcrumb a:hover{ color:var(--mocha); }
+  .page-titulo{ font-size:20px; margin:0 0 4px; color:var(--ink); font-weight:600; }
+  .page-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px; }
+
+  .filtro-grade-solic{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .filtro-campo{ display:flex; flex-direction:column; gap:5px; flex:0 0 220px; }
+  .filtro-campo-label{ font-size:11px; color:var(--ink-soft); }
+  .filtro-select-grade{
+    font-size:13px; padding:9px 12px; border-radius:10px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .filtro-select-grade:focus{ outline:none; border-color:var(--rose); }
+
+  .kpi-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:20px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; text-align:center; box-shadow:0 4px 14px -8px rgba(120,93,86,0.12); }
+  .kpi-valor{ font-size:26px; font-weight:700; color:var(--mocha-deep); }
+  .kpi-label{ font-size:12px; color:var(--ink-soft); margin-top:6px; line-height:1.4; }
+  .mini-titulo{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); margin:0 0 10px; }
+
+  .mini-kpi-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+  .mini-kpi{ background:#FEFCFB; border:1px solid var(--line); border-radius:10px; padding:14px 10px; text-align:center; }
+  .mini-kpi-valor{ font-size:19px; font-weight:700; color:var(--mocha-deep); }
+  .mini-kpi-valor.alerta{ color:var(--alerta); }
+  .mini-kpi-label{ font-size:10.5px; color:var(--ink-soft); margin-top:4px; line-height:1.3; }
+
+  @media (max-width: 700px){
+    .mini-kpi-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+
+  .rel-painel{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px 24px; margin-bottom:18px; box-shadow:0 4px 16px -8px rgba(120,93,86,0.10); }
+  .rel-painel-titulo{ font-size:15px; font-weight:600; color:var(--ink); margin:0 0 14px; }
+  .insight-linha{ display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--ink); line-height:1.5; padding:8px 0; }
+  .insight-dot{ width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .insight-dot.ok{ background:var(--ok); }
+  .insight-dot.aviso{ background:var(--aviso); }
+  .insight-dot.alerta{ background:var(--alerta); }
+
+  .rel-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+
+  .barra-linha{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .barra-nome{ font-size:12px; color:var(--ink); width:90px; flex-shrink:0; }
+  .barra-trilho{ flex:1; height:10px; background:var(--bg); border-radius:6px; overflow:hidden; }
+  .barra-preenchida{ height:100%; border-radius:6px; }
+  .barra-valor{ font-size:12px; color:var(--ink-soft); width:34px; text-align:right; flex-shrink:0; }
+
+  .donut-wrap{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+  .donut{ width:120px; height:120px; border-radius:50%; flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center; }
+  .donut-centro{ width:74px; height:74px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .donut-centro b{ font-size:17px; color:var(--mocha-deep); }
+  .donut-centro span{ font-size:9.5px; color:var(--ink-soft); }
+  .donut-legenda{ display:flex; flex-direction:column; gap:7px; }
+  .donut-legenda-item{ font-size:12.5px; color:var(--ink); display:flex; align-items:center; gap:7px; }
+  .donut-legenda-item i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }
+  .donut-legenda-item b{ color:var(--mocha-deep); }
+  .donut-legenda-item span{ color:var(--ink-soft); font-size:11.5px; }
+
+  .sessoes-grid{ display:grid; grid-template-columns:1fr 1.4fr; gap:24px; align-items:center; }
+  @media (max-width: 800px){ .sessoes-grid{ grid-template-columns:1fr; } }
+
+  .linha-legenda{ display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:11px; color:var(--ink-soft); }
+  .linha-legenda span{ display:flex; align-items:center; gap:5px; }
+  .linha-legenda i{ width:14px; height:2px; display:inline-block; }
+
+  .modal-tabela{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+  .modal-col{ background:#FEFCFB; border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .modal-col-titulo{ font-size:12.5px; font-weight:600; color:var(--mocha-deep); margin-bottom:10px; }
+  .modal-linha{ display:flex; justify-content:space-between; font-size:12px; color:var(--ink); padding:3px 0; }
+  .modal-linha b{ color:var(--mocha-deep); }
+  .modal-linha.alerta b{ color:var(--alerta); }
+
+  @media (max-width: 700px){
+    .modal-tabela{ grid-template-columns:1fr; }
+  }
+
+  .grafico-mensal-wrap{ display:flex; align-items:flex-end; gap:10px; height:140px; padding-top:10px; }
+  .grafico-mensal-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .grafico-mensal-barra{ width:100%; max-width:32px; background:var(--mocha); border-radius:4px 4px 0 0; }
+  .grafico-mensal-num{ font-size:10.5px; color:var(--ink-soft); margin-bottom:4px; }
+  .grafico-mensal-mes{ font-size:10.5px; color:var(--ink-soft); margin-top:6px; }
+  .legenda-mensal{ display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; font-size:11px; color:var(--ink-soft); }
+  .legenda-mensal span{ display:flex; align-items:center; gap:5px; }
+  .legenda-mensal i{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+  .btn-atualizar-ia{
+    font-size:12px; padding:7px 14px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; color:var(--mocha); cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; white-space:nowrap;
+  }
+  .btn-atualizar-ia:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-atualizar-ia:disabled{ opacity:0.5; cursor:not-allowed; }
+  .analise-ia-placeholder{ font-size:13px; color:var(--ink-soft); }
+  .analise-ia-erro{ font-size:12.5px; color:var(--alerta); background:var(--alerta-bg); border-radius:8px; padding:10px 12px; }
+  .analise-ia-texto{ font-size:13.5px; color:var(--ink); line-height:1.7; white-space:pre-line; }
+
+  .insights-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .insight-card{ border-radius:12px; padding:14px 16px; border:1px solid var(--line); }
+  .insight-card.positivo{ background:var(--ok-bg); border-color:#C8E6C9; }
+  .insight-card.atencao{ background:var(--aviso-bg); border-color:#F5DDB8; }
+  .insight-card.alerta{ background:var(--alerta-bg); border-color:#F0D3D0; }
+  .insight-card-topo{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .insight-icone{ width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+  .insight-card.positivo .insight-icone{ background:var(--ok); color:#fff; }
+  .insight-card.atencao .insight-icone{ background:var(--aviso); color:#fff; }
+  .insight-card.alerta .insight-icone{ background:var(--alerta); color:#fff; }
+  .insight-categoria{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:600; }
+  .insight-card-texto{ font-size:13px; color:var(--ink); line-height:1.5; margin:0; }
+
+  @media (max-width: 700px){
+    .insights-grid{ grid-template-columns:1fr; }
+  }
+
+  @media (max-width: 980px){
+    .kpi-grid{ grid-template-columns:repeat(2, 1fr); }
+    .rel-grid-2{ grid-template-columns:1fr; }
+  }
+
+  @media (max-width: 980px){
+    .cards-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width: 720px){
+    .sidebar{ display:none; }
+    .main{ padding:24px 18px; }
+    .cards-grid{ grid-template-columns:1fr; }
+    .topo{ flex-direction:column; }
+    .perfil-saudacao{ width:100%; }
+  }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <button class="btn-voltar" id="btn-voltar">← Voltar</button>
-  <h1>Editar paciente</h1>
-</div>
-
-<div class="container" id="form-container">
-  <div class="loading">Carregando dados...</div>
-</div>
-
-<div class="footer">
-  <button class="btn-cancelar" id="btn-cancelar">Cancelar</button>
-  <button class="btn-salvar" onclick="salvar()">Salvar alterações</button>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
-const params = new URLSearchParams(window.location.search);
-const PACIENTE_ID = params.get('id');
-
-document.getElementById('btn-voltar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
-document.getElementById('btn-cancelar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
-
-function toast(msg, tipo) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + tipo;
-  t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 3000);
-}
-
-function v(id) { return document.getElementById(id)?.value || ''; }
-function set(id, val) { const el = document.getElementById(id); if (el && val !== null && val !== undefined) el.value = val; }
-function vCheck(id) { return document.getElementById(id)?.checked || false; }
-function setCheck(id, val) { const el = document.getElementById(id); if (el) el.checked = !!val; }
-
-function toggleResp() {
-  const val = document.getElementById('f_resp_tipo').value;
-  const campos = document.getElementById('resp-campos');
-  campos.style.display = val === 'outra_pessoa' ? 'block' : 'none';
-}
-
-async function carregar() {
-  if (!PACIENTE_ID) {
-    document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">ID não informado.</div>';
-    return;
-  }
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  const data = await r.json();
-  if (!data.length) {
-    document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">Paciente não encontrada.</div>';
-    return;
-  }
-  const p = data[0];
-  renderForm(p);
-}
-
-function renderForm(p) {
-  document.getElementById('form-container').innerHTML = `
-    <div class="section">
-      <div class="section-title">Dados pessoais</div>
-      <div class="grid-2" style="margin-bottom:14px">
-        <div class="field" style="grid-column:1/-1"><label>Nome completo</label><input id="f_nome" type="text"></div>
-      </div>
-      <div class="grid-3">
-        <div class="field"><label>Data de nascimento</label><input id="f_nasc" type="date"></div>
-        <div class="field"><label>Gênero</label>
-          <select id="f_genero">
-            <option value="">Selecione</option>
-            <option value="feminino">Feminino</option>
-            <option value="masculino">Masculino</option>
-            <option value="não-binário">Não-binário</option>
-            <option value="outro">Outro</option>
-            <option value="prefiro não dizer">Prefiro não dizer</option>
-          </select>
-        </div>
-        <div class="field"><label>Estado civil</label>
-          <select id="f_estado_civil">
-            <option value="">Selecione</option>
-            <option value="solteiro(a)">Solteiro(a)</option>
-            <option value="casado(a)">Casado(a)</option>
-            <option value="divorciado(a)">Divorciado(a)</option>
-            <option value="viúvo(a)">Viúvo(a)</option>
-            <option value="união estável">União estável</option>
-          </select>
-        </div>
-      </div>
+<div class="shell">
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="selo.png" alt="PsiAna" onerror="this.onerror=null; this.src='icone_selo.png';">
     </div>
 
-    <div class="section">
-      <div class="section-title">Contato</div>
-      <div class="grid-2">
-        <div class="field"><label>E-mail</label><input id="f_email" type="email"></div>
-        <div class="field"><label>Telefone</label><input id="f_tel" type="text"></div>
-        <div class="field"><label>WhatsApp</label><input id="f_wpp" type="text"></div>
-        <div class="field"><label>CPF</label><input id="f_cpf" type="text"></div>
-      </div>
-    </div>
+    <div class="nav-label">Rotinas</div>
+    <a class="nav-item" href="visao-geral.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+      Início
+    </a>
+    <a class="nav-item" href="pacientes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
+      Pacientes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
+      Agenda
+    </a>
+    <a class="nav-item" href="solicitacoes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v11H8.5L4 19.5v-15Z"/><path d="M8 9h8M8 12.3h5"/></svg>
+      Solicitações
+    </a>
 
-    <div class="section">
-      <div class="section-title">Endereço</div>
-      <div class="grid-3">
-        <div class="field"><label>CEP</label><input id="f_cep" type="text"></div>
-        <div class="field" style="grid-column:2/-1"><label>Logradouro</label><input id="f_end" type="text"></div>
-        <div class="field"><label>Número</label><input id="f_num" type="text"></div>
-        <div class="field"><label>Complemento</label><input id="f_comp" type="text"></div>
-        <div class="field"><label>Bairro</label><input id="f_bairro" type="text"></div>
-        <div class="field"><label>Cidade</label><input id="f_cidade" type="text"></div>
-        <div class="field"><label>Estado</label><input id="f_estado" type="text"></div>
-      </div>
-    </div>
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="financeiro.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h14a3 3 0 0 1 3 3v7a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5v-10Z"/><path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h9"/><circle cx="16.5" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
+      Financeiro
+    </a>
+    <a class="nav-item active" href="relatorios.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12V3.5Z"/><path d="M15.5 3.9A8.5 8.5 0 0 1 20.1 8.5H15.5V3.9Z"/></svg>
+      Relatórios
+    </a>
 
-    <div class="section">
-      <div class="section-title">Informações clínicas</div>
-      <div class="grid-2">
-        <div class="field"><label>Escolaridade</label><input id="f_escol" type="text"></div>
-        <div class="field"><label>Profissão</label><input id="f_prof" type="text"></div>
-        <div class="field"><label>Como conheceu</label><input id="f_como" type="text"></div>
-        <div class="field"><label>Tem filhos?</label>
-          <select id="f_filhos">
-            <option value="">Selecione</option>
-            <option value="true">Sim</option>
-            <option value="false">Não</option>
-          </select>
-        </div>
-      </div>
-      <div class="field" style="margin-top:14px"><label>Anotações</label><textarea id="f_anot"></textarea></div>
-    </div>
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5c2.5-1.3 5-1.3 7.5 0v14c-2.5-1.3-5-1.3-7.5 0v-14Z"/><path d="M19.5 5.5c-2.5-1.3-5-1.3-7.5 0v14c2.5-1.3 5-1.3 7.5 0v-14Z"/></svg>
+      Psicoeducação
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6M8 6.5h8l-1.3 4.3 3.3 6.7a1.5 1.5 0 0 1-1.35 2.15H7.35A1.5 1.5 0 0 1 6 17.5l3.3-6.7L8 6.5Z"/></svg>
+      Testes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>
+      Atividades
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5"/><circle cx="12" cy="15.7" r="0.6" fill="currentColor" stroke="none"/></svg>
+      Apoio
+    </a>
 
-    <div class="section">
-      <div class="section-title">Atendimento</div>
-      <div class="grid-2">
-        <div class="field"><label>Frequência</label>
-          <select id="f_freq">
-            <option value="">Selecione</option>
-            <option value="semanal">Semanal</option>
-            <option value="quinzenal">Quinzenal</option>
-            <option value="mensal">Mensal</option>
-          </select>
-        </div>
-        <div class="field"><label>Forma de pagamento</label>
-          <select id="f_pgto">
-            <option value="">Selecione</option>
-            <option value="PIX">PIX</option>
-            <option value="transferencia">Transferência bancária</option>
-            <option value="link_pagamento">Link de pagamento</option>
-          </select>
-        </div>
-        <div class="field" style="grid-column:1/-1"><label>Link Google Meet</label><input id="f_meet" type="url" placeholder="https://meet.google.com/..."></div>
-      </div>
-    </div>
+    <div class="nav-label">Clínica Avançada</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.4 3.1L16.5 7l-3.1 1.4L12 11.5l-1.4-3.1L7.5 7l3.1-.9L12 3Z"/><path d="M5.5 14l.8 1.8L8 16.5l-1.7.8-.8 1.8-.8-1.8L3 16.5l1.7-.7.8-1.8Z"/><path d="M17.5 13.5l.9 2 2 .9-2 .9-.9 2-.9-2-2-.9 2-.9.9-2Z"/></svg>
+      Prontuários com IA
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+      Supervisão
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5h11v7H8l-3 3v-3H3v-7Z"/><path d="M11 10.5h10v6h-3v3l-3-3h-4v-6Z"/></svg>
+      Discussão de Casos
+    </a>
+  </div>
 
-    <div class="section">
-      <div class="section-title">Consentimentos</div>
-      <div class="consent-row">
-        <input type="checkbox" id="f_consent_wpp">
-        <label for="f_consent_wpp">
-          Autorizo o recebimento de lembretes por WhatsApp
-          <span class="consent-sub">Financeiro, links de sessão, tarefas terapêuticas e demais avisos.</span>
-        </label>
-      </div>
-      <div class="consent-row">
-        <input type="checkbox" id="f_consent_gravacao">
-        <label for="f_consent_gravacao">
-          Estou ciente e de acordo com a gravação das sessões para fins de transcrição clínica
-          <span class="consent-sub">O áudio é utilizado exclusivamente para elaborar o registro da evolução e é descartado em seguida.</span>
-        </label>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Financeiro</div>
-      <div class="grid-2">
-        <div class="field" style="grid-column:1/-1">
-          <label>Quando a paciente costuma pagar?</label>
-          <select id="f_data_pgto">
-            <option value="">Selecione</option>
-            <option value="Todo dia 5">Todo dia 5</option>
-            <option value="Todo dia 10">Todo dia 10</option>
-            <option value="Todo dia 15">Todo dia 15</option>
-            <option value="Todo dia 20">Todo dia 20</option>
-            <option value="Todo dia 25">Todo dia 25</option>
-            <option value="Todo dia 30">Todo dia 30</option>
-            <option value="Antes da sessão">Antes da sessão</option>
-            <option value="Depois da sessão">Depois da sessão</option>
-          </select>
-        </div>
-        <div class="field" style="grid-column:1/-1">
-          <label>Responsável financeiro</label>
-          <select id="f_resp_tipo" onchange="toggleResp()">
-            <option value="propria">A própria paciente</option>
-            <option value="outra_pessoa">Outra pessoa</option>
-          </select>
-        </div>
-        <div id="resp-campos" style="display:none; grid-column:1/-1">
-          <div class="grid-2">
-            <div class="field"><label>Nome do responsável</label><input id="f_resp_nome" type="text"></div>
-            <div class="field"><label>CPF do responsável</label><input id="f_resp_cpf" type="text" placeholder="000.000.000-00"></div>
+  <!-- ===== CONTEÚDO ===== -->
+  <div class="main">
+    <div class="topo">
+      <div class="perfil-saudacao">
+        <div class="avatar-grande">AC</div>
+        <div>
+          <h1 id="saudacao">Bom dia, Ana</h1>
+          <div class="data" id="dataHoje">Sábado, 04 de julho</div>
+          <div class="crp-linha">
+            <span class="crp-texto">CRP 12/28631</span>
+            <button class="btn-config" title="Configurações" onclick="window.location.href='#'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
+            </button>
           </div>
         </div>
       </div>
+      <button class="btn-sair" onclick="sair()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Sair
+      </button>
     </div>
-  `;
 
-  // Preencher valores
-  set('f_nome', p.nome_completo);
-  set('f_nasc', p.data_nascimento);
-  set('f_genero', p.genero);
-  set('f_estado_civil', p.estado_civil);
-  set('f_email', p.email);
-  set('f_tel', p.telefone);
-  set('f_wpp', p.whatsapp);
-  set('f_cpf', p.cpf);
-  set('f_cep', p.cep);
-  set('f_end', p.endereco);
-  set('f_num', p.numero || p['Nº']);
-  set('f_comp', p.complemento);
-  set('f_bairro', p.bairro);
-  set('f_cidade', p.cidade);
-  set('f_estado', p.estado);
-  set('f_escol', p.escolaridade);
-  set('f_prof', p.profissao);
-  set('f_como', p.como_conheceu);
-  set('f_filhos', p.tem_filhos !== null && p.tem_filhos !== undefined ? String(p.tem_filhos) : '');
-  set('f_anot', p.anotacoes);
-  set('f_freq', p.frequencia);
-  set('f_pgto', p.forma_pagamento);
-  set('f_meet', p.link_meet);
-  setCheck('f_consent_wpp', p.consentimento_whatsapp);
-  setCheck('f_consent_gravacao', p.consentimento_gravacao);
-  set('f_data_pgto', p.data_pagamento);
-  if (p.responsavel_financeiro === 'outra_pessoa') {
-    document.getElementById('f_resp_tipo').value = 'outra_pessoa';
-    document.getElementById('resp-campos').style.display = 'block';
-    set('f_resp_nome', p.responsavel_nome);
-    set('f_resp_cpf', p.responsavel_cpf);
+    <div class="breadcrumb"><a href="visao-geral.html">Início</a> / Relatórios</div>
+    <h2 class="page-titulo">Relatórios</h2>
+    <p class="page-sub">Panorama geral do seu consultório e do portal das pacientes, num só lugar.</p>
+
+    <div class="filtro-grade-solic">
+      <div class="filtro-campo">
+        <label class="filtro-campo-label">Período</label>
+        <select class="filtro-select-grade" id="select-periodo-rel" onchange="renderRelatorios()">
+          <option value="30">Últimos 30 dias</option>
+          <option value="90" selected>Últimos 3 meses</option>
+          <option value="180">Últimos 6 meses</option>
+          <option value="365">Este ano</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-valor">94%</div>
+        <div class="kpi-label">Taxa de realização de sessões</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-valor">R$ 2.420</div>
+        <div class="kpi-label">Receita no período</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-valor">63%</div>
+        <div class="kpi-label">Interação média das pacientes</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-valor">70%</div>
+        <div class="kpi-label">Pacientes com melhora clínica</div>
+      </div>
+    </div>
+
+    <div class="rel-painel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 class="rel-painel-titulo" style="margin:0;">Análise da IA</h2>
+        <button class="btn-atualizar-ia" onclick="gerarAnaliseIA()">↻ Atualizar análise</button>
+      </div>
+      <div id="analise-ia-conteudo">
+        <p class="analise-ia-placeholder">Clique em "Atualizar análise" para gerar uma leitura dos dados deste período.</p>
+      </div>
+    </div>
+
+    <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Sessões</h2>
+      <div class="sessoes-grid">
+        <div>
+          <p class="mini-titulo">Proporção por status no período</p>
+          <div id="grafico-status"></div>
+        </div>
+        <div>
+          <p class="mini-titulo">Evolução mês a mês</p>
+          <div id="grafico-mensal"></div>
+        </div>
+      </div>
+      <div class="mini-kpi-grid" id="mini-sessoes" style="margin-top:18px;"></div>
+    </div>
+
+    <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Pacientes</h2>
+      <div class="mini-kpi-grid" id="mini-pacientes"></div>
+      <p class="mini-titulo" style="margin-top:16px;">Ativos, novos e desistências, mês a mês</p>
+      <div id="grafico-pacientes-mes"></div>
+    </div>
+
+    <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Financeiro</h2>
+      <div class="mini-kpi-grid" id="mini-financeiro"></div>
+      <p class="mini-titulo" style="margin-top:16px;">Recebido, pendente e atrasado, mês a mês</p>
+      <div id="grafico-financeiro-mes"></div>
+    </div>
+
+    <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Modalidades financeiras</h2>
+      <p class="page-sub" style="margin-bottom:14px;">Comparação entre Integral, Valor Social e Gratuidade.</p>
+      <div class="modal-tabela" id="tabela-modalidades"></div>
+      <div class="rel-grid-2" style="margin-top:18px;">
+        <div>
+          <p class="mini-titulo">Quantas pacientes novas entraram, por modalidade e mês</p>
+          <div id="grafico-modalidades-mes"></div>
+        </div>
+        <div>
+          <p class="mini-titulo">Qual modalidade pede mais ajuste de sessão</p>
+          <div id="grafico-modalidades-ajustes"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Solicitações</h2>
+      <p class="page-sub" style="margin-bottom:14px;">Por tipo e por status, no período selecionado.</p>
+      <div class="rel-grid-2">
+        <div>
+          <p class="mini-titulo">Qual tipo é mais pedido</p>
+          <div id="grafico-solic-tipo"></div>
+        </div>
+        <div>
+          <p class="mini-titulo">Como estão sendo respondidas</p>
+          <div id="grafico-solic-status"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function(){
+    var agora = new Date();
+    var hora = agora.getHours();
+    var saudacao = hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite');
+    document.getElementById('saudacao').textContent = saudacao + ', Ana';
+
+    var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
+  })();
+
+  var STATUS_CORES = {
+    realizadas: '#1D7A6B', agendadas: '#6B57A8', canceladas: '#B5514A', remarcadas: '#A6790F', faltou: '#7A7A7A'
+  };
+  var SOLIC_CORES_TIPO = { 'Ajuste de sessão': '#5B4FBF', 'Financeiro': '#2E7D32', 'Documento médico': '#B5680F' };
+  var SOLIC_CORES_STATUS = { 'Pendente': '#A6790F', 'Aprovada': '#2E7D32', 'Recusada': '#B5514A' };
+
+  // Base única com granularidade mensal — tudo deriva daqui
+  var MESES_BASE = [
+    { mes: 'Fev', sessoes: { realizadas: 7, canceladas: 0, remarcadas: 1, faltou: 0, confirmadas: 7 },
+      financeiro: { recebido: 1540, pendente: 0, atrasado: 0 },
+      solic: { ajuste: 1, financeiro: 1, documento: 0, pendente: 0, aprovada: 2, recusada: 0 },
+      pacientes: { ativos: 8, novos: 1, desistencias: 0 },
+      avaliacoes: { positivas: 6, neutras: 1, negativas: 0 },
+      humor: { bem: 20, neutro: 8, dificil: 2 },
+      tarefas: { concluidas: 24, incompletas: 6, atrasadas: 2 },
+      modalidades: { integral: { ativos: 3, novos: 1, ajustes: 0, taxaExtra: 0 }, social: { ativos: 4, novos: 0, ajustes: 1, taxaExtra: 0 }, gratuidade: { ativos: 1, novos: 0, ajustes: 0, taxaExtra: 0 } } },
+    { mes: 'Mar', sessoes: { realizadas: 9, canceladas: 0, remarcadas: 1, faltou: 0, confirmadas: 9 },
+      financeiro: { recebido: 1980, pendente: 0, atrasado: 0 },
+      solic: { ajuste: 1, financeiro: 1, documento: 1, pendente: 0, aprovada: 3, recusada: 0 },
+      pacientes: { ativos: 9, novos: 1, desistencias: 0 },
+      avaliacoes: { positivas: 8, neutras: 1, negativas: 0 },
+      humor: { bem: 24, neutro: 7, dificil: 1 },
+      tarefas: { concluidas: 28, incompletas: 5, atrasadas: 1 },
+      modalidades: { integral: { ativos: 4, novos: 1, ajustes: 0, taxaExtra: 0 }, social: { ativos: 4, novos: 0, ajustes: 1, taxaExtra: 0 }, gratuidade: { ativos: 1, novos: 0, ajustes: 0, taxaExtra: 0 } } },
+    { mes: 'Abr', sessoes: { realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0, confirmadas: 8 },
+      financeiro: { recebido: 1760, pendente: 0, atrasado: 0 },
+      solic: { ajuste: 2, financeiro: 1, documento: 1, pendente: 0, aprovada: 3, recusada: 1 },
+      pacientes: { ativos: 9, novos: 0, desistencias: 0 },
+      avaliacoes: { positivas: 6, neutras: 2, negativas: 0 },
+      humor: { bem: 20, neutro: 9, dificil: 2 },
+      tarefas: { concluidas: 22, incompletas: 8, atrasadas: 3 },
+      modalidades: { integral: { ativos: 4, novos: 0, ajustes: 1, taxaExtra: 0 }, social: { ativos: 4, novos: 0, ajustes: 1, taxaExtra: 0 }, gratuidade: { ativos: 1, novos: 0, ajustes: 0, taxaExtra: 0 } } },
+    { mes: 'Mai', sessoes: { realizadas: 8, canceladas: 0, remarcadas: 1, faltou: 0, confirmadas: 8 },
+      financeiro: { recebido: 1760, pendente: 0, atrasado: 0 },
+      solic: { ajuste: 2, financeiro: 1, documento: 1, pendente: 0, aprovada: 4, recusada: 0 },
+      pacientes: { ativos: 10, novos: 1, desistencias: 0 },
+      avaliacoes: { positivas: 7, neutras: 1, negativas: 0 },
+      humor: { bem: 22, neutro: 8, dificil: 1 },
+      tarefas: { concluidas: 26, incompletas: 6, atrasadas: 2 },
+      modalidades: { integral: { ativos: 4, novos: 1, ajustes: 1, taxaExtra: 0 }, social: { ativos: 5, novos: 0, ajustes: 1, taxaExtra: 0 }, gratuidade: { ativos: 1, novos: 0, ajustes: 0, taxaExtra: 0 } } },
+    { mes: 'Jun', sessoes: { realizadas: 11, canceladas: 1, remarcadas: 1, faltou: 1, confirmadas: 12 },
+      financeiro: { recebido: 2420, pendente: 220, atrasado: 0 },
+      solic: { ajuste: 3, financeiro: 1, documento: 1, pendente: 1, aprovada: 3, recusada: 1 },
+      pacientes: { ativos: 10, novos: 1, desistencias: 1 },
+      avaliacoes: { positivas: 8, neutras: 2, negativas: 1 },
+      humor: { bem: 21, neutro: 10, dificil: 4 },
+      tarefas: { concluidas: 24, incompletas: 9, atrasadas: 4 },
+      modalidades: { integral: { ativos: 5, novos: 1, ajustes: 2, taxaExtra: 150 }, social: { ativos: 4, novos: 0, ajustes: 1, taxaExtra: 0 }, gratuidade: { ativos: 1, novos: 0, ajustes: 0, taxaExtra: 0 } } },
+    { mes: 'Jul', sessoes: { realizadas: 10, canceladas: 1, remarcadas: 1, faltou: 2, confirmadas: 10 },
+      financeiro: { recebido: 2200, pendente: 220, atrasado: 220 },
+      solic: { ajuste: 3, financeiro: 1, documento: 0, pendente: 2, aprovada: 2, recusada: 1 },
+      pacientes: { ativos: 10, novos: 0, desistencias: 1 },
+      avaliacoes: { positivas: 5, neutras: 2, negativas: 2 },
+      humor: { bem: 18, neutro: 10, dificil: 6 },
+      tarefas: { concluidas: 20, incompletas: 10, atrasadas: 6 },
+      modalidades: { integral: { ativos: 5, novos: 0, ajustes: 2, taxaExtra: 150 }, social: { ativos: 4, novos: 0, ajustes: 2, taxaExtra: 90 }, gratuidade: { ativos: 1, novos: 0, ajustes: 0, taxaExtra: 0 } } }
+  ];
+
+  function montarPeriodo(meses){
+    var soma = function(campo, sub){ return meses.reduce(function(s, m){ return s + m[campo][sub]; }, 0); };
+    var statusSessoes = [
+      { nome: 'Realizadas', valor: soma('sessoes','realizadas'), cor: STATUS_CORES.realizadas },
+      { nome: 'Remarcadas', valor: soma('sessoes','remarcadas'), cor: STATUS_CORES.remarcadas },
+      { nome: 'Canceladas', valor: soma('sessoes','canceladas'), cor: STATUS_CORES.canceladas },
+      { nome: 'Faltou', valor: soma('sessoes','faltou'), cor: STATUS_CORES.faltou }
+    ];
+    return {
+      statusSessoes: statusSessoes,
+      sessoesPorMes: meses.map(function(m){ return { mes: m.mes, realizadas: m.sessoes.realizadas, canceladas: m.sessoes.canceladas, remarcadas: m.sessoes.remarcadas, faltou: m.sessoes.faltou }; }),
+      confirmadas: soma('sessoes','confirmadas'),
+      pacientes: { novos: soma('pacientes','novos'), desistencias: soma('pacientes','desistencias'), ativos: meses[meses.length-1].pacientes.ativos },
+      pacientesPorMes: meses.map(function(m){ return { mes: m.mes, ativos: m.pacientes.ativos, novos: m.pacientes.novos, desistencias: m.pacientes.desistencias }; }),
+      financeiro: { recebido: soma('financeiro','recebido'), pendente: meses[meses.length-1].financeiro.pendente, atrasado: meses[meses.length-1].financeiro.atrasado },
+      financeiroPorMes: meses.map(function(m){ return { mes: m.mes, recebido: m.financeiro.recebido, pendente: m.financeiro.pendente, atrasado: m.financeiro.atrasado }; }),
+      solicPorTipo: [
+        { nome: 'Ajuste de sessão', valor: soma('solic','ajuste') },
+        { nome: 'Financeiro', valor: soma('solic','financeiro') },
+        { nome: 'Documento médico', valor: soma('solic','documento') }
+      ],
+      solicPorStatus: [
+        { nome: 'Pendente', valor: soma('solic','pendente') },
+        { nome: 'Aprovada', valor: soma('solic','aprovada') },
+        { nome: 'Recusada', valor: soma('solic','recusada') }
+      ],
+      solicPorMes: meses.map(function(m){ return { mes: m.mes, ajuste: m.solic.ajuste, financeiro: m.solic.financeiro, documento: m.solic.documento, pendente: m.solic.pendente, aprovada: m.solic.aprovada, recusada: m.solic.recusada }; }),
+      tarefas: { concluidas: soma('tarefas','concluidas'), incompletas: soma('tarefas','incompletas'), atrasadas: soma('tarefas','atrasadas') },
+      avaliacoesPorMesHumor: meses.map(function(m){ return { mes: m.mes, avaliacoes: m.avaliacoes, humor: m.humor }; }),
+      modalidadesResumo: {
+        integral: {
+          ativos: meses[meses.length-1].modalidades.integral.ativos,
+          novos: meses.reduce(function(s,m){ return s + m.modalidades.integral.novos; }, 0),
+          ajustes: meses.reduce(function(s,m){ return s + m.modalidades.integral.ajustes; }, 0),
+          taxaExtra: meses.reduce(function(s,m){ return s + m.modalidades.integral.taxaExtra; }, 0)
+        },
+        social: {
+          ativos: meses[meses.length-1].modalidades.social.ativos,
+          novos: meses.reduce(function(s,m){ return s + m.modalidades.social.novos; }, 0),
+          ajustes: meses.reduce(function(s,m){ return s + m.modalidades.social.ajustes; }, 0),
+          taxaExtra: meses.reduce(function(s,m){ return s + m.modalidades.social.taxaExtra; }, 0)
+        },
+        gratuidade: {
+          ativos: meses[meses.length-1].modalidades.gratuidade.ativos,
+          novos: meses.reduce(function(s,m){ return s + m.modalidades.gratuidade.novos; }, 0),
+          ajustes: meses.reduce(function(s,m){ return s + m.modalidades.gratuidade.ajustes; }, 0),
+          taxaExtra: 0
+        }
+      },
+      modalidadesPorMes: meses.map(function(m){ return { mes: m.mes, integral: m.modalidades.integral.novos, social: m.modalidades.social.novos, gratuidade: m.modalidades.gratuidade.novos }; })
+    };
   }
-}
 
-async function salvar() {
-  if (!PACIENTE_ID) return;
-  const dados = {
-    nome_completo: v('f_nome'),
-    data_nascimento: v('f_nasc') || null,
-    genero: v('f_genero') || null,
-    estado_civil: v('f_estado_civil') || null,
-    email: v('f_email') || null,
-    telefone: v('f_tel') || null,
-    whatsapp: v('f_wpp') || null,
-    cpf: v('f_cpf') || null,
-    cep: v('f_cep') || null,
-    endereco: v('f_end') || null,
-    numero: v('f_num') || null,
-    complemento: v('f_comp') || null,
-    bairro: v('f_bairro') || null,
-    cidade: v('f_cidade') || null,
-    estado: v('f_estado') || null,
-    escolaridade: v('f_escol') || null,
-    profissao: v('f_prof') || null,
-    como_conheceu: v('f_como') || null,
-    tem_filhos: v('f_filhos') !== '' ? v('f_filhos') === 'true' : null,
-    anotacoes: v('f_anot') || null,
-    frequencia: v('f_freq') || null,
-    forma_pagamento: v('f_pgto') || null,
-    link_meet: v('f_meet') || null,
-    consentimento_whatsapp: vCheck('f_consent_wpp'),
-    consentimento_gravacao: vCheck('f_consent_gravacao'),
-    data_pagamento: v('f_data_pgto') || null,
-    responsavel_financeiro: v('f_resp_tipo') === 'outra_pessoa' ? 'outra_pessoa' : 'propria',
-    responsavel_nome: v('f_resp_tipo') === 'outra_pessoa' ? (v('f_resp_nome') || null) : null,
-    responsavel_cpf: v('f_resp_tipo') === 'outra_pessoa' ? (v('f_resp_cpf') || null) : null,
+  var fakeRelatorios = {
+    30: montarPeriodo(MESES_BASE.slice(-1)),
+    90: montarPeriodo(MESES_BASE.slice(-3)),
+    180: montarPeriodo(MESES_BASE.slice(-6)),
+    365: montarPeriodo(MESES_BASE)
   };
 
-  // remover nulls
-  Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
+  function renderRelatorios(){
+    var periodo = document.getElementById('select-periodo-rel').value;
+    var dados = fakeRelatorios[periodo];
 
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`
-      },
-      body: JSON.stringify(dados)
-    });
-    if (r.ok) {
-      toast('Dados salvos com sucesso!', 'ok');
-      setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`, 1200);
-    } else {
-      const err = await r.json();
-      toast('Erro: ' + (err.message || JSON.stringify(err)), 'erro');
+    var totalStatus = dados.statusSessoes.reduce(function(s, i){ return s + i.valor; }, 0);
+    var realizadas = dados.statusSessoes.find(function(s){ return s.nome === 'Realizadas'; }).valor;
+    var taxaRealizacao = totalStatus ? Math.round((realizadas / totalStatus) * 100) : 0;
+    var totalTarefas = dados.tarefas.concluidas + dados.tarefas.incompletas + dados.tarefas.atrasadas;
+    var interacaoMedia = totalTarefas ? Math.round((dados.tarefas.concluidas / totalTarefas) * 100) : 0;
+
+    var kpiEls = document.querySelectorAll('.kpi-valor');
+    kpiEls[0].textContent = taxaRealizacao + '%';
+    kpiEls[1].textContent = 'R$ ' + dados.financeiro.recebido.toLocaleString('pt-BR');
+    kpiEls[2].textContent = interacaoMedia + '%';
+    kpiEls[3].textContent = '70%';
+
+    // Gráfico de rosca (donut) — sessões por status
+    var acumulado = 0;
+    var stops = dados.statusSessoes.map(function(s){
+      var pct = totalStatus ? (s.valor / totalStatus) * 100 : 0;
+      var inicio = acumulado;
+      acumulado += pct;
+      return s.cor + ' ' + inicio.toFixed(1) + '% ' + acumulado.toFixed(1) + '%';
+    }).join(', ');
+    document.getElementById('grafico-status').innerHTML =
+      '<div class="donut-wrap">' +
+        '<div class="donut" style="background: conic-gradient(' + stops + ');"><div class="donut-centro"><b>' + totalStatus + '</b><span>sessões</span></div></div>' +
+        '<div class="donut-legenda">' + dados.statusSessoes.map(function(s){
+          var pct = totalStatus ? Math.round((s.valor/totalStatus)*100) : 0;
+          return '<div class="donut-legenda-item"><i style="background:' + s.cor + ';"></i>' + s.nome + ' <b>' + s.valor + '</b> <span>(' + pct + '%)</span></div>';
+        }).join('') + '</div>' +
+      '</div>';
+
+    function desenharLinhas(elId, meses, series){
+      var todosValores = [];
+      series.forEach(function(s){ todosValores = todosValores.concat(s.valores); });
+      var maxValor = Math.max.apply(null, todosValores.concat([1]));
+      var w = 500, h = 160, padL = 6, padR = 30, padT = 16, padB = 24;
+      var passoX = meses.length > 1 ? (w - padL - padR) / (meses.length - 1) : 0;
+
+      function pontoY(v){ return padT + (h - padT - padB) * (1 - v / maxValor); }
+
+      var grade =
+        '<line x1="' + padL + '" y1="' + pontoY(0) + '" x2="' + (w - padR) + '" y2="' + pontoY(0) + '" stroke="#EEE3E1" stroke-width="1"/>' +
+        '<line x1="' + padL + '" y1="' + pontoY(maxValor) + '" x2="' + (w - padR) + '" y2="' + pontoY(maxValor) + '" stroke="#EEE3E1" stroke-width="1"/>' +
+        '<text x="' + padL + '" y="' + (pontoY(maxValor) - 4) + '" font-size="9" fill="#BBB">' + maxValor + '</text>';
+
+      var linhasSvg = series.map(function(s){
+        var pontos = s.valores.map(function(v, i){ return (padL + i * passoX) + ',' + pontoY(v); }).join(' ');
+        var circulos = s.valores.map(function(v, i){
+          return '<circle cx="' + (padL + i * passoX) + '" cy="' + pontoY(v) + '" r="2.8" fill="' + s.cor + '"><title>' + s.nome + ' em ' + meses[i] + ': ' + v + '</title></circle>';
+        }).join('');
+        var ultimoIdx = s.valores.length - 1;
+        var rotuloFinal = '<text x="' + (padL + ultimoIdx * passoX + 6) + '" y="' + (pontoY(s.valores[ultimoIdx]) + 3) + '" font-size="11" font-weight="700" fill="' + s.cor + '">' + s.valores[ultimoIdx] + '</text>';
+        return '<polyline points="' + pontos + '" fill="none" stroke="' + s.cor + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' + circulos + rotuloFinal;
+      }).join('');
+
+      var labelsX = meses.map(function(m, i){
+        return '<text x="' + (padL + i * passoX) + '" y="' + (h - 4) + '" font-size="10" fill="#999" text-anchor="middle">' + m + '</text>';
+      }).join('');
+
+      document.getElementById(elId).innerHTML =
+        '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%; height:auto;">' + grade + linhasSvg + labelsX + '</svg>' +
+        '<div class="linha-legenda">' + series.map(function(s){
+          return '<span><i style="background:' + s.cor + ';"></i>' + s.nome + '</span>';
+        }).join('') + '</div>';
     }
-  } catch(e) {
-    toast('Erro: ' + e.message, 'erro');
-  }
-}
 
-carregar();
+    desenharLinhas('grafico-mensal',
+      dados.sessoesPorMes.map(function(m){ return m.mes; }),
+      [
+        { nome: 'Realizadas', cor: STATUS_CORES.realizadas, valores: dados.sessoesPorMes.map(function(m){ return m.realizadas; }) },
+        { nome: 'Remarcadas', cor: STATUS_CORES.remarcadas, valores: dados.sessoesPorMes.map(function(m){ return m.remarcadas; }) },
+        { nome: 'Canceladas', cor: STATUS_CORES.canceladas, valores: dados.sessoesPorMes.map(function(m){ return m.canceladas; }) },
+        { nome: 'Faltas', cor: STATUS_CORES.faltou, valores: dados.sessoesPorMes.map(function(m){ return m.faltou; }) }
+      ]
+    );
+
+    desenharLinhas('grafico-financeiro-mes',
+      dados.financeiroPorMes.map(function(m){ return m.mes; }),
+      [
+        { nome: 'Recebido', cor: '#1D7A6B', valores: dados.financeiroPorMes.map(function(m){ return m.recebido; }) },
+        { nome: 'Pendente', cor: '#A6790F', valores: dados.financeiroPorMes.map(function(m){ return m.pendente; }) },
+        { nome: 'Atrasado', cor: '#B5514A', valores: dados.financeiroPorMes.map(function(m){ return m.atrasado; }) }
+      ]
+    );
+
+    desenharLinhas('grafico-pacientes-mes',
+      dados.pacientesPorMes.map(function(m){ return m.mes; }),
+      [
+        { nome: 'Ativos', cor: '#785D56', valores: dados.pacientesPorMes.map(function(m){ return m.ativos; }) },
+        { nome: 'Novos', cor: '#2E7D32', valores: dados.pacientesPorMes.map(function(m){ return m.novos; }) },
+        { nome: 'Desistências', cor: '#B5514A', valores: dados.pacientesPorMes.map(function(m){ return m.desistencias; }) }
+      ]
+    );
+
+    function acharValor(nome){
+      var item = dados.statusSessoes.find(function(s){ return s.nome === nome; });
+      return item ? item.valor : 0;
+    }
+
+    document.getElementById('mini-sessoes').innerHTML =
+      '<div class="mini-kpi"><div class="mini-kpi-valor">' + dados.confirmadas + '</div><div class="mini-kpi-label">Confirmações</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor">' + acharValor('Remarcadas') + '</div><div class="mini-kpi-label">Remarcações</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">' + acharValor('Canceladas') + '</div><div class="mini-kpi-label">Cancelamentos</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">' + acharValor('Faltou') + '</div><div class="mini-kpi-label">Faltas</div></div>';
+
+    document.getElementById('mini-pacientes').innerHTML =
+      '<div class="mini-kpi"><div class="mini-kpi-valor">' + dados.pacientes.ativos + '</div><div class="mini-kpi-label">Ativos</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor">' + dados.pacientes.novos + '</div><div class="mini-kpi-label">Novos no período</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">' + dados.pacientes.desistencias + '</div><div class="mini-kpi-label">Desistências</div></div>';
+
+    document.getElementById('mini-financeiro').innerHTML =
+      '<div class="mini-kpi"><div class="mini-kpi-valor">R$ ' + dados.financeiro.recebido.toLocaleString('pt-BR') + '</div><div class="mini-kpi-label">Recebido</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">R$ ' + dados.financeiro.pendente.toLocaleString('pt-BR') + '</div><div class="mini-kpi-label">Pendente</div></div>' +
+      '<div class="mini-kpi"><div class="mini-kpi-valor alerta">R$ ' + dados.financeiro.atrasado.toLocaleString('pt-BR') + '</div><div class="mini-kpi-label">Atrasado</div></div>';
+
+    function desenharBarras(elId, lista, coresMap){
+      var total = lista.reduce(function(s, i){ return s + i.valor; }, 0);
+      document.getElementById(elId).innerHTML = lista.map(function(item){
+        var pct = total ? Math.round((item.valor / total) * 100) : 0;
+        return '<div class="barra-linha">' +
+          '<span class="barra-nome">' + item.nome + '</span>' +
+          '<div class="barra-trilho"><div class="barra-preenchida" style="width:' + pct + '%; background:' + coresMap[item.nome] + ';"></div></div>' +
+          '<span class="barra-valor">' + item.valor + '</span>' +
+        '</div>';
+      }).join('');
+    }
+    desenharBarras('grafico-solic-tipo', dados.solicPorTipo, SOLIC_CORES_TIPO);
+    desenharBarras('grafico-solic-status', dados.solicPorStatus, SOLIC_CORES_STATUS);
+
+    // Modalidades financeiras
+    var MOD_CORES = { integral: '#5B4FBF', social: '#2E7D32', gratuidade: '#7A7A7A' };
+    var MOD_LABEL = { integral: 'Integral', social: 'Valor Social', gratuidade: 'Gratuidade' };
+    var mr = dados.modalidadesResumo;
+    document.getElementById('tabela-modalidades').innerHTML = ['integral', 'social', 'gratuidade'].map(function(chave){
+      var m = mr[chave];
+      return '<div class="modal-col">' +
+        '<div class="modal-col-titulo">' + MOD_LABEL[chave] + '</div>' +
+        '<div class="modal-linha"><span>Ativos</span><b>' + m.ativos + '</b></div>' +
+        '<div class="modal-linha"><span>Novos no período</span><b>' + m.novos + '</b></div>' +
+        '<div class="modal-linha' + (m.ajustes > 2 ? ' alerta' : '') + '"><span>Ajustes de sessão</span><b>' + m.ajustes + '</b></div>' +
+        '<div class="modal-linha' + (m.taxaExtra > 0 ? ' alerta' : '') + '"><span>Taxa extra gerada</span><b>R$ ' + m.taxaExtra.toLocaleString('pt-BR') + '</b></div>' +
+      '</div>';
+    }).join('');
+
+    desenharLinhas('grafico-modalidades-mes',
+      dados.modalidadesPorMes.map(function(m){ return m.mes; }),
+      [
+        { nome: 'Integral', cor: MOD_CORES.integral, valores: dados.modalidadesPorMes.map(function(m){ return m.integral; }) },
+        { nome: 'Social', cor: MOD_CORES.social, valores: dados.modalidadesPorMes.map(function(m){ return m.social; }) },
+        { nome: 'Gratuidade', cor: MOD_CORES.gratuidade, valores: dados.modalidadesPorMes.map(function(m){ return m.gratuidade; }) }
+      ]
+    );
+
+    desenharBarras('grafico-modalidades-ajustes',
+      [
+        { nome: 'Integral', valor: mr.integral.ajustes },
+        { nome: 'Valor Social', valor: mr.social.ajustes },
+        { nome: 'Gratuidade', valor: mr.gratuidade.ajustes }
+      ],
+      { 'Integral': MOD_CORES.integral, 'Valor Social': MOD_CORES.social, 'Gratuidade': MOD_CORES.gratuidade }
+    );
+  }
+
+  var N8N_WEBHOOK_ANALISE_IA = 'https://psi3ana.app.n8n.cloud/webhook/relatorio-analise-ia';
+
+  async function gerarAnaliseIA(){
+    var periodo = document.getElementById('select-periodo-rel').value;
+    var dados = fakeRelatorios[periodo];
+    var btn = document.querySelector('.btn-atualizar-ia');
+    var wrap = document.getElementById('analise-ia-conteudo');
+
+    btn.disabled = true;
+    wrap.innerHTML = '<p class="analise-ia-placeholder">Analisando os dados do período…</p>';
+
+    var payload = {
+      periodo_dias: periodo,
+      kpis: {
+        taxa_realizacao: document.querySelectorAll('.kpi-valor')[0].textContent,
+        receita_periodo: document.querySelectorAll('.kpi-valor')[1].textContent,
+        interacao_media: document.querySelectorAll('.kpi-valor')[2].textContent,
+        melhora_clinica: document.querySelectorAll('.kpi-valor')[3].textContent
+      },
+      sessoes_por_status_total: dados.statusSessoes,
+      sessoes_por_mes: dados.sessoesPorMes,
+      confirmadas_total: dados.confirmadas,
+      pacientes_total: dados.pacientes,
+      pacientes_por_mes: dados.pacientesPorMes,
+      financeiro_total: dados.financeiro,
+      financeiro_por_mes: dados.financeiroPorMes,
+      solicitacoes_por_tipo_total: dados.solicPorTipo,
+      solicitacoes_por_status_total: dados.solicPorStatus,
+      solicitacoes_por_mes: dados.solicPorMes,
+      tarefas_total: dados.tarefas,
+      avaliacoes_e_humor_por_mes: dados.avaliacoesPorMesHumor,
+      modalidades_resumo: dados.modalidadesResumo,
+      modalidades_por_mes: dados.modalidadesPorMes
+    };
+
+    try{
+      var resposta = await fetch(N8N_WEBHOOK_ANALISE_IA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var json = await resposta.json();
+      if(json && Array.isArray(json.insights) && json.insights.length > 0){
+        var iconePorTipo = { positivo: '✓', atencao: '!', alerta: '⚠' };
+        wrap.innerHTML = '<div class="insights-grid">' + json.insights.map(function(item){
+          var tipo = item.tipo || 'atencao';
+          return '<div class="insight-card ' + tipo + '">' +
+            '<div class="insight-card-topo"><span class="insight-icone">' + (iconePorTipo[tipo] || '•') + '</span><span class="insight-categoria">' + (item.categoria || '') + '</span></div>' +
+            '<p class="insight-card-texto">' + item.texto + '</p>' +
+          '</div>';
+        }).join('') + '</div>';
+      } else if(json && json.analise){
+        wrap.innerHTML = '<div class="analise-ia-texto">' + json.analise.replace(/\n/g, '<br>') + '</div>';
+      } else {
+        wrap.innerHTML = '<p class="analise-ia-erro">Não foi possível gerar a análise agora. Tente novamente.</p>';
+      }
+    } catch(e){
+      wrap.innerHTML = '<p class="analise-ia-erro">Não foi possível conectar ao serviço de análise. Verifique sua conexão e tente novamente.</p>';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  renderRelatorios();
+
+  function sair(){
+    sessionStorage.removeItem('psiana_admin_logado');
+    window.location.href = 'login-psicologa.html';
+  }
 </script>
+
 </body>
 </html>
