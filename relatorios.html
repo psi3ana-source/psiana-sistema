@@ -650,7 +650,7 @@
       var todosValores = [];
       series.forEach(function(s){ todosValores = todosValores.concat(s.valores); });
       var maxValor = Math.max.apply(null, todosValores.concat([1]));
-      var w = 500, h = 160, padL = 6, padR = 30, padT = 16, padB = 24;
+      var w = 500, h = 160, padL = 6, padR = 34, padT = 16, padB = 22;
       var passoX = meses.length > 1 ? (w - padL - padR) / (meses.length - 1) : 0;
 
       function pontoY(v){ return padT + (h - padT - padB) * (1 - v / maxValor); }
@@ -658,20 +658,20 @@
       var grade =
         '<line x1="' + padL + '" y1="' + pontoY(0) + '" x2="' + (w - padR) + '" y2="' + pontoY(0) + '" stroke="#EEE3E1" stroke-width="1"/>' +
         '<line x1="' + padL + '" y1="' + pontoY(maxValor) + '" x2="' + (w - padR) + '" y2="' + pontoY(maxValor) + '" stroke="#EEE3E1" stroke-width="1"/>' +
-        '<text x="' + padL + '" y="' + (pontoY(maxValor) - 4) + '" font-size="9" fill="#BBB">' + maxValor + '</text>';
+        '<text x="' + padL + '" y="' + (pontoY(maxValor) - 4) + '" font-size="7" fill="#BBB">' + maxValor + '</text>';
 
       var linhasSvg = series.map(function(s){
         var pontos = s.valores.map(function(v, i){ return (padL + i * passoX) + ',' + pontoY(v); }).join(' ');
         var circulos = s.valores.map(function(v, i){
-          return '<circle cx="' + (padL + i * passoX) + '" cy="' + pontoY(v) + '" r="2.8" fill="' + s.cor + '"><title>' + s.nome + ' em ' + meses[i] + ': ' + v + '</title></circle>';
+          return '<circle cx="' + (padL + i * passoX) + '" cy="' + pontoY(v) + '" r="2.4" fill="' + s.cor + '"><title>' + s.nome + ' em ' + meses[i] + ': ' + v + '</title></circle>';
         }).join('');
         var ultimoIdx = s.valores.length - 1;
-        var rotuloFinal = '<text x="' + (padL + ultimoIdx * passoX + 6) + '" y="' + (pontoY(s.valores[ultimoIdx]) + 3) + '" font-size="11" font-weight="700" fill="' + s.cor + '">' + s.valores[ultimoIdx] + '</text>';
-        return '<polyline points="' + pontos + '" fill="none" stroke="' + s.cor + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' + circulos + rotuloFinal;
+        var rotuloFinal = '<text x="' + (padL + ultimoIdx * passoX + 5) + '" y="' + (pontoY(s.valores[ultimoIdx]) + 2.5) + '" font-size="8" font-weight="700" fill="' + s.cor + '">' + s.valores[ultimoIdx] + '</text>';
+        return '<polyline points="' + pontos + '" fill="none" stroke="' + s.cor + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' + circulos + rotuloFinal;
       }).join('');
 
       var labelsX = meses.map(function(m, i){
-        return '<text x="' + (padL + i * passoX) + '" y="' + (h - 4) + '" font-size="10" fill="#999" text-anchor="middle">' + m + '</text>';
+        return '<text x="' + (padL + i * passoX) + '" y="' + (h - 4) + '" font-size="7.5" fill="#999" text-anchor="middle">' + m + '</text>';
       }).join('');
 
       document.getElementById(elId).innerHTML =
@@ -780,6 +780,28 @@
 
   var PALETA_GRAFICOS = ['#5B4FBF','#2E7D32','#B5680F','#1D7A6B','#A6790F','#B5514A','#785D56','#C89F9D'];
 
+  // Estrutura pronta para quando decidirmos avançar com a análise de adesão por categoria de tarefa
+  var fakeTarefasPorCategoria = [
+    { categoria: 'Respiração e regulação', concluidas: 22, incompletas: 4, atrasadas: 1 },
+    { categoria: 'RPD', concluidas: 14, incompletas: 9, atrasadas: 5 },
+    { categoria: 'Posicionamento e limites', concluidas: 18, incompletas: 7, atrasadas: 3 },
+    { categoria: 'Autocuidado', concluidas: 20, incompletas: 5, atrasadas: 2 },
+    { categoria: 'Exposição', concluidas: 9, incompletas: 8, atrasadas: 6 }
+  ];
+
+  // Estrutura pronta para análise futura de temas por SOAP — sempre agregada e anônima, nunca identificando a paciente
+  var fakeTemasSessoesSOAP = [
+    { secao_soap: 'subjetivo', tema: 'Sobrecarga no trabalho', avaliacao_sessao: 'positiva', ocorrencias: 6 },
+    { secao_soap: 'subjetivo', tema: 'Dificuldade em dizer não', avaliacao_sessao: 'positiva', ocorrencias: 5 },
+    { secao_soap: 'subjetivo', tema: 'Cansaço e falta de energia', avaliacao_sessao: 'negativa', ocorrencias: 4 },
+    { secao_soap: 'objetivo', tema: 'Discurso mais organizado', avaliacao_sessao: 'positiva', ocorrencias: 7 },
+    { secao_soap: 'objetivo', tema: 'Afeto rebaixado', avaliacao_sessao: 'negativa', ocorrencias: 3 },
+    { secao_soap: 'avaliacao', tema: 'Progresso em autocuidado', avaliacao_sessao: 'positiva', ocorrencias: 8 },
+    { secao_soap: 'avaliacao', tema: 'Estagnação percebida pela paciente', avaliacao_sessao: 'neutra', ocorrencias: 3 },
+    { secao_soap: 'plano', tema: 'Reforço de tarefa de respiração', avaliacao_sessao: 'positiva', ocorrencias: 6 },
+    { secao_soap: 'plano', tema: 'Revisão de expectativas do tratamento', avaliacao_sessao: 'neutra', ocorrencias: 2 }
+  ];
+
   var fakePacientesAnalise = [
     { nome: 'Willian Francisco Caetano Lopes', sexo: 'masculino', idade: 29, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Engenheiro', escolaridade: 'Superior completo', renda_mensal: 6500, indicador_predominante: 'autocuidado', queixa_principal: 'Sobrecarga no trabalho e dificuldade de desconectar', status: 'ativo' },
     { nome: 'Anna Clara Oldoni Costa', sexo: 'feminino', idade: 21, cidade: 'Florianópolis', estado: 'SC', frequencia: 'quinzenal', forma_pagamento: 'PIX', como_conheceu: 'Google', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1200, indicador_predominante: 'sintomas ansiosos', queixa_principal: 'Ansiedade antes de provas e apresentações', status: 'ativo' },
@@ -833,6 +855,8 @@
       pergunta: pergunta,
       pacientes: fakePacientesAnalise,
       pagamentos_amostra: fakePagamentosAmostra,
+      tarefas_por_categoria: fakeTarefasPorCategoria,
+      temas_sessoes_soap: fakeTemasSessoesSOAP,
       periodo_atual: {
         sessoes_por_mes: dadosAtuais.sessoesPorMes,
         financeiro_por_mes: dadosAtuais.financeiroPorMes,
