@@ -1453,7 +1453,10 @@
     el.classList.toggle('err', false);
   }
 
-  function criarSenha(){
+  var N8N_WEBHOOK_CRIAR_SENHA = 'https://psi3ana.app.n8n.cloud/webhook/portal-criar-senha';
+  var TOKEN_PRIMEIRO_ACESSO = new URLSearchParams(window.location.search).get('token');
+
+  async function criarSenha(){
     var nova = document.getElementById('nova-senha').value;
     var confirma = document.getElementById('confirma-senha').value;
     var errBox = document.getElementById('senha-error');
@@ -1469,9 +1472,37 @@
       return;
     }
     errBox.classList.remove('show');
-    sessionStorage.setItem('psiana_portal_logado', 'true');
-    sessionStorage.setItem('psiana_portal_nome', fakePaciente.nome);
-    entrarNoApp();
+
+    if(!TOKEN_PRIMEIRO_ACESSO){
+      errBox.textContent = 'Link inválido ou expirado. Peça um novo convite.';
+      errBox.classList.add('show');
+      return;
+    }
+
+    try{
+      var senhaHash = await sha256(nova);
+      var resposta = await fetch(N8N_WEBHOOK_CRIAR_SENHA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: TOKEN_PRIMEIRO_ACESSO, senha_hash: senhaHash })
+      });
+      var dados = await resposta.json();
+      var sucesso = dados && (dados.sucesso === true || dados.success === true);
+      if(!sucesso){
+        errBox.textContent = 'Não foi possível criar sua senha. O link pode ter expirado.';
+        errBox.classList.add('show');
+        return;
+      }
+      var pacienteId = dados.paciente_id || dados.id || (dados.paciente && dados.paciente.id) || null;
+      var nome = dados.nome || dados.nome_completo || (dados.paciente && (dados.paciente.nome_completo || dados.paciente.nome)) || '';
+      sessionStorage.setItem('psiana_portal_logado', 'true');
+      sessionStorage.setItem('psiana_portal_nome', nome || fakePaciente.nome);
+      if(pacienteId) sessionStorage.setItem('psiana_portal_paciente_id', pacienteId);
+      entrarNoApp();
+    } catch(e){
+      errBox.textContent = 'Não foi possível conectar ao servidor. Tente novamente.';
+      errBox.classList.add('show');
+    }
   }
 
   function entrarNoApp(){
