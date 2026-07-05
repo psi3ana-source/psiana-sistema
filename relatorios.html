@@ -544,7 +544,7 @@
       tarefas: { concluidas: 24, incompletas: 9, atrasadas: 4 },
       modalidades: { integral: { ativos: 5, novos: 1, ajustes: 2, taxaExtra: 150 }, social: { ativos: 4, novos: 0, ajustes: 1, taxaExtra: 0 }, gratuidade: { ativos: 1, novos: 0, ajustes: 0, taxaExtra: 0 } } },
     { mes: 'Jul', sessoes: { realizadas: 10, canceladas: 1, remarcadas: 1, faltou: 2, confirmadas: 10 },
-      financeiro: { recebido: 2200, pendente: 220, atrasado: 220 },
+      financeiro: { recebido: 2200, pendente: 220, atrasado: 150 },
       solic: { ajuste: 3, financeiro: 1, documento: 0, pendente: 2, aprovada: 2, recusada: 1 },
       pacientes: { ativos: 10, novos: 0, desistencias: 1 },
       avaliacoes: { positivas: 5, neutras: 2, negativas: 2 },
@@ -781,16 +781,25 @@
   var PALETA_GRAFICOS = ['#5B4FBF','#2E7D32','#B5680F','#1D7A6B','#A6790F','#B5514A','#785D56','#C89F9D'];
 
   var fakePacientesAnalise = [
-    { nome: 'Willian Francisco Caetano Lopes', sexo: 'masculino', idade: 29, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Instagram', profissao: 'Engenheiro', escolaridade: 'Superior completo', renda_mensal: 6500, indicador_predominante: 'autocuidado', queixa_principal: 'Sobrecarga no trabalho e dificuldade de desconectar', status: 'ativo' },
-    { nome: 'Anna Clara Oldoni Costa', sexo: 'feminino', idade: 21, cidade: 'Florianópolis', estado: 'SC', frequencia: 'quinzenal', como_conheceu: 'Google', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1200, indicador_predominante: 'sintomas ansiosos', queixa_principal: 'Ansiedade antes de provas e apresentações', status: 'ativo' },
-    { nome: 'Catarina Marchi Jasper', sexo: 'feminino', idade: 24, cidade: 'Tubarão', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Indicação', profissao: 'Designer', escolaridade: 'Superior completo', renda_mensal: 3200, indicador_predominante: 'humor', queixa_principal: 'Oscilação de humor e falta de motivação', status: 'ativo' },
-    { nome: 'Dariana Christina Marcelino Valle', sexo: 'feminino', idade: 24, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Instagram', profissao: 'Advogada', escolaridade: 'Pós-graduação', renda_mensal: 7200, indicador_predominante: 'autocuidado', queixa_principal: 'Dificuldade em dizer não e estabelecer limites', status: 'ativo' },
-    { nome: 'Emiliane Clarissa Gomes de Lima', sexo: 'feminino', idade: 22, cidade: 'São Paulo', estado: 'SP', frequencia: 'quinzenal', como_conheceu: 'TikTok', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1800, indicador_predominante: 'sintomas depressivos', queixa_principal: 'Cansaço constante e falta de vontade', status: 'pausado' },
-    { nome: 'Graziela Premoli de Souza', sexo: 'feminino', idade: 48, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Indicação', profissao: 'Professora', escolaridade: 'Pós-graduação', renda_mensal: 4800, indicador_predominante: 'insonia', queixa_principal: 'Dificuldade para dormir e pensamentos acelerados', status: 'ativo' },
-    { nome: 'Julia de Paiva Bento', sexo: 'feminino', idade: 42, cidade: 'Rio de Janeiro', estado: 'RJ', frequencia: 'mensal', como_conheceu: 'Google', profissao: 'Empresária', escolaridade: 'Superior completo', renda_mensal: 9000, indicador_predominante: 'tolerancia', queixa_principal: 'Irritabilidade e baixa tolerância à frustração', status: 'ativo' },
-    { nome: 'Lara Cristina Petry Bueno', sexo: 'feminino', idade: 41, cidade: 'Porto Alegre', estado: 'RS', frequencia: 'quinzenal', como_conheceu: 'Instagram', profissao: 'Bióloga', escolaridade: 'Pós-graduação', renda_mensal: 5200, indicador_predominante: 'sintomas depressivos', queixa_principal: 'Falta de vontade e cansaço mesmo dormindo bem', status: 'desistente' },
-    { nome: 'Marcos Rosti Martins Filho', sexo: 'masculino', idade: 35, cidade: 'Curitiba', estado: 'PR', frequencia: 'semanal', como_conheceu: 'Google', profissao: 'Autônomo', escolaridade: 'Ensino médio', renda_mensal: 2800, indicador_predominante: 'limites', queixa_principal: 'Dificuldade em cobrar clientes e se posicionar', status: 'ativo' },
-    { nome: 'Sabrina Mendes Teixeira', sexo: 'feminino', idade: 31, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Indicação', profissao: 'Enfermeira', escolaridade: 'Superior completo', renda_mensal: 3600, indicador_predominante: 'autocuidado', queixa_principal: 'Exaustão pelo trabalho em turnos e pouco autocuidado', status: 'alta' }
+    { nome: 'Willian Francisco Caetano Lopes', sexo: 'masculino', idade: 29, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Engenheiro', escolaridade: 'Superior completo', renda_mensal: 6500, indicador_predominante: 'autocuidado', queixa_principal: 'Sobrecarga no trabalho e dificuldade de desconectar', status: 'ativo' },
+    { nome: 'Anna Clara Oldoni Costa', sexo: 'feminino', idade: 21, cidade: 'Florianópolis', estado: 'SC', frequencia: 'quinzenal', forma_pagamento: 'PIX', como_conheceu: 'Google', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1200, indicador_predominante: 'sintomas ansiosos', queixa_principal: 'Ansiedade antes de provas e apresentações', status: 'ativo' },
+    { nome: 'Catarina Marchi Jasper', sexo: 'feminino', idade: 24, cidade: 'Tubarão', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'Cartão', como_conheceu: 'Indicação', profissao: 'Designer', escolaridade: 'Superior completo', renda_mensal: 3200, indicador_predominante: 'humor', queixa_principal: 'Oscilação de humor e falta de motivação', status: 'ativo' },
+    { nome: 'Dariana Christina Marcelino Valle', sexo: 'feminino', idade: 24, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Advogada', escolaridade: 'Pós-graduação', renda_mensal: 7200, indicador_predominante: 'autocuidado', queixa_principal: 'Dificuldade em dizer não e estabelecer limites', status: 'ativo' },
+    { nome: 'Emiliane Clarissa Gomes de Lima', sexo: 'feminino', idade: 22, cidade: 'São Paulo', estado: 'SP', frequencia: 'quinzenal', forma_pagamento: 'Transferência', como_conheceu: 'TikTok', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1800, indicador_predominante: 'sintomas depressivos', queixa_principal: 'Cansaço constante e falta de vontade', status: 'pausado' },
+    { nome: 'Graziela Premoli de Souza', sexo: 'feminino', idade: 48, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Indicação', profissao: 'Professora', escolaridade: 'Pós-graduação', renda_mensal: 4800, indicador_predominante: 'insonia', queixa_principal: 'Dificuldade para dormir e pensamentos acelerados', status: 'ativo' },
+    { nome: 'Julia de Paiva Bento', sexo: 'feminino', idade: 42, cidade: 'Rio de Janeiro', estado: 'RJ', frequencia: 'mensal', forma_pagamento: 'Transferência', como_conheceu: 'Google', profissao: 'Empresária', escolaridade: 'Superior completo', renda_mensal: 9000, indicador_predominante: 'tolerancia', queixa_principal: 'Irritabilidade e baixa tolerância à frustração', status: 'ativo' },
+    { nome: 'Lara Cristina Petry Bueno', sexo: 'feminino', idade: 41, cidade: 'Porto Alegre', estado: 'RS', frequencia: 'quinzenal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Bióloga', escolaridade: 'Pós-graduação', renda_mensal: 5200, indicador_predominante: 'sintomas depressivos', queixa_principal: 'Falta de vontade e cansaço mesmo dormindo bem', status: 'desistente' },
+    { nome: 'Marcos Rosti Martins Filho', sexo: 'masculino', idade: 35, cidade: 'Curitiba', estado: 'PR', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Google', profissao: 'Autônomo', escolaridade: 'Ensino médio', renda_mensal: 2800, indicador_predominante: 'limites', queixa_principal: 'Dificuldade em cobrar clientes e se posicionar', status: 'ativo' },
+    { nome: 'Sabrina Mendes Teixeira', sexo: 'feminino', idade: 31, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'Cartão', como_conheceu: 'Indicação', profissao: 'Enfermeira', escolaridade: 'Superior completo', renda_mensal: 3600, indicador_predominante: 'autocuidado', queixa_principal: 'Exaustão pelo trabalho em turnos e pouco autocuidado', status: 'alta' }
+  ];
+
+  // Amostra de pagamentos com data, pra permitir análise de "qual dia entra mais pagamento"
+  var fakePagamentosAmostra = [
+    { data: '2026-06-30', dia_semana: 'terça' }, { data: '2026-06-16', dia_semana: 'terça' },
+    { data: '2026-06-23', dia_semana: 'terça' }, { data: '2026-06-29', dia_semana: 'segunda' },
+    { data: '2026-06-25', dia_semana: 'quinta' }, { data: '2026-07-01', dia_semana: 'quarta' },
+    { data: '2026-07-06', dia_semana: 'segunda' }, { data: '2026-07-07', dia_semana: 'terça' },
+    { data: '2026-07-08', dia_semana: 'quarta' }, { data: '2026-07-02', dia_semana: 'quinta' }
   ];
 
   function perguntarIASugestao(el){
@@ -823,6 +832,7 @@
     var payload = {
       pergunta: pergunta,
       pacientes: fakePacientesAnalise,
+      pagamentos_amostra: fakePagamentosAmostra,
       periodo_atual: {
         sessoes_por_mes: dadosAtuais.sessoesPorMes,
         financeiro_por_mes: dadosAtuais.financeiroPorMes,
