@@ -3,412 +3,548 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PsiAna — Agendar Sessão</title>
+<title>Agenda · PsiAna</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: #FAF6F5; color: #2C2C2C; }
-  .header { background: #fff; border-bottom: 1px solid #EDE4E3; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
-  .header h1 { font-size: 17px; font-weight: 700; color: #785D56; }
-  .header .paciente-nome { font-size: 13px; color: #999; margin-left: 4px; }
-  .btn-voltar { padding: 7px 14px; border: 1px solid #DDD; border-radius: 8px; background: #fff; color: #785D56; font-size: 13px; cursor: pointer; }
-  .btn-voltar:hover { background: #F0E8E7; }
-  .container { max-width: 620px; margin: 0 auto; padding: 24px 16px 100px; }
-  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #EDE4E3; }
-  .section-title { font-size: 13px; font-weight: 700; color: #C89F9D; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-  .field input, .field select, .field textarea { font-size: 14px; padding: 10px 12px; border: 1px solid #DDD; border-radius: 8px; background: #FAFAFA; color: #2C2C2C; width: 100%; }
-  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #C89F9D; }
-  .field textarea { resize: vertical; min-height: 70px; }
-  .meet-row { display: flex; gap: 8px; }
-  .meet-row input { flex: 1; }
-  .btn-meet { padding: 10px 14px; background: #FAF6F5; border: 1px solid #DDD; border-radius: 8px; font-size: 13px; color: #785D56; cursor: pointer; white-space: nowrap; }
-  .btn-meet:hover { background: #F0E8E7; }
-  .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #EDE4E3; padding: 14px 24px; display: flex; justify-content: flex-end; gap: 10px; }
-  .btn-salvar { padding: 12px 28px; background: #785D56; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn-salvar:hover { background: #C89F9D; }
-  .btn-cancelar { padding: 12px 20px; background: #fff; border: 1px solid #DDD; border-radius: 8px; font-size: 14px; color: #999; cursor: pointer; }
-  .toast { position: fixed; bottom: 80px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 999; display: none; }
-  .toast.ok { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
-  .toast.erro { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
-  .hint { font-size: 12px; color: #999; margin-top: 3px; font-style: italic; }
+  :root{
+    --bg:#FAF6F5; --card:#fff; --line:#EDE4E3;
+    --mocha:#785D56; --mocha-deep:#5A453F; --rose:#C89F9D; --rose-soft:#F0E8E7;
+    --ink:#2C2C2C; --ink-soft:#999;
+    --ok:#2E7D32; --ok-bg:#E8F5E9; --alerta:#C62828; --alerta-bg:#FFEBEE; --aviso:#F57F17; --aviso-bg:#FFF8E1;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Segoe UI', Arial, sans-serif; background:var(--bg); color:var(--ink); }
+
+  .shell{ display:flex; min-height:100vh; }
+
+  /* --- Sidebar --- */
+  .sidebar{
+    width:224px; background:#fff; border-right:1px solid var(--line);
+    padding:22px 14px; display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
+  }
+  .sidebar-logo{ display:flex; justify-content:center; padding:0 0 20px; }
+  .sidebar-logo img{ width:150px; height:150px; object-fit:contain; }
+  .nav-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; padding:16px 10px 6px; }
+  .nav-label:first-of-type{ padding-top:4px; }
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:8px;
+    color:var(--ink); font-size:13.5px; cursor:pointer; text-decoration:none;
+  }
+  .nav-item svg{ width:17px; height:17px; color:var(--mocha); flex-shrink:0; }
+  .nav-item:hover{ background:var(--rose-soft); }
+  .nav-item.active{ background:var(--mocha); color:#fff; }
+  .nav-item.active svg{ color:#fff; }
+
+  /* --- Main --- */
+  .main{ flex:1; padding:32px 40px; max-width:1240px; }
+  .topo{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+  .topo h1{ font-size:21px; margin:0; color:var(--ink); font-weight:400; }
+  .topo .data{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+
+  .perfil-saudacao{ display:flex; align-items:center; gap:14px; }
+  .avatar-grande{
+    width:54px; height:54px; border-radius:50%; background:var(--rose-soft); color:var(--mocha);
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; flex-shrink:0;
+  }
+  .crp-linha{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .crp-texto{ font-size:11.5px; color:var(--ink-soft); }
+  .btn-config{
+    width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:#fff;
+    color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .btn-config:hover{ color:var(--mocha); border-color:var(--rose); }
+  .btn-config svg{ width:13px; height:13px; }
+
+  .btn-sair{
+    display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha);
+    background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px;
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; font-weight:500; flex-shrink:0;
+  }
+  .btn-sair:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-sair svg{ width:15px; height:15px; }
+
+  .aviso-topo{
+    display:flex; align-items:center; gap:10px; background:var(--aviso-bg); color:#8A5A0F;
+    border-radius:10px; padding:10px 16px; font-size:12.5px; margin-bottom:10px; cursor:pointer; width:fit-content;
+  }
+  .aviso-topo svg{ width:16px; height:16px; flex-shrink:0; }
+  .aviso-detalhe{
+    display:none; background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:12px 16px; font-size:12.5px; color:var(--ink); margin-bottom:20px; max-width:420px;
+  }
+  .aviso-detalhe.show{ display:block; }
+  .aviso-detalhe-item{ display:flex; justify-content:space-between; padding:5px 0; }
+  .aviso-detalhe-item:not(:last-child){ border-bottom:1px solid var(--bg); }
+
+  .cards-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-top:20px; }
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:20px; display:flex; flex-direction:column;
+  }
+  .card-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .card-head .icon{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .card-head .icon svg{ width:17px; height:17px; }
+  .card-head h2{ font-size:14px; margin:0; color:var(--ink); font-weight:600; }
+
+  .ic-financeiro{ background:#E8F5E9; color:#2E7D32; }
+  .ic-engajamento{ background:#F0E8E7; color:#785D56; }
+  .ic-solicitacoes{ background:#FFF8E1; color:#F57F17; }
+  .ic-agenda{ background:#E3E0F5; color:#5B4FBF; }
+  .ic-pacientes{ background:#F3E5F5; color:#8E24AA; }
+  .ic-relatorios{ background:#E1F0F5; color:#0288A8; }
+
+  .card-linha{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; color:var(--ink); padding:6px 0; border-bottom:1px solid var(--bg); }
+  .card-linha:last-of-type{ border-bottom:none; }
+  .card-linha .valor{ font-weight:600; color:var(--mocha-deep); }
+  .card-linha .valor.alerta{ color:var(--alerta); }
+  .card-destaque{ font-size:26px; font-weight:700; color:var(--mocha-deep); margin:2px 0 10px; }
+  .card-sub{ font-size:12px; color:var(--ink-soft); margin:-8px 0 12px; }
+
+  .card-alerta-linha{
+    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--alerta);
+    background:var(--alerta-bg); border-radius:8px; padding:7px 10px; margin-bottom:8px;
+  }
+  .card-alerta-linha svg{ width:14px; height:14px; flex-shrink:0; }
+
+  .card-link{
+    margin-top:auto; padding-top:12px; font-size:12.5px; color:var(--mocha);
+    text-decoration:none; display:flex; align-items:center; gap:5px; font-weight:500;
+  }
+  .card-link:hover{ color:var(--rose); }
+  .card-link svg{ width:13px; height:13px; }
+
+  /* --- Página Agenda --- */
+  .breadcrumb{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
+  .breadcrumb a{ color:var(--ink-soft); text-decoration:none; }
+  .breadcrumb a:hover{ color:var(--mocha); }
+  .page-titulo{ font-size:20px; margin:0 0 4px; color:var(--ink); font-weight:600; }
+  .page-sub{ font-size:13px; color:var(--ink-soft); margin:0; }
+
+  .agenda-cabecalho{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:14px; }
+  .agenda-acoes{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .btn-agenda-nav{
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:#fff;
+    color:var(--mocha); font-size:15px; cursor:pointer;
+  }
+  .btn-agenda-nav:hover{ background:var(--rose-soft); }
+  .btn-agenda-hoje{
+    font-size:12.5px; padding:8px 16px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; color:var(--mocha); cursor:pointer;
+  }
+  .btn-agenda-hoje:hover{ background:var(--rose-soft); }
+  .btn-nova-sessao{
+    font-size:13px; padding:9px 18px; border-radius:20px; border:none;
+    background:var(--mocha); color:#fff; cursor:pointer; font-weight:600;
+  }
+  .btn-nova-sessao:hover{ background:var(--mocha-deep); }
+
+  .agenda-legenda{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; font-size:11.5px; color:var(--ink-soft); }
+  .agenda-legenda span{ display:flex; align-items:center; gap:5px; }
+  .agenda-legenda i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+
+  .agenda-wrap{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; overflow-x:auto; box-shadow:0 4px 16px -8px rgba(120,93,86,0.10); }
+  .agenda-grade{
+    display:grid; grid-template-columns: 56px repeat(7, minmax(120px, 1fr));
+    min-width:920px;
+  }
+  .agenda-col-cabecalho{
+    text-align:center; font-size:12px; color:var(--ink-soft); padding:8px 4px 12px;
+    border-bottom:2px solid var(--line); position:sticky; top:0; background:var(--card);
+  }
+  .agenda-col-cabecalho.hoje{ color:var(--mocha); font-weight:700; }
+  .agenda-col-cabecalho b{ display:block; font-size:15px; color:var(--ink); margin-top:2px; }
+  .agenda-col-cabecalho.hoje b{ color:var(--mocha); }
+  .agenda-hora-label{ font-size:10.5px; color:var(--ink-soft); text-align:right; padding-right:8px; padding-top:2px; border-top:1px solid var(--bg); }
+  .agenda-celula{ border-top:1px solid var(--bg); border-left:1px solid var(--bg); min-height:52px; position:relative; padding:2px; }
+  .agenda-sessao{
+    border-radius:8px; padding:5px 7px; font-size:11px; color:#fff; cursor:pointer;
+    line-height:1.35; margin-bottom:2px; overflow:hidden;
+  }
+  .agenda-sessao:hover{ filter:brightness(0.92); }
+  .agenda-sessao .hora{ font-weight:700; }
+  .agenda-sessao .nome{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .modal-overlay-agenda{
+    display:none; position:fixed; inset:0; background:rgba(44,44,44,0.35);
+    align-items:center; justify-content:center; z-index:999; padding:20px;
+  }
+  .modal-overlay-agenda.open{ display:flex; }
+  .modal-card-agenda{ background:#fff; border-radius:16px; padding:24px; max-width:420px; width:100%; }
+  .modal-card-agenda input{
+    width:100%; font-size:13.5px; padding:10px 14px; border-radius:20px; border:1px solid var(--line);
+    margin-bottom:14px; font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .lista-pacientes-modal{ max-height:260px; overflow-y:auto; margin-bottom:14px; }
+  .item-paciente-modal{
+    padding:10px 12px; border-radius:10px; cursor:pointer; font-size:13.5px; color:var(--ink);
+  }
+  .item-paciente-modal:hover{ background:var(--rose-soft); }
+  .btn-cancelar-modal{
+    width:100%; font-size:13px; padding:10px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; color:var(--ink-soft); cursor:pointer;
+  }
+  .btn-acao-sessao{
+    width:100%; font-size:14px; padding:12px; border-radius:12px; border:none;
+    cursor:pointer; margin-bottom:10px; font-weight:600; text-align:left;
+  }
+  .btn-acao-sessao.btn-iniciar{ background:var(--ok-bg); color:var(--ok); }
+  .btn-acao-sessao.btn-iniciar:hover{ background:#C8E6C9; }
+  .btn-acao-sessao.btn-editar{ background:var(--rose-soft); color:var(--mocha); }
+  .btn-acao-sessao.btn-editar:hover{ background:#EAD9D6; }
+
+  @media (max-width: 980px){
+    .cards-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width: 720px){
+    .sidebar{ display:none; }
+    .main{ padding:24px 18px; }
+    .cards-grid{ grid-template-columns:1fr; }
+    .topo{ flex-direction:column; }
+    .perfil-saudacao{ width:100%; }
+  }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <button class="btn-voltar" id="btn-voltar">← Voltar</button>
-  <h1 id='page-title'>Agendar sessão</h1>
-  <span class="paciente-nome" id="paciente-nome"></span>
-</div>
-
-<div class="container">
-
-  <div class="section">
-    <div class="section-title">Data e horário</div>
-    <div class="grid-2">
-      <div class="field" style="grid-column:1/-1">
-        <label>Data da sessão *</label>
-        <input type="date" id="f_data">
-      </div>
-      <div class="field" style="grid-column:1/-1">
-        <label>Horário de início</label>
-        <input type="time" id="f_inicio">
-        <span class="hint">Duração padrão de 50 minutos</span>
-      </div>
+<div class="shell">
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="selo.png" alt="PsiAna" onerror="this.onerror=null; this.src='icone_selo.png';">
     </div>
+
+    <div class="nav-label">Rotinas</div>
+    <a class="nav-item" href="visao-geral.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+      Início
+    </a>
+    <a class="nav-item" href="pacientes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
+      Pacientes
+    </a>
+    <a class="nav-item active" href="agenda.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
+      Agenda
+    </a>
+    <a class="nav-item" href="solicitacoes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v11H8.5L4 19.5v-15Z"/><path d="M8 9h8M8 12.3h5"/></svg>
+      Solicitações
+    </a>
+
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="financeiro.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h14a3 3 0 0 1 3 3v7a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5v-10Z"/><path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h9"/><circle cx="16.5" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
+      Financeiro
+    </a>
+    <a class="nav-item" href="relatorios.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12V3.5Z"/><path d="M15.5 3.9A8.5 8.5 0 0 1 20.1 8.5H15.5V3.9Z"/></svg>
+      Relatórios
+    </a>
+
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5c2.5-1.3 5-1.3 7.5 0v14c-2.5-1.3-5-1.3-7.5 0v-14Z"/><path d="M19.5 5.5c-2.5-1.3-5-1.3-7.5 0v14c2.5-1.3 5-1.3 7.5 0v-14Z"/></svg>
+      Psicoeducação
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6M8 6.5h8l-1.3 4.3 3.3 6.7a1.5 1.5 0 0 1-1.35 2.15H7.35A1.5 1.5 0 0 1 6 17.5l3.3-6.7L8 6.5Z"/></svg>
+      Testes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>
+      Atividades
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5"/><circle cx="12" cy="15.7" r="0.6" fill="currentColor" stroke="none"/></svg>
+      Apoio
+    </a>
+
+    <div class="nav-label">Clínica Avançada</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.4 3.1L16.5 7l-3.1 1.4L12 11.5l-1.4-3.1L7.5 7l3.1-.9L12 3Z"/><path d="M5.5 14l.8 1.8L8 16.5l-1.7.8-.8 1.8-.8-1.8L3 16.5l1.7-.7.8-1.8Z"/><path d="M17.5 13.5l.9 2 2 .9-2 .9-.9 2-.9-2-2-.9 2-.9.9-2Z"/></svg>
+      Prontuários com IA
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+      Supervisão
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5h11v7H8l-3 3v-3H3v-7Z"/><path d="M11 10.5h10v6h-3v3l-3-3h-4v-6Z"/></svg>
+      Discussão de Casos
+    </a>
   </div>
 
-  <div class="section">
-    <div class="section-title">Sessão</div>
-    <div class="grid-2">
-      <div class="field">
-        <label>Status</label>
-        <select id="f_status">
-          <option value="agendada">Agendada</option>
-          <option value="confirmada">Confirmada</option>
-          <option value="realizada">Realizada</option>
-          <option value="faltou">Paciente faltou</option>
-          <option value="cancelada">Cancelada</option>
-          <option value="remarcada">Remarcada</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Tipo</label>
-        <select id="f_tipo">
-          <option value="primeira sessão">Primeira sessão</option>
-          <option value="sessão regular">Sessão regular</option>
-          <option value="avaliação">Avaliação</option>
-          <option value="devolutiva">Devolutiva</option>
-          <option value="emergência">Emergência</option>
-        </select>
-      </div>
-      <div class="field" style="grid-column:1/-1">
-        <label>Link da videochamada</label>
-        <div class="meet-row">
-          <input type="url" id="f_meet" placeholder="https://meet.google.com/...">
-          <button class="btn-meet" onclick="window.open('https://meet.google.com/new','_blank')">🎥 Novo</button>
+  <!-- ===== CONTEÚDO ===== -->
+  <div class="main">
+    <div class="topo">
+      <div class="perfil-saudacao">
+        <div class="avatar-grande">AC</div>
+        <div>
+          <h1 id="saudacao">Bom dia, Ana</h1>
+          <div class="data" id="dataHoje">Sábado, 04 de julho</div>
+          <div class="crp-linha">
+            <span class="crp-texto">CRP 12/28631</span>
+            <button class="btn-config" title="Configurações" onclick="window.location.href='#'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
+            </button>
+          </div>
         </div>
-        <span class="hint" id="meet-hint"></span>
+      </div>
+      <button class="btn-sair" onclick="sair()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Sair
+      </button>
+    </div>
+
+    <div class="breadcrumb"><a href="visao-geral.html">Início</a> / Agenda</div>
+    <div class="agenda-cabecalho">
+      <div>
+        <h2 class="page-titulo">Agenda</h2>
+        <p class="page-sub" id="agenda-intervalo">—</p>
+      </div>
+      <div class="agenda-acoes">
+        <button class="btn-agenda-nav" onclick="mudarSemana(-1)">←</button>
+        <button class="btn-agenda-hoje" onclick="irParaHoje()">Hoje</button>
+        <button class="btn-agenda-nav" onclick="mudarSemana(1)">→</button>
+        <button class="btn-nova-sessao" onclick="abrirNovaSessao()">+ Nova sessão</button>
       </div>
     </div>
-  </div>
 
-  <div class="section">
-    <div class="section-title">Financeiro</div>
-    <div class="grid-2">
-      <div class="field">
-        <label>Status do pagamento</label>
-        <select id="f_status_pgto" onchange="toggleDataPgto()">
-          <option value="pendente">Pendente</option>
-          <option value="pago">Pago</option>
-          <option value="isento">Isento</option>
-        </select>
-      </div>
-      <div class="field" id="campo-data-pgto" style="display:none">
-        <label>Data do pagamento</label>
-        <input type="date" id="f_data_pgto">
+    <div class="agenda-legenda">
+      <span><i style="background:#6B57A8;"></i>Agendada</span>
+      <span><i style="background:#3E7CB1;"></i>Confirmada</span>
+      <span><i style="background:#1D7A6B;"></i>Realizada</span>
+      <span><i style="background:#7A7A7A;"></i>Faltou</span>
+      <span><i style="background:#B5514A;"></i>Cancelada</span>
+      <span><i style="background:#A6790F;"></i>Remarcada</span>
+    </div>
+
+    <div class="agenda-wrap">
+      <div id="agenda-grade" class="agenda-grade">
+        <div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:13px; padding:40px 0;">Carregando agenda…</div>
       </div>
     </div>
-  </div>
 
-  <div class="section">
-    <div class="section-title">Observações</div>
-    <div class="field">
-      <textarea id="f_obs" placeholder="Anotações sobre a sessão..."></textarea>
+    <!-- Modal: escolher paciente para nova sessão -->
+    <div class="modal-overlay-agenda" id="modal-nova-sessao">
+      <div class="modal-card-agenda">
+        <h2 style="font-size:16px; margin-bottom:14px;">Nova sessão — escolher paciente</h2>
+        <input type="text" id="busca-paciente-modal" placeholder="Buscar paciente…" oninput="filtrarPacientesModal()">
+        <div id="lista-pacientes-modal" class="lista-pacientes-modal"></div>
+        <button class="btn-cancelar-modal" onclick="fecharModalNovaSessao()">Cancelar</button>
+      </div>
     </div>
-  </div>
 
+    <!-- Modal: ações rápidas de uma sessão -->
+    <div class="modal-overlay-agenda" id="modal-acoes-sessao">
+      <div class="modal-card-agenda">
+        <h2 id="acoes-sessao-titulo" style="font-size:16px; margin-bottom:16px;">—</h2>
+        <button class="btn-acao-sessao btn-iniciar" id="btn-iniciar-sessao">▶ Iniciar sessão</button>
+        <button class="btn-acao-sessao btn-editar" id="btn-editar-sessao">✎ Ver / editar sessão</button>
+        <button class="btn-cancelar-modal" onclick="fecharAcoesSessao()">Fechar</button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<div class="footer">
-  <button class="btn-cancelar" id="btn-cancelar">Cancelar</button>
-  <button class="btn-salvar" onclick="salvar()">Salvar sessão</button>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
-const N8N_CALENDAR_WEBHOOK = 'https://psi3ana.app.n8n.cloud/webhook/create-session-event';
-const params = new URLSearchParams(window.location.search);
-const PACIENTE_ID = params.get('paciente_id');
-const SESSAO_ID = params.get('sessao_id');
-const REMARCAR_ID = params.get('remarcar_id');
-const ORIGEM = params.get('origem') || 'dados';
+  (function(){
+    var agora = new Date();
+    var hora = agora.getHours();
+    var saudacao = hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite');
+    document.getElementById('saudacao').textContent = saudacao + ', Ana';
 
-const VOLTAR_PARA = params.get('voltar_para') ? decodeURIComponent(params.get('voltar_para')) : `ficha-paciente_1.html?id=${PACIENTE_ID}&aba=${ORIGEM}`;
+    var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
+  })();
 
-document.getElementById('btn-voltar').onclick = () => window.location.href = VOLTAR_PARA;
-document.getElementById('btn-cancelar').onclick = () => window.location.href = VOLTAR_PARA;
+  const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
 
-// Pré-definir hoje como data padrão
-document.getElementById('f_data').value = new Date().toISOString().split('T')[0];
-
-function toast(msg, tipo) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + tipo;
-  t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 3000);
-}
-
-function v(id) { return document.getElementById(id)?.value || ''; }
-
-function set(id, val) { const el = document.getElementById(id); if (el && val !== null && val !== undefined) el.value = val; }
-
-let ehPrimeiraSessao = false;
-let valorCobradoSessao = null;
-let pacienteFormaPagamento = null;
-let numeroEncontro = 1;
-
-function toggleDataPgto() {
-  const status = document.getElementById('f_status_pgto').value;
-  const campo = document.getElementById('campo-data-pgto');
-  campo.style.display = status === 'pago' ? 'flex' : 'none';
-  if (status === 'pago' && !v('f_data_pgto')) {
-    document.getElementById('f_data_pgto').value = new Date().toISOString().split('T')[0];
-  }
-}
-
-async function carregarPaciente() {
-  if (!PACIENTE_ID) return;
-  try {
-    // Verificar sessões existentes (só se não for edição)
-    if (!SESSAO_ID) {
-      // Busca sessões que contam como encontro (exclui canceladas)
-      const rCheck = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?paciente_id=eq.${PACIENTE_ID}&status=not.eq.cancelada&select=id`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      });
-      const checkData = await rCheck.json();
-      ehPrimeiraSessao = checkData.length === 0;
-      numeroEncontro = checkData.length + 1; // próximo encontro
-      if (ehPrimeiraSessao) {
-        document.getElementById('f_tipo').value = 'primeira sessão';
-      } else {
-        document.getElementById('f_tipo').value = 'sessão regular';
-      }
-    }
-
-    const promises = [
-      fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}&select=nome_completo,link_meet,valor_sessao,forma_pagamento,preco_id`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      })
-    ];
-    if (SESSAO_ID) {
-      promises.push(fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${SESSAO_ID}`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      }));
-    }
-    const results = await Promise.all(promises);
-    const pacData = await results[0].json();
-
-    if (pacData.length) {
-      const p = pacData[0];
-      document.getElementById('paciente-nome').textContent = '— ' + (p.nome_completo || '');
-      if (p.link_meet) {
-        document.getElementById('f_meet').value = p.link_meet;
-        document.getElementById('meet-hint').textContent = 'Link padrão da paciente';
-      }
-      pacienteFormaPagamento = p.forma_pagamento || null;
-      // Buscar valor da modalidade financeira
-      if (p.preco_id) {
-        try {
-          const rp = await fetch(`${SUPABASE_URL}/rest/v1/tabela_precos?id=eq.${p.preco_id}&select=valor_unitario`, {
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-          });
-          const dp = await rp.json();
-          if (dp.length) valorCobradoSessao = parseFloat(dp[0].valor_unitario);
-        } catch(e) {}
-      }
-    }
-
-    // Modo edição
-    if (SESSAO_ID && results[1]) {
-      document.getElementById('page-title').textContent = 'Editar sessão';
-      const sesData = await results[1].json();
-      if (sesData.length) {
-        const s = sesData[0];
-        if (s.data_sessao) set('f_data', s.data_sessao);
-        if (s.horario_inicio) {
-          const hi = new Date(s.horario_inicio);
-          set('f_inicio', `${String(hi.getHours()).padStart(2,'0')}:${String(hi.getMinutes()).padStart(2,'0')}`);
-        }
-        set('f_status', s.status);
-        set('f_tipo', s.tipo_atendimento);
-        if (s.link_videochamada) {
-          set('f_meet', s.link_videochamada);
-          document.getElementById('meet-hint').textContent = 'Link da sessão';
-        }
-        set('f_status_pgto', s.status_pagamento || 'pendente');
-        if (s.data_pagamento) set('f_data_pgto', s.data_pagamento);
-        toggleDataPgto();
-        set('f_obs', s.observacoes);
-        valorCobradoSessao = s.valor_cobrado || null;
-      }
-    }
-
-    // Modo remarcação
-    if (REMARCAR_ID) {
-      document.getElementById('page-title').textContent = 'Remarcar sessão';
-      document.getElementById('f_status').value = 'agendada';
-      document.getElementById('f_data').value = '';
-    }
-  } catch(e) { console.error(e); }
-}
-
-async function criarEventoCalendar(sessaoId, horarioInicio, horarioFim, tipo, numEncontro, horaFormatada) {
-  try {
-    const titulo = `Encontro ${numEncontro} — Sessão`;
-    const resp = await fetch(N8N_CALENDAR_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessao_id: String(sessaoId),
-        paciente_nome: titulo,
-        data_inicio: horarioInicio,
-        data_fim: horarioFim,
-        descricao: `${tipo} — PsiAna Sistema`
-      })
-    });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    return data;
-  } catch(e) {
-    console.warn('Erro ao criar evento no Calendar:', e);
-    return null;
-  }
-}
-
-async function salvar() {
-  if (!PACIENTE_ID) { toast('ID da paciente não encontrado', 'erro'); return; }
-  const data = v('f_data');
-  if (!data) { toast('Informe a data da sessão', 'erro'); return; }
-  const inicio = v('f_inicio');
-  if (!inicio) { toast('Informe o horário de início', 'erro'); return; }
-  if (!v('f_tipo')) { toast('Informe o tipo de sessão', 'erro'); return; }
-  if (!v('f_status_pgto')) { toast('Informe o status do pagamento', 'erro'); return; }
-
-  // Montar horários com timezone de Brasília (duração padrão 50 min)
-  let horario_inicio = null, horario_fim = null;
-  if (inicio) {
-    horario_inicio = `${data}T${inicio}:00-03:00`;
-    const [h, m] = inicio.split(':').map(Number);
-    const totalMin = h * 60 + m + 50;
-    const hFim = Math.floor(totalMin / 60) % 24;
-    const mFim = totalMin % 60;
-    const fimStr = `${String(hFim).padStart(2,'0')}:${String(mFim).padStart(2,'0')}`;
-    horario_fim = `${data}T${fimStr}:00-03:00`;
-  }
-
-  const dados = {
-    paciente_id: parseInt(PACIENTE_ID),
-    data_sessao: data,
-    horario_inicio,
-    horario_fim,
-    status: v('f_status') || 'agendada',
-    tipo_atendimento: v('f_tipo') || null,
-    link_videochamada: v('f_meet') || null,
-    valor_cobrado: valorCobradoSessao,
-    status_pagamento: v('f_status_pgto') || 'pendente',
-    forma_pagamento: pacienteFormaPagamento,
-    data_pagamento: v('f_data_pgto') || null,
-    observacoes: v('f_obs') || null,
+  var STATUS_CORES_AGENDA = {
+    agendada: '#6B57A8', confirmada: '#3E7CB1', realizada: '#1D7A6B',
+    faltou: '#7A7A7A', cancelada: '#B5514A', remarcada: '#A6790F'
   };
+  var DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  var MESES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var HORA_INICIO = 7, HORA_FIM = 21;
 
-  // Remover nulls
-  Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
+  var referenciaSemana = new Date();
+  var todosPacientesAgenda = [];
 
-  try {
-    let r, sessaoSalva = null;
-    if (SESSAO_ID) {
-      // Edição — PATCH
-      delete dados.paciente_id;
-      r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${SESSAO_ID}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-        body: JSON.stringify(dados)
-      });
-    } else {
-      // Nova sessão — POST
-      r = await fetch(`${SUPABASE_URL}/rest/v1/sessoes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=representation' },
-        body: JSON.stringify(dados)
-      });
-      if (r.ok) {
-        const retorno = await r.json();
-        sessaoSalva = Array.isArray(retorno) ? retorno[0] : retorno;
-        // Fallback: buscar a sessão recém-criada se id não vier no retorno
-        if (!sessaoSalva?.id && dados.data_sessao) {
-          const rBusca = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?paciente_id=eq.${PACIENTE_ID}&data_sessao=eq.${dados.data_sessao}&order=id.desc&limit=1`, {
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-          });
-          const buscaData = await rBusca.json();
-          if (buscaData.length) sessaoSalva = buscaData[0];
-        }
-      }
-    }
-
-    if (r.ok) {
-      // Se for a primeira sessão, atualiza campo primeira_sessao no paciente
-      if (ehPrimeiraSessao && !SESSAO_ID) {
-        await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-          body: JSON.stringify({ primeira_sessao: data })
-        });
-      }
-
-      // Integração Google Calendar — apenas novas sessões com horário definido
-      if (!SESSAO_ID && sessaoSalva?.id && horario_inicio && horario_fim) {
-        const tipo = v('f_tipo') || 'sessão regular';
-        // Formatar hora para título: "10h" ou "10h30"
-        const [hStr, mStr] = inicio.split(':');
-        const horaFormatada = mStr === '00' ? `${parseInt(hStr)}h` : `${parseInt(hStr)}h${mStr}`;
-        const calResp = await criarEventoCalendar(sessaoSalva.id, horario_inicio, horario_fim, tipo, numeroEncontro, horaFormatada);        if (calResp?.google_event_id) {
-          const meetLink = calResp.hangoutLink || calResp.meet_link || null;
-          // Salvar google_event_id e meet_link na sessão
-          await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoSalva.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-            body: JSON.stringify({
-              google_event_id: calResp.google_event_id,
-              meet_link: meetLink,
-              link_videochamada: meetLink || dados.link_videochamada || null
-            })
-          });
-          // Se não tiver link Meet salvo na paciente, salvar este como fixo
-          if (meetLink) {
-            const rPac = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}&select=link_meet`, {
-              headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-            });
-            const pacData = await rPac.json();
-            if (!pacData[0]?.link_meet) {
-              await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-                body: JSON.stringify({ link_meet: meetLink })
-              });
-            }
-          }
-        }
-      }
-
-      toast(SESSAO_ID ? 'Sessão atualizada!' : 'Sessão agendada! 📅', 'ok');
-      setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}&aba=${ORIGEM}`, 1200);
-    } else {
-      const err = await r.json();
-      toast('Erro: ' + (err.message || JSON.stringify(err)), 'erro');
-    }
-  } catch(e) {
-    toast('Erro: ' + e.message, 'erro');
+  function inicioDaSemana(data){
+    var d = new Date(data);
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - d.getDay());
+    return d;
   }
-}
 
-carregarPaciente();
+  function fmtISO(data){
+    return data.getFullYear() + '-' + String(data.getMonth()+1).padStart(2,'0') + '-' + String(data.getDate()).padStart(2,'0');
+  }
+
+  function ehHoje(data){
+    var hoje = new Date();
+    return data.getFullYear() === hoje.getFullYear() && data.getMonth() === hoje.getMonth() && data.getDate() === hoje.getDate();
+  }
+
+  function mudarSemana(direcao){
+    referenciaSemana.setDate(referenciaSemana.getDate() + direcao * 7);
+    carregarAgenda();
+  }
+
+  function irParaHoje(){
+    referenciaSemana = new Date();
+    carregarAgenda();
+  }
+
+  async function carregarAgenda(){
+    var inicioSemana = inicioDaSemana(referenciaSemana);
+    var dias = [];
+    for(var i = 0; i < 7; i++){
+      var d = new Date(inicioSemana);
+      d.setDate(d.getDate() + i);
+      dias.push(d);
+    }
+    var fimSemana = dias[6];
+
+    document.getElementById('agenda-intervalo').textContent =
+      inicioSemana.getDate() + ' ' + MESES_ABREV[inicioSemana.getMonth()] + ' — ' +
+      fimSemana.getDate() + ' ' + MESES_ABREV[fimSemana.getMonth()] + ' de ' + fimSemana.getFullYear();
+
+    var grade = document.getElementById('agenda-grade');
+    grade.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--ink-soft); font-size:13px; padding:40px 0;">Carregando agenda…</div>';
+
+    try{
+      var dataIni = fmtISO(dias[0]);
+      var dataFim = fmtISO(dias[6]);
+      var r = await fetch(
+        SUPABASE_URL + '/rest/v1/sessoes?select=id,paciente_id,data_sessao,horario_inicio,status,pacientes(nome_completo,link_meet)' +
+        '&data_sessao=gte.' + dataIni + '&data_sessao=lte.' + dataFim + '&order=horario_inicio.asc',
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
+      );
+      var sessoes = await r.json();
+      montarGrade(dias, Array.isArray(sessoes) ? sessoes : []);
+    } catch(e){
+      grade.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--alerta); font-size:13px; padding:40px 0;">Não foi possível carregar a agenda.</div>';
+    }
+  }
+
+  var sessoesDaSemana = [];
+
+  function montarGrade(dias, sessoes){
+    sessoesDaSemana = sessoes;
+    var grade = document.getElementById('agenda-grade');
+    var html = '<div></div>';
+
+    dias.forEach(function(d){
+      var classe = ehHoje(d) ? 'agenda-col-cabecalho hoje' : 'agenda-col-cabecalho';
+      html += '<div class="' + classe + '">' + DIAS_SEMANA[d.getDay()] + '<b>' + d.getDate() + '</b></div>';
+    });
+
+    for(var h = HORA_INICIO; h < HORA_FIM; h++){
+      html += '<div class="agenda-hora-label">' + h + 'h</div>';
+      dias.forEach(function(d){
+        var isoData = fmtISO(d);
+        var sessoesHora = sessoes.filter(function(s){
+          if(s.data_sessao !== isoData) return false;
+          var horaSessao = new Date(s.horario_inicio).getHours();
+          return horaSessao === h;
+        });
+        html += '<div class="agenda-celula">' + sessoesHora.map(function(s){
+          var horaFmt = new Date(s.horario_inicio);
+          var hStr = String(horaFmt.getHours()).padStart(2,'0') + ':' + String(horaFmt.getMinutes()).padStart(2,'0');
+          var nomePaciente = (s.pacientes && s.pacientes.nome_completo) || 'Paciente';
+          var cor = STATUS_CORES_AGENDA[s.status] || '#785D56';
+          return '<div class="agenda-sessao" style="background:' + cor + ';" onclick="abrirAcoesSessao(' + s.id + ')">' +
+            '<div class="hora">Sessão - ' + hStr + '</div><div class="nome">' + nomePaciente + '</div>' +
+          '</div>';
+        }).join('') + '</div>';
+      });
+    }
+
+    grade.innerHTML = html;
+  }
+
+  function abrirAcoesSessao(sessaoId){
+    var s = sessoesDaSemana.find(function(x){ return x.id === sessaoId; });
+    if(!s) return;
+    var horaFmt = new Date(s.horario_inicio);
+    var hStr = String(horaFmt.getHours()).padStart(2,'0') + ':' + String(horaFmt.getMinutes()).padStart(2,'0');
+    var nomePaciente = (s.pacientes && s.pacientes.nome_completo) || 'Paciente';
+    var linkMeet = s.pacientes && s.pacientes.link_meet;
+
+    document.getElementById('acoes-sessao-titulo').textContent = nomePaciente + ' · ' + hStr;
+    var botaoIniciar = document.getElementById('btn-iniciar-sessao');
+    if(linkMeet){
+      botaoIniciar.style.display = 'block';
+      botaoIniciar.onclick = function(){ window.open(linkMeet, '_blank'); fecharAcoesSessao(); };
+    } else {
+      botaoIniciar.style.display = 'none';
+    }
+    document.getElementById('btn-editar-sessao').onclick = function(){
+      window.location.href = 'agendar-sessao_2.html?sessao_id=' + s.id + '&paciente_id=' + s.paciente_id + '&origem=sessoes&voltar_para=' + encodeURIComponent('agenda.html');
+    };
+    document.getElementById('modal-acoes-sessao').classList.add('open');
+  }
+
+  function fecharAcoesSessao(){
+    document.getElementById('modal-acoes-sessao').classList.remove('open');
+  }
+
+  function abrirSessao(sessaoId, pacienteId){
+    window.location.href = 'agendar-sessao_2.html?sessao_id=' + sessaoId + '&paciente_id=' + pacienteId + '&origem=sessoes&voltar_para=' + encodeURIComponent('agenda.html');
+  }
+
+  async function abrirNovaSessao(){
+    document.getElementById('modal-nova-sessao').classList.add('open');
+    document.getElementById('busca-paciente-modal').value = '';
+    document.getElementById('busca-paciente-modal').focus();
+    if(todosPacientesAgenda.length === 0){
+      try{
+        var r = await fetch(SUPABASE_URL + '/rest/v1/pacientes?select=id,nome_completo&status=eq.ativo&order=nome_completo', {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        });
+        todosPacientesAgenda = await r.json();
+      } catch(e){
+        todosPacientesAgenda = [];
+      }
+    }
+    filtrarPacientesModal();
+  }
+
+  function filtrarPacientesModal(){
+    var busca = document.getElementById('busca-paciente-modal').value.toLowerCase();
+    var lista = todosPacientesAgenda.filter(function(p){
+      return p.nome_completo && p.nome_completo.toLowerCase().indexOf(busca) !== -1;
+    });
+    var wrap = document.getElementById('lista-pacientes-modal');
+    if(lista.length === 0){
+      wrap.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);padding:8px;">Nenhuma paciente encontrada.</p>';
+      return;
+    }
+    wrap.innerHTML = lista.map(function(p){
+      return '<div class="item-paciente-modal" onclick="irParaNovaSessao(' + p.id + ')">' + p.nome_completo + '</div>';
+    }).join('');
+  }
+
+  function irParaNovaSessao(pacienteId){
+    window.location.href = 'agendar-sessao_2.html?paciente_id=' + pacienteId + '&origem=sessoes&voltar_para=' + encodeURIComponent('agenda.html');
+  }
+
+  function fecharModalNovaSessao(){
+    document.getElementById('modal-nova-sessao').classList.remove('open');
+  }
+
+  carregarAgenda();
+
+  function sair(){
+    sessionStorage.removeItem('psiana_admin_logado');
+    window.location.href = 'login-psicologa.html';
+  }
 </script>
+
 </body>
 </html>
