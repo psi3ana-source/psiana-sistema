@@ -283,7 +283,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
       Pacientes
     </a>
-    <a class="nav-item" href="#">
+    <a class="nav-item" href="agenda.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
       Agenda
     </a>
@@ -464,7 +464,7 @@
 
     <div class="rel-painel">
       <h2 class="rel-painel-titulo">Pergunte à IA</h2>
-      <p class="page-sub" style="margin-bottom:14px;">Peça uma análise específica — por sexo, idade, frequência, região, como conheceu a clínica, profissão, escolaridade, renda, queixas, ou qualquer cruzamento entre pacientes, inclusive comparando períodos. A IA escolhe o gráfico certo e explica o que encontrou.</p>
+      <p class="page-sub" style="margin-bottom:14px;">Peça uma análise específica — por gênero, idade, região, profissão, escolaridade, renda, frequência, forma de pagamento, como conheceu a clínica, indicador clínico predominante, humor, queixa principal, ou qualquer cruzamento entre esses dados, inclusive comparando períodos. As pacientes nunca são identificadas por nome — a IA só recebe um código anônimo por paciente.</p>
       <div class="pergunta-ia-linha">
         <input type="text" id="pergunta-ia-input" placeholder="Ex: compare este período com o anterior…" onkeydown="if(event.key==='Enter') perguntarIA();">
         <button class="btn-atualizar-ia" onclick="perguntarIA()">Perguntar</button>
@@ -803,17 +803,20 @@
     { secao_soap: 'plano', tema: 'Revisão de expectativas do tratamento', avaliacao_sessao: 'neutra', ocorrencias: 2 }
   ];
 
+  // Regra de privacidade: NUNCA nome, CPF, e-mail, telefone, endereço exato ou qualquer coisa que identifique
+  // a pessoa diretamente. Tudo o mais (inclusive dado clínico) pode ir, desde que anônimo — por isso o "id"
+  // no lugar do nome. Sem nome atrelado, vira só um ponto de dado dentro de uma análise geral.
   var fakePacientesAnalise = [
-    { nome: 'Willian Francisco Caetano Lopes', sexo: 'masculino', idade: 29, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Engenheiro', escolaridade: 'Superior completo', renda_mensal: 6500, indicador_predominante: 'autocuidado', queixa_principal: 'Sobrecarga no trabalho e dificuldade de desconectar', status: 'ativo' },
-    { nome: 'Anna Clara Oldoni Costa', sexo: 'feminino', idade: 21, cidade: 'Florianópolis', estado: 'SC', frequencia: 'quinzenal', forma_pagamento: 'PIX', como_conheceu: 'Google', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1200, indicador_predominante: 'sintomas ansiosos', queixa_principal: 'Ansiedade antes de provas e apresentações', status: 'ativo' },
-    { nome: 'Catarina Marchi Jasper', sexo: 'feminino', idade: 24, cidade: 'Tubarão', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'Cartão', como_conheceu: 'Indicação', profissao: 'Designer', escolaridade: 'Superior completo', renda_mensal: 3200, indicador_predominante: 'humor', queixa_principal: 'Oscilação de humor e falta de motivação', status: 'ativo' },
-    { nome: 'Dariana Christina Marcelino Valle', sexo: 'feminino', idade: 24, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Advogada', escolaridade: 'Pós-graduação', renda_mensal: 7200, indicador_predominante: 'autocuidado', queixa_principal: 'Dificuldade em dizer não e estabelecer limites', status: 'ativo' },
-    { nome: 'Emiliane Clarissa Gomes de Lima', sexo: 'feminino', idade: 22, cidade: 'São Paulo', estado: 'SP', frequencia: 'quinzenal', forma_pagamento: 'Transferência', como_conheceu: 'TikTok', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1800, indicador_predominante: 'sintomas depressivos', queixa_principal: 'Cansaço constante e falta de vontade', status: 'pausado' },
-    { nome: 'Graziela Premoli de Souza', sexo: 'feminino', idade: 48, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Indicação', profissao: 'Professora', escolaridade: 'Pós-graduação', renda_mensal: 4800, indicador_predominante: 'insonia', queixa_principal: 'Dificuldade para dormir e pensamentos acelerados', status: 'ativo' },
-    { nome: 'Julia de Paiva Bento', sexo: 'feminino', idade: 42, cidade: 'Rio de Janeiro', estado: 'RJ', frequencia: 'mensal', forma_pagamento: 'Transferência', como_conheceu: 'Google', profissao: 'Empresária', escolaridade: 'Superior completo', renda_mensal: 9000, indicador_predominante: 'tolerancia', queixa_principal: 'Irritabilidade e baixa tolerância à frustração', status: 'ativo' },
-    { nome: 'Lara Cristina Petry Bueno', sexo: 'feminino', idade: 41, cidade: 'Porto Alegre', estado: 'RS', frequencia: 'quinzenal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Bióloga', escolaridade: 'Pós-graduação', renda_mensal: 5200, indicador_predominante: 'sintomas depressivos', queixa_principal: 'Falta de vontade e cansaço mesmo dormindo bem', status: 'desistente' },
-    { nome: 'Marcos Rosti Martins Filho', sexo: 'masculino', idade: 35, cidade: 'Curitiba', estado: 'PR', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Google', profissao: 'Autônomo', escolaridade: 'Ensino médio', renda_mensal: 2800, indicador_predominante: 'limites', queixa_principal: 'Dificuldade em cobrar clientes e se posicionar', status: 'ativo' },
-    { nome: 'Sabrina Mendes Teixeira', sexo: 'feminino', idade: 31, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'Cartão', como_conheceu: 'Indicação', profissao: 'Enfermeira', escolaridade: 'Superior completo', renda_mensal: 3600, indicador_predominante: 'autocuidado', queixa_principal: 'Exaustão pelo trabalho em turnos e pouco autocuidado', status: 'alta' }
+    { id: 'P1', sexo: 'masculino', idade: 29, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Engenheiro', escolaridade: 'Superior completo', renda_mensal: 6500, indicador_clinico_predominante: 'autocuidado', humor_checkin_predominante: 'bem', queixa_principal: 'Sobrecarga no trabalho e dificuldade de desconectar', status: 'ativo' },
+    { id: 'P2', sexo: 'feminino', idade: 21, cidade: 'Florianópolis', estado: 'SC', frequencia: 'quinzenal', forma_pagamento: 'PIX', como_conheceu: 'Google', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1200, indicador_clinico_predominante: 'sintomas ansiosos', humor_checkin_predominante: 'neutro', queixa_principal: 'Ansiedade antes de provas e apresentações', status: 'ativo' },
+    { id: 'P3', sexo: 'feminino', idade: 24, cidade: 'Tubarão', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'Cartão', como_conheceu: 'Indicação', profissao: 'Designer', escolaridade: 'Superior completo', renda_mensal: 3200, indicador_clinico_predominante: 'humor', humor_checkin_predominante: 'bem', queixa_principal: 'Oscilação de humor e falta de motivação', status: 'ativo' },
+    { id: 'P4', sexo: 'feminino', idade: 24, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Advogada', escolaridade: 'Pós-graduação', renda_mensal: 7200, indicador_clinico_predominante: 'autocuidado', humor_checkin_predominante: 'bem', queixa_principal: 'Dificuldade em dizer não e estabelecer limites', status: 'ativo' },
+    { id: 'P5', sexo: 'feminino', idade: 22, cidade: 'São Paulo', estado: 'SP', frequencia: 'quinzenal', forma_pagamento: 'Transferência', como_conheceu: 'TikTok', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1800, indicador_clinico_predominante: 'sintomas depressivos', humor_checkin_predominante: 'dificil', queixa_principal: 'Cansaço constante e falta de vontade', status: 'pausado' },
+    { id: 'P6', sexo: 'feminino', idade: 48, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Indicação', profissao: 'Professora', escolaridade: 'Pós-graduação', renda_mensal: 4800, indicador_clinico_predominante: 'insonia', humor_checkin_predominante: 'neutro', queixa_principal: 'Dificuldade para dormir e pensamentos acelerados', status: 'ativo' },
+    { id: 'P7', sexo: 'feminino', idade: 42, cidade: 'Rio de Janeiro', estado: 'RJ', frequencia: 'mensal', forma_pagamento: 'Transferência', como_conheceu: 'Google', profissao: 'Empresária', escolaridade: 'Superior completo', renda_mensal: 9000, indicador_clinico_predominante: 'tolerancia', humor_checkin_predominante: 'neutro', queixa_principal: 'Irritabilidade e baixa tolerância à frustração', status: 'ativo' },
+    { id: 'P8', sexo: 'feminino', idade: 41, cidade: 'Porto Alegre', estado: 'RS', frequencia: 'quinzenal', forma_pagamento: 'PIX', como_conheceu: 'Instagram', profissao: 'Bióloga', escolaridade: 'Pós-graduação', renda_mensal: 5200, indicador_clinico_predominante: 'sintomas depressivos', humor_checkin_predominante: 'dificil', queixa_principal: 'Falta de vontade e cansaço mesmo dormindo bem', status: 'desistente' },
+    { id: 'P9', sexo: 'masculino', idade: 35, cidade: 'Curitiba', estado: 'PR', frequencia: 'semanal', forma_pagamento: 'PIX', como_conheceu: 'Google', profissao: 'Autônomo', escolaridade: 'Ensino médio', renda_mensal: 2800, indicador_clinico_predominante: 'limites', humor_checkin_predominante: 'bem', queixa_principal: 'Dificuldade em cobrar clientes e se posicionar', status: 'ativo' },
+    { id: 'P10', sexo: 'feminino', idade: 31, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', forma_pagamento: 'Cartão', como_conheceu: 'Indicação', profissao: 'Enfermeira', escolaridade: 'Superior completo', renda_mensal: 3600, indicador_clinico_predominante: 'autocuidado', humor_checkin_predominante: 'bem', queixa_principal: 'Exaustão pelo trabalho em turnos e pouco autocuidado', status: 'alta' }
   ];
 
   // Amostra de pagamentos com data, pra permitir análise de "qual dia entra mais pagamento"
@@ -856,8 +859,8 @@
       pergunta: pergunta,
       pacientes: fakePacientesAnalise,
       pagamentos_amostra: fakePagamentosAmostra,
-      tarefas_por_categoria: fakeTarefasPorCategoria,
-      temas_sessoes_soap: fakeTemasSessoesSOAP,
+      // tarefas_por_categoria e temas_sessoes_soap ficam prontos no código, mas só entram
+      // no envio quando decidirmos ativar essa análise (combinado com a Ana).
       periodo_atual: {
         sessoes_por_mes: dadosAtuais.sessoesPorMes,
         financeiro_por_mes: dadosAtuais.financeiroPorMes,
