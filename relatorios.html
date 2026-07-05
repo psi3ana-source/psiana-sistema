@@ -35,7 +35,7 @@
   .nav-item.active svg{ color:#fff; }
 
   /* --- Main --- */
-  .main{ flex:1; padding:32px 40px; max-width:1240px; }
+  .main{ flex:1; padding:32px 40px; max-width:1240px; min-width:0; overflow-x:hidden; }
   .topo{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
   .topo h1{ font-size:21px; margin:0; color:var(--ink); font-weight:400; }
   .topo .data{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
@@ -152,7 +152,8 @@
   .insight-dot.aviso{ background:var(--aviso); }
   .insight-dot.alerta{ background:var(--alerta); }
 
-  .rel-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .rel-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; min-width:0; }
+  .rel-grid-2 > div{ min-width:0; }
 
   .barra-linha{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
   .barra-nome{ font-size:12px; color:var(--ink); width:90px; flex-shrink:0; }
@@ -171,7 +172,8 @@
   .donut-legenda-item b{ color:var(--mocha-deep); }
   .donut-legenda-item span{ color:var(--ink-soft); font-size:11.5px; }
 
-  .sessoes-grid{ display:grid; grid-template-columns:1fr 1.4fr; gap:24px; align-items:center; }
+  .sessoes-grid{ display:grid; grid-template-columns:1fr 1.4fr; gap:24px; align-items:center; min-width:0; }
+  .sessoes-grid > div{ min-width:0; }
   @media (max-width: 800px){ .sessoes-grid{ grid-template-columns:1fr; } }
 
   .linha-legenda{ display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:11px; color:var(--ink-soft); }
@@ -210,7 +212,7 @@
 
   .pergunta-ia-linha{ display:flex; gap:10px; margin-bottom:12px; }
   .pergunta-ia-linha input{
-    flex:1; font-size:13.5px; padding:11px 14px; border-radius:20px; border:1px solid var(--line);
+    flex:1; min-width:0; font-size:13.5px; padding:11px 14px; border-radius:20px; border:1px solid var(--line);
     background:#fff; color:var(--ink); font-family:'Segoe UI', Arial, sans-serif;
   }
   .pergunta-ia-linha input:focus{ outline:none; border-color:var(--rose); }
@@ -391,33 +393,6 @@
     </div>
 
     <div class="rel-painel">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h2 class="rel-painel-titulo" style="margin:0;">Análise da IA</h2>
-        <button class="btn-atualizar-ia" onclick="gerarAnaliseIA()">↻ Atualizar análise</button>
-      </div>
-      <div id="analise-ia-conteudo">
-        <p class="analise-ia-placeholder">Clique em "Atualizar análise" para gerar uma leitura dos dados deste período.</p>
-      </div>
-    </div>
-
-    <div class="rel-painel">
-      <h2 class="rel-painel-titulo">Pergunte à IA</h2>
-      <p class="page-sub" style="margin-bottom:14px;">Peça uma análise específica — por sexo, idade, frequência, região, como conheceu a clínica, profissão, escolaridade, renda, queixas, ou qualquer cruzamento entre pacientes. A IA escolhe o gráfico certo e explica o que encontrou.</p>
-      <div class="pergunta-ia-linha">
-        <input type="text" id="pergunta-ia-input" placeholder="Ex: compare desistência por faixa etária…" onkeydown="if(event.key==='Enter') perguntarIA();">
-        <button class="btn-atualizar-ia" onclick="perguntarIA()">Perguntar</button>
-      </div>
-      <div class="pergunta-ia-sugestoes">
-        <span onclick="perguntarIASugestao(this)">Análise por idade</span>
-        <span onclick="perguntarIASugestao(this)">Análise por região</span>
-        <span onclick="perguntarIASugestao(this)">Como as pacientes me conheceram</span>
-        <span onclick="perguntarIASugestao(this)">Predominância dos indicadores clínicos</span>
-        <span onclick="perguntarIASugestao(this)">Queixas mais recorrentes</span>
-      </div>
-      <div id="pergunta-ia-resultado"></div>
-    </div>
-
-    <div class="rel-painel">
       <h2 class="rel-painel-titulo">Sessões</h2>
       <div class="sessoes-grid">
         <div>
@@ -475,6 +450,34 @@
           <div id="grafico-solic-status"></div>
         </div>
       </div>
+    </div>
+
+    <div class="rel-painel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 class="rel-painel-titulo" style="margin:0;">Análise da IA</h2>
+        <button class="btn-atualizar-ia" onclick="gerarAnaliseIA()">↻ Atualizar análise</button>
+      </div>
+      <div id="analise-ia-conteudo">
+        <p class="analise-ia-placeholder">Clique em "Atualizar análise" para gerar uma leitura dos dados deste período.</p>
+      </div>
+    </div>
+
+    <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Pergunte à IA</h2>
+      <p class="page-sub" style="margin-bottom:14px;">Peça uma análise específica — por sexo, idade, frequência, região, como conheceu a clínica, profissão, escolaridade, renda, queixas, ou qualquer cruzamento entre pacientes, inclusive comparando períodos. A IA escolhe o gráfico certo e explica o que encontrou.</p>
+      <div class="pergunta-ia-linha">
+        <input type="text" id="pergunta-ia-input" placeholder="Ex: compare este período com o anterior…" onkeydown="if(event.key==='Enter') perguntarIA();">
+        <button class="btn-atualizar-ia" onclick="perguntarIA()">Perguntar</button>
+      </div>
+      <div class="pergunta-ia-sugestoes">
+        <span onclick="perguntarIASugestao(this)">Análise por idade</span>
+        <span onclick="perguntarIASugestao(this)">Análise por região</span>
+        <span onclick="perguntarIASugestao(this)">Como as pacientes me conheceram</span>
+        <span onclick="perguntarIASugestao(this)">Predominância dos indicadores clínicos</span>
+        <span onclick="perguntarIASugestao(this)">Queixas mais recorrentes</span>
+        <span onclick="perguntarIASugestao(this)">Compare este período com o anterior</span>
+      </div>
+      <div id="pergunta-ia-resultado"></div>
     </div>
 
   </div>
@@ -795,6 +798,15 @@
     perguntarIA();
   }
 
+  function obterPeriodoAnterior(periodoAtual){
+    var n = periodoAtual === '30' ? 1 : periodoAtual === '90' ? 3 : null;
+    if(!n) return null; // 180/365 não têm meses anteriores suficientes na base fake
+    var inicioAtual = MESES_BASE.length - n;
+    var inicioAnterior = inicioAtual - n;
+    if(inicioAnterior < 0) return null;
+    return montarPeriodo(MESES_BASE.slice(inicioAnterior, inicioAtual));
+  }
+
   async function perguntarIA(){
     var pergunta = document.getElementById('pergunta-ia-input').value.trim();
     var wrap = document.getElementById('pergunta-ia-resultado');
@@ -804,7 +816,28 @@
     }
     wrap.innerHTML = '<p class="analise-ia-placeholder">Analisando "' + pergunta + '"…</p>';
 
-    var payload = { pergunta: pergunta, pacientes: fakePacientesAnalise };
+    var periodoSelecionado = document.getElementById('select-periodo-rel').value;
+    var dadosAtuais = fakeRelatorios[periodoSelecionado];
+    var dadosAnteriores = obterPeriodoAnterior(periodoSelecionado);
+
+    var payload = {
+      pergunta: pergunta,
+      pacientes: fakePacientesAnalise,
+      periodo_atual: {
+        sessoes_por_mes: dadosAtuais.sessoesPorMes,
+        financeiro_por_mes: dadosAtuais.financeiroPorMes,
+        pacientes_por_mes: dadosAtuais.pacientesPorMes,
+        solicitacoes_por_mes: dadosAtuais.solicPorMes,
+        modalidades_resumo: dadosAtuais.modalidadesResumo
+      },
+      periodo_anterior: dadosAnteriores ? {
+        sessoes_por_mes: dadosAnteriores.sessoesPorMes,
+        financeiro_por_mes: dadosAnteriores.financeiroPorMes,
+        pacientes_por_mes: dadosAnteriores.pacientesPorMes,
+        solicitacoes_por_mes: dadosAnteriores.solicPorMes,
+        modalidades_resumo: dadosAnteriores.modalidadesResumo
+      } : null
+    };
 
     try{
       var resposta = await fetch(N8N_WEBHOOK_PERGUNTA_IA, {
