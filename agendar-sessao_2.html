@@ -139,8 +139,10 @@ const SESSAO_ID = params.get('sessao_id');
 const REMARCAR_ID = params.get('remarcar_id');
 const ORIGEM = params.get('origem') || 'dados';
 
-document.getElementById('btn-voltar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}&aba=${ORIGEM}`;
-document.getElementById('btn-cancelar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}&aba=${ORIGEM}`;
+const VOLTAR_PARA = params.get('voltar_para') ? decodeURIComponent(params.get('voltar_para')) : `ficha-paciente_1.html?id=${PACIENTE_ID}&aba=${ORIGEM}`;
+
+document.getElementById('btn-voltar').onclick = () => window.location.href = VOLTAR_PARA;
+document.getElementById('btn-cancelar').onclick = () => window.location.href = VOLTAR_PARA;
 
 // Pré-definir hoje como data padrão
 document.getElementById('f_data').value = new Date().toISOString().split('T')[0];
