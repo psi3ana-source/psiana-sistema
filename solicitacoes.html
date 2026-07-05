@@ -349,38 +349,65 @@
     document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
   })();
 
-  var fakeSolicitacoes = [
-    {
-      id: 1, paciente: "Willian Francisco Caetano Lopes", iniciais: "WL", tipo: "ajuste",
-      titulo: "Remarcação · Encontro 12 · 14/07/2026", data: "03/07/2026", status: "pendente",
-      justificativa: "Terei uma viagem de trabalho nesse dia e não vou conseguir comparecer.",
-      taxa: 150.00, planoInfo: "Plano Integral · avulso"
-    },
-    {
-      id: 2, paciente: "Graziela Premoli de Souza", iniciais: "GP", tipo: "financeiro",
-      titulo: "Segunda via de recibo", data: "02/07/2026", status: "pendente",
-      justificativa: "Preciso do recibo do mês de junho para reembolso no convênio."
-    },
-    {
-      id: 3, paciente: "Lara Cristina Petry Bueno", iniciais: "LB", tipo: "documento",
-      titulo: "Declaração", data: "01/07/2026", status: "pendente",
-      justificativa: "Para apresentar na faculdade, comprovando acompanhamento psicológico."
-    },
-    {
-      id: 4, paciente: "Julia de Paiva Bento", iniciais: "JB", tipo: "ajuste",
-      titulo: "Cancelamento · Encontro 8 · 25/06/2026", data: "24/06/2026", status: "aprovada",
-      justificativa: "Tive um imprevisto médico."
-    },
-    {
-      id: 5, paciente: "Marcos Rosti Martins Filho", iniciais: "MM", tipo: "documento",
-      titulo: "Encaminhamento", data: "20/06/2026", status: "recusada",
-      justificativa: "Solicito encaminhamento para psiquiatra."
-    }
-  ];
+  const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
 
+  var todasSolicitacoes = [];
   var TIPO_LABEL = { ajuste: 'Ajuste de sessão', financeiro: 'Financeiro', documento: 'Documento médico' };
   var STATUS_LABEL = { pendente: 'Pendente', aprovada: 'Aprovada', recusada: 'Recusada' };
   var filtro = { tipo: 'todos', status: 'pendente' };
+
+  function iniciaisDe(nome){
+    if(!nome) return '—';
+    var partes = nome.trim().split(' ');
+    return (partes[0][0] + (partes[partes.length - 1][0] || '')).toUpperCase();
+  }
+
+  function fmtDataBR(iso){
+    if(!iso) return '—';
+    return iso.substring(8,10) + '/' + iso.substring(5,7) + '/' + iso.substring(0,4);
+  }
+
+  function montarTitulo(s){
+    if(s.tipo === 'ajuste'){
+      var acaoLabel = s.acao === 'cancelar' ? 'Cancelamento' : 'Remarcação';
+      var txt = acaoLabel + (s.sessao_id ? ' · Sessão #' + s.sessao_id : '');
+      if(s.acao === 'remarcar' && s.nova_data){
+        txt += ' → novo horário sugerido: ' + fmtDataBR(s.nova_data) + (s.novo_horario ? ' às ' + s.novo_horario.substring(0,5) : '');
+      }
+      return txt;
+    }
+    return s.assunto || TIPO_LABEL[s.tipo];
+  }
+
+  async function carregarSolicitacoes(){
+    var wrap = document.getElementById('lista-solicitacoes');
+    wrap.innerHTML = '<div style="text-align:center;color:var(--ink-soft);font-size:13px;padding:30px 0;">Carregando solicitações…</div>';
+    try{
+      var r = await fetch(
+        SUPABASE_URL + '/rest/v1/solicitacoes?select=*,pacientes(nome_completo)&order=created_at.desc',
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
+      );
+      var dados = await r.json();
+      todasSolicitacoes = (Array.isArray(dados) ? dados : []).map(function(s){
+        return {
+          id: s.id,
+          paciente: (s.pacientes && s.pacientes.nome_completo) || 'Paciente',
+          iniciais: iniciaisDe(s.pacientes && s.pacientes.nome_completo),
+          tipo: s.tipo,
+          titulo: montarTitulo(s),
+          data: fmtDataBR((s.created_at || '').substring(0,10)),
+          status: s.status,
+          justificativa: s.justificativa || s.mensagem || '',
+          taxa: s.taxa_aplicada,
+          planoInfo: null
+        };
+      });
+      renderSolicitacoes();
+    } catch(e){
+      wrap.innerHTML = '<div style="text-align:center;color:var(--alerta);font-size:13px;padding:30px 0;">Não foi possível carregar as solicitações.</div>';
+    }
+  }
 
   function setFiltro(grupo, valor){
     filtro[grupo] = valor;
@@ -389,7 +416,7 @@
 
   function renderSolicitacoes(){
     var wrap = document.getElementById('lista-solicitacoes');
-    var lista = fakeSolicitacoes.filter(function(s){
+    var lista = todasSolicitacoes.filter(function(s){
       if(filtro.tipo !== 'todos' && s.tipo !== filtro.tipo) return false;
       if(filtro.status !== 'todos' && s.status !== filtro.status) return false;
       return true;
@@ -406,7 +433,7 @@
           '</div>'
         : '';
       var taxaHtml = s.taxa
-        ? '<div class="taxa-tag">💲 Taxa de R$ ' + s.taxa.toFixed(2).replace('.', ',') + ' · ' + s.planoInfo + '</div>'
+        ? '<div class="taxa-tag">💲 Taxa de R$ ' + Number(s.taxa).toFixed(2).replace('.', ',') + '</div>'
         : '';
       return '<div class="solic-card">' +
         '<div class="avatar-mini">' + s.iniciais + '</div>' +
@@ -429,13 +456,13 @@
   var modalContexto = null;
 
   function abrirModal(id, acao){
-    var s = fakeSolicitacoes.find(function(x){ return x.id === id; });
+    var s = todasSolicitacoes.find(function(x){ return x.id === id; });
     modalContexto = { id: id, acao: acao };
     document.getElementById('modal-titulo').textContent = (acao === 'aprovar' ? 'Aprovar' : 'Recusar') + ' solicitação';
     var corpo =
       '<div class="modal-corpo-linha"><b>' + s.paciente + '</b><br>' + s.titulo + '</div>' +
       '<div class="modal-corpo-linha">' + s.justificativa + '</div>' +
-      (s.taxa ? '<div class="modal-corpo-linha">Taxa aplicável: <b>R$ ' + s.taxa.toFixed(2).replace('.', ',') + '</b></div>' : '') +
+      (s.taxa ? '<div class="modal-corpo-linha">Taxa aplicável: <b>R$ ' + Number(s.taxa).toFixed(2).replace('.', ',') + '</b></div>' : '') +
       '<label style="font-size:12px;color:var(--mocha);">Observação (opcional)</label>' +
       '<textarea class="modal-textarea" id="modal-obs" rows="3" placeholder="Escreva uma mensagem para a paciente, se quiser..."></textarea>' +
       '<button class="btn-mini ' + (acao === 'aprovar' ? 'aprovar' : 'recusar') + '" style="width:100%;" onclick="confirmarAcao()">Confirmar ' + (acao === 'aprovar' ? 'aprovação' : 'recusa') + '</button>';
@@ -448,13 +475,29 @@
     modalContexto = null;
   }
 
-  function confirmarAcao(){
+  async function confirmarAcao(){
     if(!modalContexto) return;
-    var s = fakeSolicitacoes.find(function(x){ return x.id === modalContexto.id; });
-    s.status = modalContexto.acao === 'aprovar' ? 'aprovada' : 'recusada';
+    var novoStatus = modalContexto.acao === 'aprovar' ? 'aprovada' : 'recusada';
+    var observacao = document.getElementById('modal-obs').value || null;
+    try{
+      await fetch(SUPABASE_URL + '/rest/v1/solicitacoes?id=eq.' + modalContexto.id, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY
+        },
+        body: JSON.stringify({ status: novoStatus, resposta_psicologa: observacao, respondido_em: new Date().toISOString() })
+      });
+      var s = todasSolicitacoes.find(function(x){ return x.id === modalContexto.id; });
+      if(s) s.status = novoStatus;
+    } catch(e){
+      alert('Não foi possível salvar a resposta. Tente novamente.');
+    }
     fecharModal();
     renderSolicitacoes();
   }
+
+  carregarSolicitacoes();
 
   function sair(){
     sessionStorage.removeItem('psiana_admin_logado');
