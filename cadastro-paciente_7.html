@@ -87,16 +87,31 @@ async function carregar() {
     document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">ID não informado.</div>';
     return;
   }
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
+  const [r, rPrecos] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    }),
+    fetch(`${SUPABASE_URL}/rest/v1/tabela_precos?ativo=eq.true&order=modalidade,tipo`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    })
+  ]);
   const data = await r.json();
+  const precos = await rPrecos.json();
   if (!data.length) {
     document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">Paciente não encontrada.</div>';
     return;
   }
   const p = data[0];
   renderForm(p);
+  popularPrecos(precos, p.preco_id);
+}
+
+function popularPrecos(precos, precoIdAtual) {
+  const select = document.getElementById('f_preco_id');
+  if (!select) return;
+  select.innerHTML = '<option value="">Selecione</option>' +
+    precos.map(pr => `<option value="${pr.id}">${pr.nome}</option>`).join('');
+  if (precoIdAtual) select.value = precoIdAtual;
 }
 
 function renderForm(p) {
@@ -174,6 +189,11 @@ function renderForm(p) {
     <div class="section">
       <div class="section-title">Atendimento</div>
       <div class="grid-2">
+        <div class="field" style="grid-column:1/-1"><label>Modalidade financeira</label>
+          <select id="f_preco_id">
+            <option value="">Selecione</option>
+          </select>
+        </div>
         <div class="field"><label>Frequência</label>
           <select id="f_freq">
             <option value="">Selecione</option>
@@ -304,6 +324,7 @@ async function salvar() {
     como_conheceu: v('f_como') || null,
     tem_filhos: v('f_filhos') !== '' ? v('f_filhos') === 'true' : null,
     anotacoes: v('f_anot') || null,
+    preco_id: v('f_preco_id') ? parseInt(v('f_preco_id')) : null,
     frequencia: v('f_freq') || null,
     forma_pagamento: v('f_pgto') || null,
     link_meet: v('f_meet') || null,
