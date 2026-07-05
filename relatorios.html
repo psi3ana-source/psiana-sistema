@@ -208,6 +208,27 @@
   .analise-ia-erro{ font-size:12.5px; color:var(--alerta); background:var(--alerta-bg); border-radius:8px; padding:10px 12px; }
   .analise-ia-texto{ font-size:13.5px; color:var(--ink); line-height:1.7; white-space:pre-line; }
 
+  .pergunta-ia-linha{ display:flex; gap:10px; margin-bottom:12px; }
+  .pergunta-ia-linha input{
+    flex:1; font-size:13.5px; padding:11px 14px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-family:'Segoe UI', Arial, sans-serif;
+  }
+  .pergunta-ia-linha input:focus{ outline:none; border-color:var(--rose); }
+  .pergunta-ia-sugestoes{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .pergunta-ia-sugestoes span{
+    font-size:11.5px; padding:6px 13px; border-radius:20px; border:1px solid var(--line);
+    background:#FEFCFB; color:var(--mocha); cursor:pointer;
+  }
+  .pergunta-ia-sugestoes span:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .pergunta-ia-resultado-titulo{ font-size:15px; font-weight:600; color:var(--mocha-deep); margin:0 0 12px; }
+  .pergunta-ia-explicacao{
+    background:var(--rose-soft); border-radius:12px; padding:14px 16px; margin-top:14px;
+    font-size:13px; color:var(--mocha); line-height:1.6; white-space:pre-line;
+  }
+  .pergunta-ia-tabela{ width:100%; border-collapse:collapse; font-size:13px; }
+  .pergunta-ia-tabela th{ text-align:left; font-size:11px; text-transform:uppercase; color:var(--ink-soft); padding:6px 10px; border-bottom:1px solid var(--line); }
+  .pergunta-ia-tabela td{ padding:8px 10px; border-bottom:1px solid var(--bg); color:var(--ink); }
+
   .insights-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .insight-card{ border-radius:12px; padding:14px 16px; border:1px solid var(--line); }
   .insight-card.positivo{ background:var(--ok-bg); border-color:#C8E6C9; }
@@ -380,6 +401,23 @@
     </div>
 
     <div class="rel-painel">
+      <h2 class="rel-painel-titulo">Pergunte à IA</h2>
+      <p class="page-sub" style="margin-bottom:14px;">Peça uma análise específica — por sexo, idade, frequência, região, como conheceu a clínica, profissão, escolaridade, renda, queixas, ou qualquer cruzamento entre pacientes. A IA escolhe o gráfico certo e explica o que encontrou.</p>
+      <div class="pergunta-ia-linha">
+        <input type="text" id="pergunta-ia-input" placeholder="Ex: compare desistência por faixa etária…" onkeydown="if(event.key==='Enter') perguntarIA();">
+        <button class="btn-atualizar-ia" onclick="perguntarIA()">Perguntar</button>
+      </div>
+      <div class="pergunta-ia-sugestoes">
+        <span onclick="perguntarIASugestao(this)">Análise por idade</span>
+        <span onclick="perguntarIASugestao(this)">Análise por região</span>
+        <span onclick="perguntarIASugestao(this)">Como as pacientes me conheceram</span>
+        <span onclick="perguntarIASugestao(this)">Predominância dos indicadores clínicos</span>
+        <span onclick="perguntarIASugestao(this)">Queixas mais recorrentes</span>
+      </div>
+      <div id="pergunta-ia-resultado"></div>
+    </div>
+
+    <div class="rel-painel">
       <h2 class="rel-painel-titulo">Sessões</h2>
       <div class="sessoes-grid">
         <div>
@@ -414,7 +452,7 @@
       <div class="modal-tabela" id="tabela-modalidades"></div>
       <div class="rel-grid-2" style="margin-top:18px;">
         <div>
-          <p class="mini-titulo">Quantas pacientes novas entraram, por modalidade e mês</p>
+          <p class="mini-titulo">Quantos pacientes novos entraram, por modalidade e mês</p>
           <div id="grafico-modalidades-mes"></div>
         </div>
         <div>
@@ -737,7 +775,96 @@
     );
   }
 
+  var PALETA_GRAFICOS = ['#5B4FBF','#2E7D32','#B5680F','#1D7A6B','#A6790F','#B5514A','#785D56','#C89F9D'];
+
+  var fakePacientesAnalise = [
+    { nome: 'Willian Francisco Caetano Lopes', sexo: 'masculino', idade: 29, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Instagram', profissao: 'Engenheiro', escolaridade: 'Superior completo', renda_mensal: 6500, indicador_predominante: 'autocuidado', queixa_principal: 'Sobrecarga no trabalho e dificuldade de desconectar', status: 'ativo' },
+    { nome: 'Anna Clara Oldoni Costa', sexo: 'feminino', idade: 21, cidade: 'Florianópolis', estado: 'SC', frequencia: 'quinzenal', como_conheceu: 'Google', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1200, indicador_predominante: 'sintomas ansiosos', queixa_principal: 'Ansiedade antes de provas e apresentações', status: 'ativo' },
+    { nome: 'Catarina Marchi Jasper', sexo: 'feminino', idade: 24, cidade: 'Tubarão', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Indicação', profissao: 'Designer', escolaridade: 'Superior completo', renda_mensal: 3200, indicador_predominante: 'humor', queixa_principal: 'Oscilação de humor e falta de motivação', status: 'ativo' },
+    { nome: 'Dariana Christina Marcelino Valle', sexo: 'feminino', idade: 24, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Instagram', profissao: 'Advogada', escolaridade: 'Pós-graduação', renda_mensal: 7200, indicador_predominante: 'autocuidado', queixa_principal: 'Dificuldade em dizer não e estabelecer limites', status: 'ativo' },
+    { nome: 'Emiliane Clarissa Gomes de Lima', sexo: 'feminino', idade: 22, cidade: 'São Paulo', estado: 'SP', frequencia: 'quinzenal', como_conheceu: 'TikTok', profissao: 'Estudante', escolaridade: 'Superior incompleto', renda_mensal: 1800, indicador_predominante: 'sintomas depressivos', queixa_principal: 'Cansaço constante e falta de vontade', status: 'pausado' },
+    { nome: 'Graziela Premoli de Souza', sexo: 'feminino', idade: 48, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Indicação', profissao: 'Professora', escolaridade: 'Pós-graduação', renda_mensal: 4800, indicador_predominante: 'insonia', queixa_principal: 'Dificuldade para dormir e pensamentos acelerados', status: 'ativo' },
+    { nome: 'Julia de Paiva Bento', sexo: 'feminino', idade: 42, cidade: 'Rio de Janeiro', estado: 'RJ', frequencia: 'mensal', como_conheceu: 'Google', profissao: 'Empresária', escolaridade: 'Superior completo', renda_mensal: 9000, indicador_predominante: 'tolerancia', queixa_principal: 'Irritabilidade e baixa tolerância à frustração', status: 'ativo' },
+    { nome: 'Lara Cristina Petry Bueno', sexo: 'feminino', idade: 41, cidade: 'Porto Alegre', estado: 'RS', frequencia: 'quinzenal', como_conheceu: 'Instagram', profissao: 'Bióloga', escolaridade: 'Pós-graduação', renda_mensal: 5200, indicador_predominante: 'sintomas depressivos', queixa_principal: 'Falta de vontade e cansaço mesmo dormindo bem', status: 'desistente' },
+    { nome: 'Marcos Rosti Martins Filho', sexo: 'masculino', idade: 35, cidade: 'Curitiba', estado: 'PR', frequencia: 'semanal', como_conheceu: 'Google', profissao: 'Autônomo', escolaridade: 'Ensino médio', renda_mensal: 2800, indicador_predominante: 'limites', queixa_principal: 'Dificuldade em cobrar clientes e se posicionar', status: 'ativo' },
+    { nome: 'Sabrina Mendes Teixeira', sexo: 'feminino', idade: 31, cidade: 'Criciúma', estado: 'SC', frequencia: 'semanal', como_conheceu: 'Indicação', profissao: 'Enfermeira', escolaridade: 'Superior completo', renda_mensal: 3600, indicador_predominante: 'autocuidado', queixa_principal: 'Exaustão pelo trabalho em turnos e pouco autocuidado', status: 'alta' }
+  ];
+
+  function perguntarIASugestao(el){
+    document.getElementById('pergunta-ia-input').value = el.textContent;
+    perguntarIA();
+  }
+
+  async function perguntarIA(){
+    var pergunta = document.getElementById('pergunta-ia-input').value.trim();
+    var wrap = document.getElementById('pergunta-ia-resultado');
+    if(!pergunta){
+      wrap.innerHTML = '<p class="analise-ia-erro">Escreva o que você quer analisar.</p>';
+      return;
+    }
+    wrap.innerHTML = '<p class="analise-ia-placeholder">Analisando "' + pergunta + '"…</p>';
+
+    var payload = { pergunta: pergunta, pacientes: fakePacientesAnalise };
+
+    try{
+      var resposta = await fetch(N8N_WEBHOOK_PERGUNTA_IA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var json = await resposta.json();
+      renderizarRespostaIA(json);
+    } catch(e){
+      wrap.innerHTML = '<p class="analise-ia-erro">Não foi possível conectar ao serviço de análise. Verifique sua conexão e tente novamente.</p>';
+    }
+  }
+
+  function renderizarRespostaIA(json){
+    var wrap = document.getElementById('pergunta-ia-resultado');
+    if(!json || !json.tipo_grafico){
+      wrap.innerHTML = '<p class="analise-ia-erro">Não consegui interpretar essa pergunta. Tente reformular de um jeito mais específico.</p>';
+      return;
+    }
+    var html = '<p class="pergunta-ia-resultado-titulo">' + (json.titulo || 'Resultado') + '</p><div id="pergunta-ia-grafico"></div>';
+    if(json.explicacao){
+      html += '<div class="pergunta-ia-explicacao">' + json.explicacao.replace(/\n/g, '<br>') + '</div>';
+    }
+    wrap.innerHTML = html;
+
+    if(json.tipo_grafico === 'barra'){
+      var lista = json.categorias.map(function(c, i){ return { nome: c, valor: json.series[0].valores[i] }; });
+      var cores = {}; lista.forEach(function(l, i){ cores[l.nome] = PALETA_GRAFICOS[i % PALETA_GRAFICOS.length]; });
+      desenharBarras('pergunta-ia-grafico', lista, cores);
+    } else if(json.tipo_grafico === 'linha'){
+      var series = json.series.map(function(s, i){ return { nome: s.nome, cor: PALETA_GRAFICOS[i % PALETA_GRAFICOS.length], valores: s.valores }; });
+      desenharLinhas('pergunta-ia-grafico', json.categorias, series);
+    } else if(json.tipo_grafico === 'rosca'){
+      var vals = json.series[0].valores;
+      var totalD = vals.reduce(function(a,b){ return a+b; }, 0);
+      var acumuladoD = 0;
+      var stopsD = json.categorias.map(function(c, i){
+        var pct = totalD ? (vals[i] / totalD) * 100 : 0;
+        var inicio = acumuladoD;
+        acumuladoD += pct;
+        return PALETA_GRAFICOS[i % PALETA_GRAFICOS.length] + ' ' + inicio.toFixed(1) + '% ' + acumuladoD.toFixed(1) + '%';
+      }).join(', ');
+      document.getElementById('pergunta-ia-grafico').innerHTML =
+        '<div class="donut-wrap">' +
+          '<div class="donut" style="background: conic-gradient(' + stopsD + ');"><div class="donut-centro"><b>' + totalD + '</b><span>total</span></div></div>' +
+          '<div class="donut-legenda">' + json.categorias.map(function(c, i){
+            var pct = totalD ? Math.round((vals[i]/totalD)*100) : 0;
+            return '<div class="donut-legenda-item"><i style="background:' + PALETA_GRAFICOS[i % PALETA_GRAFICOS.length] + ';"></i>' + c + ' <b>' + vals[i] + '</b> <span>(' + pct + '%)</span></div>';
+          }).join('') + '</div>' +
+        '</div>';
+    } else if(json.tipo_grafico === 'tabela'){
+      var thead = '<tr>' + json.colunas.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr>';
+      var tbody = json.linhas.map(function(l){ return '<tr>' + l.map(function(v){ return '<td>' + v + '</td>'; }).join('') + '</tr>'; }).join('');
+      document.getElementById('pergunta-ia-grafico').innerHTML = '<table class="pergunta-ia-tabela"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
+    }
+  }
+
   var N8N_WEBHOOK_ANALISE_IA = 'https://psi3ana.app.n8n.cloud/webhook/relatorio-analise-ia';
+  var N8N_WEBHOOK_PERGUNTA_IA = 'https://psi3ana.app.n8n.cloud/webhook/relatorio-pergunta-ia';
 
   async function gerarAnaliseIA(){
     var periodo = document.getElementById('select-periodo-rel').value;
