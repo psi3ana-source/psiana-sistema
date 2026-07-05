@@ -121,6 +121,18 @@ function renderForm(p) {
       <div class="grid-2" style="margin-bottom:14px">
         <div class="field" style="grid-column:1/-1"><label>Nome completo</label><input id="f_nome" type="text"></div>
       </div>
+      <div class="grid-3" style="margin-bottom:14px">
+        <div class="field"><label>Status</label>
+          <select id="f_status">
+            <option value="ativo">Ativo</option>
+            <option value="pausado">Pausado</option>
+            <option value="lista de espera">Lista de espera</option>
+            <option value="encerrado">Encerrado (por mim)</option>
+            <option value="desistente">Desistente (pela paciente)</option>
+            <option value="alta">Alta (comum acordo)</option>
+          </select>
+        </div>
+      </div>
       <div class="grid-3">
         <div class="field"><label>Data de nascimento</label><input id="f_nasc" type="date"></div>
         <div class="field"><label>Gênero</label>
@@ -268,6 +280,7 @@ function renderForm(p) {
 
   // Preencher valores
   set('f_nome', p.nome_completo);
+  set('f_status', p.status);
   set('f_nasc', p.data_nascimento);
   set('f_genero', p.genero);
   set('f_estado_civil', p.estado_civil);
@@ -305,6 +318,7 @@ async function salvar() {
   if (!PACIENTE_ID) return;
   const dados = {
     nome_completo: v('f_nome'),
+    status: v('f_status') || 'ativo',
     data_nascimento: v('f_nasc') || null,
     genero: v('f_genero') || null,
     estado_civil: v('f_estado_civil') || null,
