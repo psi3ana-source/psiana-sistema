@@ -150,6 +150,10 @@
   .mat-tipo-icone svg{ width:16px; height:16px; }
   .mat-categoria{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--mocha); background:var(--rose-soft); padding:3px 10px; border-radius:20px; }
   .mat-titulo{ font-size:14.5px; font-weight:600; color:var(--ink); line-height:1.35; }
+  .mat-status-badge{ font-size:10.5px; padding:3px 9px; border-radius:20px; font-weight:600; display:inline-block; width:fit-content; }
+  .mat-status-badge.processando{ background:#FFF1E0; color:#B5680F; }
+  .mat-status-badge.erro{ background:var(--alerta-bg); color:var(--alerta); }
+  .mat-status-badge.pronto{ background:var(--ok-bg); color:var(--ok); }
   .mat-descricao{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; flex:1; }
   .mat-card-rodape{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
   .mat-link{ font-size:12.5px; color:var(--mocha); text-decoration:none; font-weight:600; }
@@ -174,6 +178,11 @@
     background:#fff; color:var(--ink-soft); cursor:pointer; margin-top:8px;
   }
   .mat-pdf-status{ font-size:11.5px; color:var(--ink-soft); display:block; margin-top:6px; }
+  .btn-gerar-link{
+    font-size:11.5px; padding:6px 12px; border-radius:20px; border:1px solid var(--line);
+    background:#FEFCFB; color:var(--mocha); cursor:pointer; margin-top:6px;
+  }
+  .btn-gerar-link:hover{ background:var(--rose-soft); }
   .mat-pdf-status.erro{ color:var(--alerta); }
   .mat-pdf-status.ok{ color:var(--ok); }
 
@@ -332,8 +341,17 @@
           </select>
         </div>
         <div class="field-mat">
+          <label>Tipo de resumo</label>
+          <select id="mat-modo-resumo">
+            <option value="geral">Geral (teoria, artigos, psicoeducação)</option>
+            <option value="diagnostico">Manual diagnóstico (preservar critérios exatos)</option>
+          </select>
+        </div>
+        <div class="field-mat">
           <label>Link</label>
           <input type="url" id="mat-url" placeholder="https://drive.google.com/...">
+          <button type="button" class="btn-gerar-link" onclick="processarLinkMaterial()">🔗 Gerar resumo a partir deste link</button>
+          <span id="mat-link-status" class="mat-pdf-status"></span>
         </div>
         <div class="field-mat">
           <label>Descrição (opcional)</label>
@@ -428,6 +446,9 @@
           (m.categoria ? '<span class="mat-categoria">' + m.categoria + '</span>' : '') +
         '</div>' +
         '<div class="mat-titulo">' + m.titulo + '</div>' +
+        (m.status_resumo === 'processando' ? '<span class="mat-status-badge processando">⏳ Gerando resumo em segundo plano...</span>' : '') +
+        (m.status_resumo === 'erro' ? '<span class="mat-status-badge erro">⚠ Resumo automático falhou — edite manualmente</span>' : '') +
+        (m.status_resumo === 'pronto' ? '<span class="mat-status-badge pronto">✓ Resumo pronto</span>' : '') +
         (m.descricao ? '<div class="mat-descricao">' + m.descricao + '</div>' : '') +
         '<div class="mat-card-rodape">' +
           '<a class="mat-link" href="' + m.url + '" target="_blank" rel="noopener">Abrir →</a>' +
@@ -437,13 +458,21 @@
     }).join('');
   }
 
+  var conteudoPendentePdf = null;
+  var linkPendenteParaResumo = null;
+
   function abrirModalMaterial(){
     document.getElementById('mat-titulo').value = '';
     document.getElementById('mat-categoria').value = '';
     document.getElementById('mat-tipo').value = 'documento';
+    document.getElementById('mat-modo-resumo').value = 'geral';
     document.getElementById('mat-url').value = '';
     document.getElementById('mat-descricao').value = '';
     document.getElementById('mat-conteudo').value = '';
+    document.getElementById('mat-pdf-status').textContent = '';
+    document.getElementById('mat-link-status').textContent = '';
+    conteudoPendentePdf = null;
+    linkPendenteParaResumo = null;
     document.getElementById('modal-material').classList.add('open');
   }
 
@@ -458,6 +487,7 @@
       alert('Preencha ao menos o título e o link.');
       return;
     }
+    var temResumoPendente = !!(conteudoPendentePdf || linkPendenteParaResumo);
     var payload = {
       secao: SECAO_ATUAL,
       titulo: titulo,
@@ -465,14 +495,38 @@
       tipo: document.getElementById('mat-tipo').value,
       url: url,
       descricao: document.getElementById('mat-descricao').value.trim() || null,
-      conteudo: document.getElementById('mat-conteudo').value.trim() || null
+      conteudo: document.getElementById('mat-conteudo').value.trim() || null,
+      status_resumo: temResumoPendente ? 'processando' : 'manual'
     };
     try{
-      await fetch(SUPABASE_URL + '/rest/v1/materiais', {
+      var resposta = await fetch(SUPABASE_URL + '/rest/v1/materiais', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+        headers: {
+          'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+          Prefer: 'return=representation'
+        },
         body: JSON.stringify(payload)
       });
+      var novo = await resposta.json();
+      var novoId = novo && novo[0] && novo[0].id;
+
+      // Dispara o resumo em segundo plano — não espera a resposta pronta
+      if(novoId && conteudoPendentePdf){
+        fetch(N8N_WEBHOOK_RESUMIR_MATERIAL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ material_id: novoId, texto: conteudoPendentePdf, titulo: titulo, modo_resumo: document.getElementById('mat-modo-resumo').value })
+        }).catch(function(e){ console.warn('Erro ao disparar resumo (PDF):', e); });
+      } else if(novoId && linkPendenteParaResumo){
+        fetch(N8N_WEBHOOK_RESUMIR_LINK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ material_id: novoId, url: linkPendenteParaResumo, titulo: titulo, modo_resumo: document.getElementById('mat-modo-resumo').value })
+        }).catch(function(e){ console.warn('Erro ao disparar resumo (link):', e); });
+      }
+
+      conteudoPendentePdf = null;
+      linkPendenteParaResumo = null;
       fecharModalMaterial();
       carregarMateriais();
     } catch(e){
@@ -555,30 +609,25 @@
       return;
     }
 
-    // ETAPA 3: gerar resumo com IA (se falhar, mantém arquivo + texto bruto)
-    status.textContent = '🧠 Gerando resumo com IA...';
-    try{
-      const resposta = await fetch(N8N_WEBHOOK_RESUMIR_MATERIAL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texto: textoCompleto, titulo: document.getElementById('mat-titulo').value || file.name })
-      });
-      const dados = await resposta.json();
-      if(dados && dados.resumo){
-        document.getElementById('mat-conteudo').value = dados.resumo;
-        status.className = 'mat-pdf-status ok';
-        status.textContent = '✓ Arquivo salvo e resumo gerado! Revise antes de salvar.';
-      } else {
-        document.getElementById('mat-conteudo').value = textoCompleto.substring(0, 3000);
-        status.className = 'mat-pdf-status ok';
-        status.textContent = '✓ Arquivo salvo! (resumo automático indisponível — colei o texto bruto, edite se quiser)';
-      }
-    } catch(e){
-      document.getElementById('mat-conteudo').value = textoCompleto.substring(0, 3000);
-      status.className = 'mat-pdf-status ok';
-      status.textContent = '✓ Arquivo salvo! (resumo automático indisponível — colei o texto bruto, edite se quiser)';
-      console.warn('Erro ao gerar resumo:', e);
+    // ETAPA 3: guarda o texto pra resumir em segundo plano DEPOIS de salvar (não trava esperando aqui)
+    conteudoPendentePdf = textoCompleto;
+    status.className = 'mat-pdf-status ok';
+    status.textContent = '✓ Arquivo salvo e texto extraído! Clique em "Salvar" — o resumo será gerado em segundo plano.';
+  }
+
+  var N8N_WEBHOOK_RESUMIR_LINK = 'https://psi3ana.app.n8n.cloud/webhook/resumir-material-link';
+
+  async function processarLinkMaterial(){
+    const url = document.getElementById('mat-url').value.trim();
+    const status = document.getElementById('mat-link-status');
+    if(!url){
+      status.className = 'mat-pdf-status erro';
+      status.textContent = 'Cole o link antes de gerar o resumo.';
+      return;
     }
+    linkPendenteParaResumo = url;
+    status.className = 'mat-pdf-status ok';
+    status.textContent = '✓ Link registrado! Clique em "Salvar" — o resumo será gerado em segundo plano.';
   }
 
   carregarMateriais();
