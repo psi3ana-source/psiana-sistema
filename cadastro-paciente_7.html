@@ -40,7 +40,7 @@
 
 <div class="header">
   <button class="btn-voltar" id="btn-voltar">← Voltar</button>
-  <h1>Editar paciente</h1>
+  <h1 id="page-title">Editar paciente</h1>
 </div>
 
 <div class="container" id="form-container">
@@ -60,8 +60,9 @@ const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
 const params = new URLSearchParams(window.location.search);
 const PACIENTE_ID = params.get('id');
 
-document.getElementById('btn-voltar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
-document.getElementById('btn-cancelar').onclick = () => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`;
+const VOLTAR_CADASTRO = PACIENTE_ID ? `ficha-paciente_1.html?id=${PACIENTE_ID}` : 'pacientes.html';
+document.getElementById('btn-voltar').onclick = () => window.location.href = VOLTAR_CADASTRO;
+document.getElementById('btn-cancelar').onclick = () => window.location.href = VOLTAR_CADASTRO;
 
 function toast(msg, tipo) {
   const t = document.getElementById('toast');
@@ -83,20 +84,23 @@ function toggleResp() {
 }
 
 async function carregar() {
+  const rPrecos = await fetch(`${SUPABASE_URL}/rest/v1/tabela_precos?ativo=eq.true&order=modalidade,tipo`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  const precos = await rPrecos.json();
+
   if (!PACIENTE_ID) {
-    document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">ID não informado.</div>';
+    // Modo "novo paciente" — formulário em branco
+    document.getElementById('page-title') && (document.getElementById('page-title').textContent = 'Novo paciente');
+    renderForm({});
+    popularPrecos(precos, null);
     return;
   }
-  const [r, rPrecos] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    }),
-    fetch(`${SUPABASE_URL}/rest/v1/tabela_precos?ativo=eq.true&order=modalidade,tipo`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    })
-  ]);
+
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
   const data = await r.json();
-  const precos = await rPrecos.json();
   if (!data.length) {
     document.getElementById('form-container').innerHTML = '<div class="loading" style="color:#C62828">Paciente não encontrada.</div>';
     return;
@@ -353,19 +357,43 @@ async function salvar() {
   // remover nulls
   Object.keys(dados).forEach(k => { if (dados[k] === null) delete dados[k]; });
 
+  if (!dados.nome_completo) {
+    toast('Preencha o nome completo antes de salvar.', 'erro');
+    return;
+  }
+
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`
-      },
-      body: JSON.stringify(dados)
-    });
+    let r;
+    if (PACIENTE_ID) {
+      r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes?id=eq.${PACIENTE_ID}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
+        },
+        body: JSON.stringify(dados)
+      });
+    } else {
+      r = await fetch(`${SUPABASE_URL}/rest/v1/pacientes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Prefer: 'return=representation'
+        },
+        body: JSON.stringify(dados)
+      });
+    }
     if (r.ok) {
-      toast('Dados salvos com sucesso!', 'ok');
-      setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${PACIENTE_ID}`, 1200);
+      toast(PACIENTE_ID ? 'Dados salvos com sucesso!' : 'Paciente cadastrada com sucesso!', 'ok');
+      let idFinal = PACIENTE_ID;
+      if (!PACIENTE_ID) {
+        const novo = await r.json();
+        idFinal = novo[0] && novo[0].id;
+      }
+      setTimeout(() => window.location.href = `ficha-paciente_1.html?id=${idFinal}`, 1200);
     } else {
       const err = await r.json();
       toast('Erro: ' + (err.message || JSON.stringify(err)), 'erro');
