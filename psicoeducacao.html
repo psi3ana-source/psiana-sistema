@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Psicoeducação · PsiAna</title>
+<title>Jogos · PsiAna</title>
 <style>
   :root{
     --bg:#FAF6F5; --card:#fff; --line:#EDE4E3;
@@ -228,11 +228,11 @@
     </a>
 
     <div class="nav-label">Ferramentas</div>
-    <a class="nav-item active" href="psicoeducacao.html">
+    <a class="nav-item" href="psicoeducacao.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5c2.5-1.3 5-1.3 7.5 0v14c-2.5-1.3-5-1.3-7.5 0v-14Z"/><path d="M19.5 5.5c-2.5-1.3-5-1.3-7.5 0v14c2.5-1.3 5-1.3 7.5 0v-14Z"/></svg>
       Psicoeducação
     </a>
-    <a class="nav-item" href="jogos.html">
+    <a class="nav-item active" href="jogos.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="9" rx="4"/><path d="M8 12h-2M7 11v2M15.5 12.5h.01M17.5 11h.01"/></svg>
       Jogos
     </a>
@@ -286,11 +286,11 @@
       </button>
     </div>
 
-    <div class="breadcrumb"><a href="visao-geral.html">Início</a> / Psicoeducação</div>
+    <div class="breadcrumb"><a href="visao-geral.html">Início</a> / Jogos</div>
     <div class="mat-cabecalho">
       <div>
-        <h2 class="page-titulo">Psicoeducação</h2>
-        <p class="page-sub">Seus materiais organizados por tema.</p>
+        <h2 class="page-titulo">Jogos</h2>
+        <p class="page-sub">Jogos e dinâmicas para usar com as pacientes.</p>
       </div>
       <button class="btn-novo-material" onclick="abrirModalMaterial()">+ Adicionar</button>
     </div>
@@ -370,7 +370,7 @@
 
   const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
-  const SECAO_ATUAL = 'psicoeducacao';
+  const SECAO_ATUAL = 'jogos';
 
   var TIPO_ICONE = {
     documento: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6a1.5 1.5 0 0 0-1.5 1.5v16A1.5 1.5 0 0 0 6 21.5h12a1.5 1.5 0 0 0 1.5-1.5V8.5L14 2.5Z"/><path d="M13.5 2.5V8h5.5"/></svg>',
@@ -501,26 +501,11 @@
     if(!file) return;
     const status = document.getElementById('mat-pdf-status');
     status.className = 'mat-pdf-status';
-    status.textContent = '📄 Lendo o PDF...';
 
+    // ETAPA 1: subir o arquivo (independente do resto — sempre tenta)
+    status.textContent = '☁️ Enviando o arquivo...';
+    let linkPublico = null;
     try{
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-      let textoCompleto = '';
-      const totalPaginas = pdf.numPages;
-      status.textContent = `📄 Lendo ${totalPaginas} páginas...`;
-
-      for(let i = 1; i <= totalPaginas; i++){
-        const pagina = await pdf.getPage(i);
-        const conteudo = await pagina.getTextContent();
-        const textoPagina = conteudo.items.map(item => item.str).join(' ').replace(/\s+/g, ' ');
-        textoCompleto += textoPagina + '\n';
-      }
-
-      status.textContent = '☁️ Enviando o arquivo...';
-
       const nomeArquivo = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const uploadResp = await fetch(SUPABASE_URL + '/storage/v1/object/materiais/' + nomeArquivo, {
         method: 'POST',
@@ -532,31 +517,67 @@
         body: file
       });
       if(uploadResp.ok){
-        const linkPublico = SUPABASE_URL + '/storage/v1/object/public/materiais/' + nomeArquivo;
+        linkPublico = SUPABASE_URL + '/storage/v1/object/public/materiais/' + nomeArquivo;
         document.getElementById('mat-url').value = linkPublico;
+      } else {
+        const erroTexto = await uploadResp.text();
+        status.className = 'mat-pdf-status erro';
+        status.textContent = 'Não foi possível subir o arquivo (' + uploadResp.status + '). Verifique se o bucket "materiais" existe e está público.';
+        console.warn('Erro no upload:', erroTexto);
+        return;
       }
+    } catch(e){
+      status.className = 'mat-pdf-status erro';
+      status.textContent = 'Não foi possível conectar ao Supabase pra subir o arquivo.';
+      console.warn('Erro no upload:', e);
+      return;
+    }
 
-      status.textContent = '🧠 Gerando resumo com IA...';
+    // ETAPA 2: extrair o texto do PDF (se falhar, mantém o link já salvo)
+    status.textContent = '📄 Lendo o PDF...';
+    let textoCompleto = '';
+    try{
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const totalPaginas = pdf.numPages;
+      status.textContent = `📄 Lendo ${totalPaginas} páginas...`;
+      for(let i = 1; i <= totalPaginas; i++){
+        const pagina = await pdf.getPage(i);
+        const conteudo = await pagina.getTextContent();
+        const textoPagina = conteudo.items.map(item => item.str).join(' ').replace(/\s+/g, ' ');
+        textoCompleto += textoPagina + '\n';
+      }
+    } catch(e){
+      status.className = 'mat-pdf-status ok';
+      status.textContent = '✓ Arquivo salvo! (não consegui ler o texto pra gerar resumo — cole o conteúdo manualmente)';
+      console.warn('Erro ao ler PDF:', e);
+      return;
+    }
 
+    // ETAPA 3: gerar resumo com IA (se falhar, mantém arquivo + texto bruto)
+    status.textContent = '🧠 Gerando resumo com IA...';
+    try{
       const resposta = await fetch(N8N_WEBHOOK_RESUMIR_MATERIAL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ texto: textoCompleto, titulo: document.getElementById('mat-titulo').value || file.name })
       });
       const dados = await resposta.json();
-
       if(dados && dados.resumo){
         document.getElementById('mat-conteudo').value = dados.resumo;
         status.className = 'mat-pdf-status ok';
-        status.textContent = '✓ Resumo gerado! Revise antes de salvar.';
+        status.textContent = '✓ Arquivo salvo e resumo gerado! Revise antes de salvar.';
       } else {
         document.getElementById('mat-conteudo').value = textoCompleto.substring(0, 3000);
-        status.className = 'mat-pdf-status erro';
-        status.textContent = 'Não deu pra resumir — colei o texto bruto (revise/edite).';
+        status.className = 'mat-pdf-status ok';
+        status.textContent = '✓ Arquivo salvo! (resumo automático indisponível — colei o texto bruto, edite se quiser)';
       }
     } catch(e){
-      status.className = 'mat-pdf-status erro';
-      status.textContent = 'Não foi possível ler esse PDF. Tente colar o conteúdo manualmente.';
+      document.getElementById('mat-conteudo').value = textoCompleto.substring(0, 3000);
+      status.className = 'mat-pdf-status ok';
+      status.textContent = '✓ Arquivo salvo! (resumo automático indisponível — colei o texto bruto, edite se quiser)';
+      console.warn('Erro ao gerar resumo:', e);
     }
   }
 
