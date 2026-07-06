@@ -501,26 +501,11 @@
     if(!file) return;
     const status = document.getElementById('mat-pdf-status');
     status.className = 'mat-pdf-status';
-    status.textContent = '📄 Lendo o PDF...';
 
+    // ETAPA 1: subir o arquivo (independente do resto — sempre tenta)
+    status.textContent = '☁️ Enviando o arquivo...';
+    let linkPublico = null;
     try{
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-      let textoCompleto = '';
-      const totalPaginas = pdf.numPages;
-      status.textContent = `📄 Lendo ${totalPaginas} páginas...`;
-
-      for(let i = 1; i <= totalPaginas; i++){
-        const pagina = await pdf.getPage(i);
-        const conteudo = await pagina.getTextContent();
-        const textoPagina = conteudo.items.map(item => item.str).join(' ').replace(/\s+/g, ' ');
-        textoCompleto += textoPagina + '\n';
-      }
-
-      status.textContent = '☁️ Enviando o arquivo...';
-
       const nomeArquivo = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const uploadResp = await fetch(SUPABASE_URL + '/storage/v1/object/materiais/' + nomeArquivo, {
         method: 'POST',
@@ -532,31 +517,67 @@
         body: file
       });
       if(uploadResp.ok){
-        const linkPublico = SUPABASE_URL + '/storage/v1/object/public/materiais/' + nomeArquivo;
+        linkPublico = SUPABASE_URL + '/storage/v1/object/public/materiais/' + nomeArquivo;
         document.getElementById('mat-url').value = linkPublico;
+      } else {
+        const erroTexto = await uploadResp.text();
+        status.className = 'mat-pdf-status erro';
+        status.textContent = 'Não foi possível subir o arquivo (' + uploadResp.status + '). Verifique se o bucket "materiais" existe e está público.';
+        console.warn('Erro no upload:', erroTexto);
+        return;
       }
+    } catch(e){
+      status.className = 'mat-pdf-status erro';
+      status.textContent = 'Não foi possível conectar ao Supabase pra subir o arquivo.';
+      console.warn('Erro no upload:', e);
+      return;
+    }
 
-      status.textContent = '🧠 Gerando resumo com IA...';
+    // ETAPA 2: extrair o texto do PDF (se falhar, mantém o link já salvo)
+    status.textContent = '📄 Lendo o PDF...';
+    let textoCompleto = '';
+    try{
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const totalPaginas = pdf.numPages;
+      status.textContent = `📄 Lendo ${totalPaginas} páginas...`;
+      for(let i = 1; i <= totalPaginas; i++){
+        const pagina = await pdf.getPage(i);
+        const conteudo = await pagina.getTextContent();
+        const textoPagina = conteudo.items.map(item => item.str).join(' ').replace(/\s+/g, ' ');
+        textoCompleto += textoPagina + '\n';
+      }
+    } catch(e){
+      status.className = 'mat-pdf-status ok';
+      status.textContent = '✓ Arquivo salvo! (não consegui ler o texto pra gerar resumo — cole o conteúdo manualmente)';
+      console.warn('Erro ao ler PDF:', e);
+      return;
+    }
 
+    // ETAPA 3: gerar resumo com IA (se falhar, mantém arquivo + texto bruto)
+    status.textContent = '🧠 Gerando resumo com IA...';
+    try{
       const resposta = await fetch(N8N_WEBHOOK_RESUMIR_MATERIAL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ texto: textoCompleto, titulo: document.getElementById('mat-titulo').value || file.name })
       });
       const dados = await resposta.json();
-
       if(dados && dados.resumo){
         document.getElementById('mat-conteudo').value = dados.resumo;
         status.className = 'mat-pdf-status ok';
-        status.textContent = '✓ Resumo gerado! Revise antes de salvar.';
+        status.textContent = '✓ Arquivo salvo e resumo gerado! Revise antes de salvar.';
       } else {
         document.getElementById('mat-conteudo').value = textoCompleto.substring(0, 3000);
-        status.className = 'mat-pdf-status erro';
-        status.textContent = 'Não deu pra resumir — colei o texto bruto (revise/edite).';
+        status.className = 'mat-pdf-status ok';
+        status.textContent = '✓ Arquivo salvo! (resumo automático indisponível — colei o texto bruto, edite se quiser)';
       }
     } catch(e){
-      status.className = 'mat-pdf-status erro';
-      status.textContent = 'Não foi possível ler esse PDF. Tente colar o conteúdo manualmente.';
+      document.getElementById('mat-conteudo').value = textoCompleto.substring(0, 3000);
+      status.className = 'mat-pdf-status ok';
+      status.textContent = '✓ Arquivo salvo! (resumo automático indisponível — colei o texto bruto, edite se quiser)';
+      console.warn('Erro ao gerar resumo:', e);
     }
   }
 
