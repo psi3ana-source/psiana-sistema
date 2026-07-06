@@ -173,6 +173,9 @@
     width:100%; font-size:13px; padding:10px; border-radius:20px; border:1px solid var(--line);
     background:#fff; color:var(--ink-soft); cursor:pointer; margin-top:8px;
   }
+  .mat-pdf-status{ font-size:11.5px; color:var(--ink-soft); display:block; margin-top:6px; }
+  .mat-pdf-status.erro{ color:var(--alerta); }
+  .mat-pdf-status.ok{ color:var(--ok); }
 
   @media (max-width: 980px){
     .cards-grid{ grid-template-columns:repeat(2, 1fr); }
@@ -185,6 +188,7 @@
     .perfil-saudacao{ width:100%; }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -335,6 +339,15 @@
           <label>Descrição (opcional)</label>
           <textarea id="mat-descricao" rows="2" placeholder="Um resumo curto sobre o conteúdo…"></textarea>
         </div>
+        <div class="field-mat">
+          <label>PDF (opcional) — gera o resumo automaticamente</label>
+          <input type="file" id="mat-pdf-input" accept="application/pdf" onchange="processarPdfMaterial(this)">
+          <span id="mat-pdf-status" class="mat-pdf-status"></span>
+        </div>
+        <div class="field-mat">
+          <label>Conteúdo completo (opcional, mas recomendado)</label>
+          <textarea id="mat-conteudo" rows="5" placeholder="Cole aqui o texto principal, ou escolha um PDF acima pra gerar automaticamente."></textarea>
+        </div>
         <button class="btn-novo-material" style="width:100%; margin-top:6px;" onclick="salvarMaterial()">Salvar</button>
         <button class="btn-cancelar-modal" onclick="fecharModalMaterial()">Cancelar</button>
       </div>
@@ -430,6 +443,7 @@
     document.getElementById('mat-tipo').value = 'documento';
     document.getElementById('mat-url').value = '';
     document.getElementById('mat-descricao').value = '';
+    document.getElementById('mat-conteudo').value = '';
     document.getElementById('modal-material').classList.add('open');
   }
 
@@ -450,7 +464,8 @@
       categoria: document.getElementById('mat-categoria').value.trim() || null,
       tipo: document.getElementById('mat-tipo').value,
       url: url,
-      descricao: document.getElementById('mat-descricao').value.trim() || null
+      descricao: document.getElementById('mat-descricao').value.trim() || null,
+      conteudo: document.getElementById('mat-conteudo').value.trim() || null
     };
     try{
       await fetch(SUPABASE_URL + '/rest/v1/materiais', {
@@ -476,6 +491,55 @@
       carregarMateriais();
     } catch(e){
       alert('Não foi possível remover. Tente novamente.');
+    }
+  }
+
+  var N8N_WEBHOOK_RESUMIR_MATERIAL = 'https://psi3ana.app.n8n.cloud/webhook/resumir-material';
+
+  async function processarPdfMaterial(input){
+    const file = input.files[0];
+    if(!file) return;
+    const status = document.getElementById('mat-pdf-status');
+    status.className = 'mat-pdf-status';
+    status.textContent = '📄 Lendo o PDF...';
+
+    try{
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+      let textoCompleto = '';
+      const totalPaginas = pdf.numPages;
+      status.textContent = `📄 Lendo ${totalPaginas} páginas...`;
+
+      for(let i = 1; i <= totalPaginas; i++){
+        const pagina = await pdf.getPage(i);
+        const conteudo = await pagina.getTextContent();
+        const textoPagina = conteudo.items.map(item => item.str).join(' ').replace(/\s+/g, ' ');
+        textoCompleto += textoPagina + '\n';
+      }
+
+      status.textContent = '🧠 Gerando resumo com IA...';
+
+      const resposta = await fetch(N8N_WEBHOOK_RESUMIR_MATERIAL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: textoCompleto, titulo: document.getElementById('mat-titulo').value || file.name })
+      });
+      const dados = await resposta.json();
+
+      if(dados && dados.resumo){
+        document.getElementById('mat-conteudo').value = dados.resumo;
+        status.className = 'mat-pdf-status ok';
+        status.textContent = '✓ Resumo gerado! Revise antes de salvar.';
+      } else {
+        document.getElementById('mat-conteudo').value = textoCompleto.substring(0, 3000);
+        status.className = 'mat-pdf-status erro';
+        status.textContent = 'Não deu pra resumir — colei o texto bruto (revise/edite).';
+      }
+    } catch(e){
+      status.className = 'mat-pdf-status erro';
+      status.textContent = 'Não foi possível ler esse PDF. Tente colar o conteúdo manualmente.';
     }
   }
 
