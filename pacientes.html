@@ -119,6 +119,32 @@
   .page-titulo{ font-size:20px; margin:0 0 4px; color:var(--ink); font-weight:600; }
   .page-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px; }
 
+  .pac-cabecalho{ display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+  .btn-novo-paciente{
+    font-size:13px; padding:10px 20px; border-radius:20px; border:none;
+    background:var(--mocha); color:#fff; cursor:pointer; font-weight:600; white-space:nowrap;
+  }
+  .btn-novo-paciente:hover{ background:var(--mocha-deep); }
+
+  .modal-overlay-pac{
+    display:none; position:fixed; inset:0; background:rgba(44,44,44,0.35);
+    align-items:center; justify-content:center; z-index:999; padding:20px;
+  }
+  .modal-overlay-pac.open{ display:flex; }
+  .modal-card-pac{ background:#fff; border-radius:16px; padding:24px; max-width:400px; width:100%; }
+  .btn-opcao-paciente{
+    width:100%; text-align:left; background:#FEFCFB; border:1px solid var(--line);
+    border-radius:12px; padding:14px 16px; margin-bottom:10px; cursor:pointer;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .btn-opcao-paciente:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .opcao-titulo{ font-size:14px; font-weight:600; color:var(--mocha-deep); }
+  .opcao-desc{ font-size:12px; color:var(--ink-soft); }
+  .btn-cancelar-modal{
+    width:100%; font-size:13px; padding:10px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; color:var(--ink-soft); cursor:pointer; margin-top:4px;
+  }
+
   .filtro-grade-solic{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
   .filtro-campo{ display:flex; flex-direction:column; gap:5px; flex:0 0 220px; }
   .filtro-campo-largo{ flex:1 1 320px; }
@@ -268,8 +294,29 @@
     </div>
 
     <div class="breadcrumb"><a href="visao-geral.html">Início</a> / Pacientes</div>
-    <h2 class="page-titulo">Pacientes</h2>
-    <p class="page-sub">Todos os seus pacientes em um só lugar.</p>
+    <div class="pac-cabecalho">
+      <div>
+        <h2 class="page-titulo">Pacientes</h2>
+        <p class="page-sub">Todos os seus pacientes em um só lugar.</p>
+      </div>
+      <button class="btn-novo-paciente" onclick="abrirModalNovoPaciente()">+ Paciente</button>
+    </div>
+
+    <!-- Modal: novo paciente -->
+    <div class="modal-overlay-pac" id="modal-novo-paciente">
+      <div class="modal-card-pac">
+        <h2 style="font-size:16px; margin-bottom:16px;">Novo paciente</h2>
+        <button class="btn-opcao-paciente" onclick="window.location.href='cadastro-paciente_7_3.html'">
+          <span class="opcao-titulo">✎ Cadastro manual</span>
+          <span class="opcao-desc">Preencher os dados da paciente do zero.</span>
+        </button>
+        <button class="btn-opcao-paciente" onclick="window.location.href='anamnese_10.html'">
+          <span class="opcao-titulo">📄 Importar anamnese</span>
+          <span class="opcao-desc">A IA extrai os dados automaticamente do documento.</span>
+        </button>
+        <button class="btn-cancelar-modal" onclick="fecharModalNovoPaciente()">Cancelar</button>
+      </div>
+    </div>
 
     <div class="filtro-grade-solic">
       <div class="filtro-campo filtro-campo-largo">
@@ -438,6 +485,13 @@
       alert('Não foi possível conectar ao servidor. Tente novamente.');
     }
     renderPacientes();
+  }
+
+  function abrirModalNovoPaciente(){
+    document.getElementById('modal-novo-paciente').classList.add('open');
+  }
+  function fecharModalNovoPaciente(){
+    document.getElementById('modal-novo-paciente').classList.remove('open');
   }
 
   carregarPacientes();
