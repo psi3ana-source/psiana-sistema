@@ -1506,7 +1506,8 @@
   }
 
   function entrarNoApp(){
-    document.getElementById('nome-paciente').textContent = sessionStorage.getItem('psiana_portal_nome') || fakePaciente.nome;
+    var nomeCompletoSalvo = sessionStorage.getItem('psiana_portal_nome') || fakePaciente.nome;
+    document.getElementById('nome-paciente').textContent = nomeCompletoSalvo.trim().split(' ')[0];
     verificarAvaliacaoPendente();
     renderTarefasPreview();
     renderSessoes();
@@ -1672,24 +1673,53 @@
     return new Date(parseInt(pd[2]), parseInt(pd[1]) - 1, parseInt(pd[0]), parseInt(ph[0]), parseInt(ph[1]));
   }
 
-  function popularSelectSessoes(){
-    var agora = new Date(2026, 6, 3, 9, 0); // referência de "agora" para a demonstração
-    var limiteMinimo = new Date(agora.getTime() + 12 * 60 * 60 * 1000);
-    var opcoes = fakeSessoes.filter(function(s){
-      if(s.status !== 'agendada') return false;
-      var dt = parseDataHora(s.data, s.hora);
-      if(dt.getMonth() !== agora.getMonth() || dt.getFullYear() !== agora.getFullYear()) return false;
-      if(dt < limiteMinimo) return false;
-      return true;
-    });
+  async function popularSelectSessoes(){
     var select = document.getElementById('ajuste-sessao');
-    if(opcoes.length === 0){
-      select.innerHTML = '<option value="">Nenhuma sessão disponível para ajuste</option>';
+    var pacienteId = sessionStorage.getItem('psiana_portal_paciente_id');
+
+    if(!pacienteId){
+      // Sem login real — mantém a lista fake, só pra visualização/demo
+      var agora = new Date(2026, 6, 3, 9, 0);
+      var limiteMinimo = new Date(agora.getTime() + 12 * 60 * 60 * 1000);
+      var opcoes = fakeSessoes.filter(function(s){
+        if(s.status !== 'agendada') return false;
+        var dt = parseDataHora(s.data, s.hora);
+        if(dt.getMonth() !== agora.getMonth() || dt.getFullYear() !== agora.getFullYear()) return false;
+        if(dt < limiteMinimo) return false;
+        return true;
+      });
+      if(opcoes.length === 0){
+        select.innerHTML = '<option value="">Nenhuma sessão disponível para ajuste</option>';
+        return;
+      }
+      select.innerHTML = opcoes.map(function(s){
+        return '<option value="' + s.data + '">Encontro ' + s.encontro + ' · ' + s.data + ' · ' + s.hora.replace(':', 'h') + '</option>';
+      }).join('');
       return;
     }
-    select.innerHTML = opcoes.map(function(s){
-      return '<option value="' + s.data + '">Encontro ' + s.encontro + ' · ' + s.data + ' · ' + s.hora.replace(':', 'h') + '</option>';
-    }).join('');
+
+    try{
+      var agoraISO = new Date().toISOString();
+      var r = await fetch(
+        SUPABASE_URL + '/rest/v1/sessoes?paciente_id=eq.' + pacienteId +
+        '&status=in.(agendada,confirmada)&horario_inicio=gte.' + agoraISO +
+        '&select=id,data_sessao,horario_inicio&order=horario_inicio.asc',
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
+      );
+      var sessoesReais = await r.json();
+      if(!Array.isArray(sessoesReais) || sessoesReais.length === 0){
+        select.innerHTML = '<option value="">Nenhuma sessão disponível para ajuste</option>';
+        return;
+      }
+      select.innerHTML = sessoesReais.map(function(s){
+        var dt = new Date(s.horario_inicio);
+        var dataFmt = s.data_sessao.split('-').reverse().join('/');
+        var horaFmt = String(dt.getHours()).padStart(2,'0') + 'h' + String(dt.getMinutes()).padStart(2,'0');
+        return '<option value="' + s.id + '">Sessão · ' + dataFmt + ' · ' + horaFmt + '</option>';
+      }).join('');
+    } catch(e){
+      select.innerHTML = '<option value="">Não foi possível carregar suas sessões</option>';
+    }
   }
 
   function atualizarLimiteAjuste(){
@@ -1841,8 +1871,10 @@
       var acao = document.getElementById('ajuste-acao').value;
       var sessaoSelect = document.getElementById('ajuste-sessao');
       var sessaoTexto = sessaoSelect.options[sessaoSelect.selectedIndex] ? sessaoSelect.options[sessaoSelect.selectedIndex].text : '';
+      var sessaoIdReal = sessaoSelect.value ? parseInt(sessaoSelect.value) : null;
       item.titulo = (acao === 'cancelar' ? 'Cancelamento' : 'Remarcação') + ' · ' + sessaoTexto;
       payloadReal.acao = acao;
+      payloadReal.sessao_id = sessaoIdReal;
       payloadReal.justificativa = document.getElementById('ajuste-justificativa').value + ' (sessão de referência: ' + sessaoTexto + ')';
       if(acao === 'remarcar' && horarioEscolhido){
         var dataFmt = horarioEscolhido.data.split('-').reverse().join('/');
