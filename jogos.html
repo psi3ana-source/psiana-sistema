@@ -158,6 +158,9 @@
   .mat-card-rodape{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
   .mat-link{ font-size:12.5px; color:var(--mocha); text-decoration:none; font-weight:600; }
   .mat-link:hover{ color:var(--rose); }
+  .mat-acoes-card{ display:flex; gap:12px; align-items:center; }
+  .mat-editar{ font-size:11.5px; color:var(--mocha); background:none; border:none; cursor:pointer; font-weight:600; }
+  .mat-editar:hover{ color:var(--rose); }
   .mat-excluir{ font-size:11.5px; color:var(--alerta); background:none; border:none; cursor:pointer; }
 
   .modal-overlay-pac{
@@ -322,7 +325,7 @@
     <!-- Modal: novo material -->
     <div class="modal-overlay-pac" id="modal-material">
       <div class="modal-card-pac">
-        <h2 style="font-size:16px; margin-bottom:16px;">Adicionar material</h2>
+        <h2 id="modal-titulo-material" style="font-size:16px; margin-bottom:16px;">Adicionar material</h2>
         <div class="field-mat">
           <label>Título</label>
           <input type="text" id="mat-titulo" placeholder="Ex: Como lidar com crises de ansiedade">
@@ -452,7 +455,10 @@
         (m.descricao ? '<div class="mat-descricao">' + m.descricao + '</div>' : '') +
         '<div class="mat-card-rodape">' +
           '<a class="mat-link" href="' + m.url + '" target="_blank" rel="noopener">Abrir →</a>' +
-          '<button class="mat-excluir" onclick="excluirMaterial(' + m.id + ')">Remover</button>' +
+          '<div class="mat-acoes-card">' +
+            '<button class="mat-editar" onclick="abrirModalEditar(' + m.id + ')">Editar</button>' +
+            '<button class="mat-excluir" onclick="excluirMaterial(' + m.id + ')">Remover</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -461,7 +467,11 @@
   var conteudoPendentePdf = null;
   var linkPendenteParaResumo = null;
 
+  var materialEmEdicaoId = null;
+
   function abrirModalMaterial(){
+    materialEmEdicaoId = null;
+    document.getElementById('modal-titulo-material').textContent = 'Adicionar material';
     document.getElementById('mat-titulo').value = '';
     document.getElementById('mat-categoria').value = '';
     document.getElementById('mat-tipo').value = 'documento';
@@ -469,6 +479,25 @@
     document.getElementById('mat-url').value = '';
     document.getElementById('mat-descricao').value = '';
     document.getElementById('mat-conteudo').value = '';
+    document.getElementById('mat-pdf-status').textContent = '';
+    document.getElementById('mat-link-status').textContent = '';
+    conteudoPendentePdf = null;
+    linkPendenteParaResumo = null;
+    document.getElementById('modal-material').classList.add('open');
+  }
+
+  function abrirModalEditar(id){
+    var m = todosMateriais.find(function(x){ return x.id === id; });
+    if(!m) return;
+    materialEmEdicaoId = id;
+    document.getElementById('modal-titulo-material').textContent = 'Editar material';
+    document.getElementById('mat-titulo').value = m.titulo || '';
+    document.getElementById('mat-categoria').value = m.categoria || '';
+    document.getElementById('mat-tipo').value = m.tipo || 'documento';
+    document.getElementById('mat-modo-resumo').value = 'geral';
+    document.getElementById('mat-url').value = m.url || '';
+    document.getElementById('mat-descricao').value = m.descricao || '';
+    document.getElementById('mat-conteudo').value = m.conteudo || '';
     document.getElementById('mat-pdf-status').textContent = '';
     document.getElementById('mat-link-status').textContent = '';
     conteudoPendentePdf = null;
@@ -499,16 +528,28 @@
       status_resumo: temResumoPendente ? 'processando' : 'manual'
     };
     try{
-      var resposta = await fetch(SUPABASE_URL + '/rest/v1/materiais', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
-          Prefer: 'return=representation'
-        },
-        body: JSON.stringify(payload)
-      });
+      var resposta;
+      if(materialEmEdicaoId){
+        resposta = await fetch(SUPABASE_URL + '/rest/v1/materiais?id=eq.' + materialEmEdicaoId, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+            Prefer: 'return=representation'
+          },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        resposta = await fetch(SUPABASE_URL + '/rest/v1/materiais', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+            Prefer: 'return=representation'
+          },
+          body: JSON.stringify(payload)
+        });
+      }
       var novo = await resposta.json();
-      var novoId = novo && novo[0] && novo[0].id;
+      var novoId = materialEmEdicaoId || (novo && novo[0] && novo[0].id);
 
       // Dispara o resumo em segundo plano — não espera a resposta pronta
       if(novoId && conteudoPendentePdf){
@@ -527,6 +568,7 @@
 
       conteudoPendentePdf = null;
       linkPendenteParaResumo = null;
+      materialEmEdicaoId = null;
       fecharModalMaterial();
       carregarMateriais();
     } catch(e){
