@@ -186,6 +186,12 @@
     background:#FEFCFB; color:var(--mocha); cursor:pointer; margin-top:6px;
   }
   .btn-gerar-link:hover{ background:var(--rose-soft); }
+  .mat-indice-resultado{ max-height:220px; overflow-y:auto; margin-top:8px; background:#FEFCFB; border:1px solid var(--line); border-radius:8px; padding:8px 10px; display:none; }
+  .mat-indice-resultado.show{ display:block; }
+  .mat-indice-item{ display:flex; justify-content:space-between; gap:8px; font-size:11.5px; color:var(--ink); padding:4px 0; border-bottom:1px solid var(--bg); }
+  .mat-indice-item:last-child{ border-bottom:none; }
+  .mat-indice-item b{ color:var(--mocha); cursor:pointer; }
+  .mat-indice-item .pag{ color:var(--ink-soft); flex-shrink:0; }
   .mat-pdf-status.erro{ color:var(--alerta); }
   .mat-pdf-status.ok{ color:var(--ok); }
 
@@ -361,8 +367,15 @@
           <textarea id="mat-descricao" rows="2" placeholder="Um resumo curto sobre o conteúdo…"></textarea>
         </div>
         <div class="field-mat">
+          <label>Páginas (opcional) — deixe em branco para ler o PDF inteiro</label>
+          <input type="text" id="mat-pdf-paginas" placeholder="Ex: 15-42 (só essas páginas serão lidas)">
+        </div>
+        <div class="field-mat">
           <label>PDF (opcional) — gera o resumo automaticamente</label>
-          <input type="file" id="mat-pdf-input" accept="application/pdf" onchange="processarPdfMaterial(this)">
+          <input type="file" id="mat-pdf-input" accept="application/pdf">
+          <button type="button" class="btn-gerar-link" onclick="analisarIndicePdf()">🔍 Ver índice com páginas</button>
+          <button type="button" class="btn-gerar-link" onclick="processarPdfMaterial(document.getElementById('mat-pdf-input'))">📄 Gerar resumo deste PDF/intervalo</button>
+          <div id="mat-indice-resultado" class="mat-indice-resultado"></div>
           <span id="mat-pdf-status" class="mat-pdf-status"></span>
         </div>
         <div class="field-mat">
@@ -480,6 +493,7 @@
     document.getElementById('mat-descricao').value = '';
     document.getElementById('mat-conteudo').value = '';
     document.getElementById('mat-pdf-status').textContent = '';
+    document.getElementById('mat-pdf-paginas').value = '';
     document.getElementById('mat-link-status').textContent = '';
     conteudoPendentePdf = null;
     linkPendenteParaResumo = null;
@@ -499,6 +513,7 @@
     document.getElementById('mat-descricao').value = m.descricao || '';
     document.getElementById('mat-conteudo').value = m.conteudo || '';
     document.getElementById('mat-pdf-status').textContent = '';
+    document.getElementById('mat-pdf-paginas').value = '';
     document.getElementById('mat-link-status').textContent = '';
     conteudoPendentePdf = null;
     linkPendenteParaResumo = null;
@@ -592,6 +607,62 @@
 
   var N8N_WEBHOOK_RESUMIR_MATERIAL = 'https://psi3ana.app.n8n.cloud/webhook/resumir-material';
 
+  async function analisarIndicePdf(){
+    const input = document.getElementById('mat-pdf-input');
+    const file = input.files[0];
+    const resultadoDiv = document.getElementById('mat-indice-resultado');
+    if(!file){
+      alert('Escolha um PDF primeiro.');
+      return;
+    }
+    resultadoDiv.classList.add('show');
+    resultadoDiv.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);">Lendo os marcadores do PDF...</span>';
+
+    try{
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const outline = await pdf.getOutline();
+
+      if(!outline || outline.length === 0){
+        resultadoDiv.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);">Esse PDF não tem marcadores/índice de navegação salvos — não dá pra automatizar essa parte. Vai precisar contar as páginas manualmente mesmo.</span>';
+        return;
+      }
+
+      const itens = [];
+      for(const item of outline){
+        try{
+          let destino = item.dest;
+          if(typeof destino === 'string'){
+            destino = await pdf.getDestination(destino);
+          }
+          if(destino && destino[0]){
+            const indicePagina = await pdf.getPageIndex(destino[0]);
+            itens.push({ titulo: item.title, pagina: indicePagina + 1 });
+          }
+        } catch(erroItem){
+          // ignora itens que não conseguirem resolver página
+        }
+      }
+
+      if(itens.length === 0){
+        resultadoDiv.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);">Não consegui calcular as páginas a partir dos marcadores. Conte manualmente.</span>';
+        return;
+      }
+
+      resultadoDiv.innerHTML = itens.map(function(it, idx){
+        var paginaFim = (idx < itens.length - 1) ? (itens[idx + 1].pagina - 1) : '?';
+        return '<div class="mat-indice-item">' +
+          '<b onclick="document.getElementById(\'mat-pdf-paginas\').value=\'' + it.pagina + '-' + paginaFim + '\'; document.getElementById(\'mat-titulo\').value=\'' + it.titulo.replace(/'/g,"\\'") + '\';">' + it.titulo + '</b>' +
+          '<span class="pag">p. ' + it.pagina + '</span>' +
+        '</div>';
+      }).join('') + '<p style="font-size:10.5px;color:var(--ink-soft);margin-top:8px;">Clique num item pra preencher automaticamente o título e o intervalo de páginas.</p>';
+    } catch(e){
+      resultadoDiv.innerHTML = '<span style="font-size:12px;color:var(--alerta);">Não foi possível ler os marcadores desse PDF.</span>';
+      console.warn('Erro ao ler índice:', e);
+    }
+  }
+
   async function processarPdfMaterial(input){
     const file = input.files[0];
     if(!file) return;
@@ -636,9 +707,21 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const totalPaginas = pdf.numPages;
-      status.textContent = `📄 Lendo ${totalPaginas} páginas...`;
-      for(let i = 1; i <= totalPaginas; i++){
+      const totalPaginasDoc = pdf.numPages;
+
+      // Se um intervalo de páginas foi informado, lê só ele — senão, lê o PDF inteiro
+      const intervaloTexto = document.getElementById('mat-pdf-paginas').value.trim();
+      let paginaInicial = 1, paginaFinal = totalPaginasDoc;
+      if(intervaloTexto){
+        const partes = intervaloTexto.split('-').map(function(n){ return parseInt(n.trim()); });
+        if(partes.length === 2 && !isNaN(partes[0]) && !isNaN(partes[1])){
+          paginaInicial = Math.max(1, partes[0]);
+          paginaFinal = Math.min(totalPaginasDoc, partes[1]);
+        }
+      }
+
+      status.textContent = `📄 Lendo páginas ${paginaInicial} a ${paginaFinal}...`;
+      for(let i = paginaInicial; i <= paginaFinal; i++){
         const pagina = await pdf.getPage(i);
         const conteudo = await pagina.getTextContent();
         const textoPagina = conteudo.items.map(item => item.str).join(' ').replace(/\s+/g, ' ');
