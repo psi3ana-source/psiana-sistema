@@ -573,7 +573,16 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ material_id: novoId, texto: conteudoPendentePdf, titulo: titulo, modo_resumo: document.getElementById('mat-modo-resumo').value })
         }).catch(function(e){ console.warn('Erro ao disparar resumo (PDF):', e); });
-      } else if(novoId && linkPendenteParaResumo){
+      } else if(novoId && payload.status_resumo === 'manual' && payload.conteudo){
+        // Conteúdo já está pronto (digitado manualmente) — gera as impressões digitais agora mesmo
+        fetch(N8N_WEBHOOK_GERAR_EMBEDDINGS, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ material_id: novoId, texto: payload.conteudo, titulo: titulo, categoria: payload.categoria, secao: SECAO_ATUAL })
+        }).catch(function(e){ console.warn('Erro ao gerar embeddings:', e); });
+      }
+
+      if(novoId && linkPendenteParaResumo){
         fetch(N8N_WEBHOOK_RESUMIR_LINK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -606,6 +615,7 @@
   }
 
   var N8N_WEBHOOK_RESUMIR_MATERIAL = 'https://psi3ana.app.n8n.cloud/webhook/resumir-material';
+  var N8N_WEBHOOK_GERAR_EMBEDDINGS = 'https://psi3ana.app.n8n.cloud/webhook/gerar-embeddings-material';
 
   async function analisarIndicePdf(){
     const input = document.getElementById('mat-pdf-input');
