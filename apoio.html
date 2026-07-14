@@ -584,10 +584,14 @@
 
       if(novoId && linkPendenteParaResumo){
         var conteudoJaExiste = payload.conteudo && payload.conteudo.trim().length > 0;
+        var payloadLink = { material_id: novoId, url: linkPendenteParaResumo, titulo: titulo, modo_resumo: document.getElementById('mat-modo-resumo').value };
+        if(conteudoJaExiste){
+          payloadLink.conteudo = payload.conteudo;
+        }
         fetch(N8N_WEBHOOK_RESUMIR_LINK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ material_id: novoId, url: linkPendenteParaResumo, titulo: titulo, modo_resumo: document.getElementById('mat-modo-resumo').value, conteudo: conteudoJaExiste ? payload.conteudo : null })
+          body: JSON.stringify(payloadLink)
         }).catch(function(e){ console.warn('Erro ao disparar resumo (link):', e); });
       }
 
