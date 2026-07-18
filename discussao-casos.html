@@ -127,9 +127,14 @@
   .ic-evolucao{ background:#E1F0F5; color:#0288A8; }
 
   .card-content{
-    font-size:13px; line-height:1.7; color:var(--ink); white-space:pre-wrap;
+    font-size:13px; line-height:1.65; color:var(--ink);
     word-break:break-word; max-height:460px; overflow-y:auto;
   }
+  .card-content p{ margin:0 0 10px; }
+  .card-content p:last-child{ margin-bottom:0; }
+  .card-content ul, .card-content ol{ margin:0 0 10px; padding-left:20px; }
+  .card-content li{ margin-bottom:4px; }
+  .card-content strong{ color:var(--mocha-deep); }
 
   .card-badge{
     display:inline-block; padding:5px 12px; border-radius:8px; font-size:11px; font-weight:600;
@@ -419,28 +424,30 @@
     const btn = document.getElementById('analyzeBtn');
     btn.disabled = true;
 
-    fetch(N8N_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        paciente_id: pacienteAtual.id,
-        paciente_nome: pacienteAtual.nome_completo,
-        sessao_id: sessaoAtual.id,
-        data_sessao: sessaoAtual.data_sessao,
-        transcricao_sessao: transcricao,
-        notas_clinicas: notasClinicas,
-        data_analise: new Date().toISOString()
+    // Aguarda um instante para garantir que o loading renderize antes do fetch começar
+    setTimeout(() => {
+      fetch(N8N_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paciente_id: pacienteAtual.id,
+          sessao_id: sessaoAtual.id,
+          data_sessao: sessaoAtual.data_sessao,
+          transcricao_sessao: transcricao,
+          notas_clinicas: notasClinicas,
+          data_analise: new Date().toISOString()
+        })
       })
-    })
-    .then(res => res.json())
-    .then(data => exibirResultados(data))
-    .catch(err => {
-      console.error('Erro:', err);
-      mostrarErro('Erro ao analisar caso. Tente novamente.');
-    })
-    .finally(() => {
-      btn.disabled = false;
-    });
+      .then(res => res.json())
+      .then(data => exibirResultados(data))
+      .catch(err => {
+        console.error('Erro:', err);
+        mostrarErro('Erro ao analisar caso. Tente novamente.');
+      })
+      .finally(() => {
+        btn.disabled = false;
+      });
+    }, 50);
   }
 
   function mostrarCarregando() {
@@ -468,6 +475,45 @@
     }, 500);
   }
 
+  // Converte markdown simples (negrito, listas, títulos, quebras de linha) em HTML legível
+  function formatarTexto(texto) {
+    if (!texto) return '(vazio)';
+
+    // Escapa HTML primeiro
+    let html = String(texto)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Negrito **texto**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // Divide em blocos por linha dupla (parágrafos)
+    const blocos = html.split(/\n\n+/);
+
+    const blocosHtml = blocos.map(bloco => {
+      const linhas = bloco.split('\n').filter(l => l.trim() !== '');
+
+      // Detecta se o bloco inteiro é uma lista (todas as linhas começam com - ou número.)
+      const ehListaMarcador = linhas.length > 0 && linhas.every(l => /^\s*[-•]\s+/.test(l));
+      const ehListaNumerada = linhas.length > 0 && linhas.every(l => /^\s*\d+[\.\)]\s+/.test(l));
+
+      if (ehListaMarcador) {
+        const itens = linhas.map(l => `<li>${l.replace(/^\s*[-•]\s+/, '')}</li>`).join('');
+        return `<ul>${itens}</ul>`;
+      }
+      if (ehListaNumerada) {
+        const itens = linhas.map(l => `<li>${l.replace(/^\s*\d+[\.\)]\s+/, '')}</li>`).join('');
+        return `<ol>${itens}</ol>`;
+      }
+
+      // Parágrafo normal — junta linhas com <br>
+      return `<p>${linhas.join('<br>')}</p>`;
+    });
+
+    return blocosHtml.join('');
+  }
+
   function exibirResultados(data) {
     const container = document.getElementById('resultsContainer');
 
@@ -483,17 +529,16 @@
             <div class="icon ic-soap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h14v10H9l-3.5 3.5v-3.5H4v-10Z"/></svg></div>
             <h2>SOAP estruturado</h2>
           </div>
-          <div class="card-content"><strong>Subjetivo:</strong>
-${soap.subjetivo || '(vazio)'}
-
-<strong>Objetivo:</strong>
-${soap.objetivo || '(vazio)'}
-
-<strong>Análise:</strong>
-${soap.analise || '(vazio)'}
-
-<strong>Plano:</strong>
-${soap.plano || '(vazio)'}</div>
+          <div class="card-content">
+            <p><strong>Subjetivo</strong></p>
+            ${formatarTexto(soap.subjetivo)}
+            <p><strong>Objetivo</strong></p>
+            ${formatarTexto(soap.objetivo)}
+            <p><strong>Análise</strong></p>
+            ${formatarTexto(soap.analise)}
+            <p><strong>Plano</strong></p>
+            ${formatarTexto(soap.plano)}
+          </div>
           <span class="card-badge">✓ Salvo no prontuário</span>
         </div>
 
@@ -502,7 +547,7 @@ ${soap.plano || '(vazio)'}</div>
             <div class="icon ic-conceituacao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg></div>
             <h2>Conceituação de caso</h2>
           </div>
-          <div class="card-content">${conceituacao}</div>
+          <div class="card-content">${formatarTexto(conceituacao)}</div>
         </div>
 
         <div class="card">
@@ -510,7 +555,7 @@ ${soap.plano || '(vazio)'}</div>
             <div class="icon ic-intervencoes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg></div>
             <h2>Intervenções recomendadas</h2>
           </div>
-          <div class="card-content">${intervencoes}</div>
+          <div class="card-content">${formatarTexto(intervencoes)}</div>
         </div>
 
         <div class="card">
@@ -518,7 +563,7 @@ ${soap.plano || '(vazio)'}</div>
             <div class="icon ic-evolucao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/></svg></div>
             <h2>Evolução & alertas</h2>
           </div>
-          <div class="card-content">${evolucao}</div>
+          <div class="card-content">${formatarTexto(evolucao)}</div>
         </div>
       </div>
     `;
