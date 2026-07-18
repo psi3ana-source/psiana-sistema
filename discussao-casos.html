@@ -315,6 +315,8 @@
   }
 
   const N8N_WEBHOOK = 'https://psi3ana.app.n8n.cloud/webhook/discussao-casos';
+  const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
   let pacientes = [];
   let pacienteAtual = null;
   let sessoes = [];
@@ -326,10 +328,10 @@
 
   async function carregarPacientes() {
     try {
-      const res = await fetch('https://gjzzbnkhipfsbmpxbzur.supabase.co/rest/v1/pacientes?select=id,nome_completo,status&status=eq.ativo&order=nome_completo', {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/pacientes?select=id,nome_completo,status&status=eq.ativo&order=nome_completo', {
         headers: {
-          'apikey': window.SUPABASE_KEY || '',
-          'Authorization': 'Bearer ' + (window.SUPABASE_KEY || '')
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
         }
       });
       pacientes = await res.json();
@@ -366,10 +368,10 @@
 
   async function carregarSessoes(pacienteId) {
     try {
-      const res = await fetch(`https://gjzzbnkhipfsbmpxbzur.supabase.co/rest/v1/sessoes?select=id,data_sessao,horario_inicio,tipo_atendimento,prontuario_status&paciente_id=eq.${pacienteId}&status=eq.realizada&order=data_sessao.desc`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?select=id,data_sessao,horario_inicio,tipo_atendimento,prontuario_status&paciente_id=eq.${pacienteId}&status=eq.realizada&order=data_sessao.desc`, {
         headers: {
-          'apikey': window.SUPABASE_KEY || '',
-          'Authorization': 'Bearer ' + (window.SUPABASE_KEY || '')
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
         }
       });
       sessoes = await res.json();
