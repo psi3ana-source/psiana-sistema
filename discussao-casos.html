@@ -294,6 +294,13 @@
       <div class="button-group">
         <button class="btn-primary" id="analyzeBtn" onclick="analisarCaso()">Analisar caso</button>
         <button class="btn-secondary" onclick="limparNotas()">Limpar tudo</button>
+        <button class="btn-secondary" onclick="verHistorico()">Ver histórico de edições</button>
+      </div>
+
+      <div id="historicoPainel" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--line);">
+        <div style="font-size:13px; font-weight:600; color:var(--ink); margin-bottom:10px;">Histórico de edições desta sessão</div>
+        <div id="historicoLista"></div>
+      </div>
       </div>
     </div>
 
@@ -399,6 +406,14 @@
     const select = document.getElementById('sessao-select');
     sessaoAtual = sessoes.find(s => s.id == select.value) || null;
     document.getElementById('resultsContainer').innerHTML = '';
+    document.getElementById('historicoPainel').style.display = 'none';
+
+    if (sessaoAtual) {
+      carregarConteudoSessao(sessaoAtual.id);
+    } else {
+      document.getElementById('transcricao').value = '';
+      document.getElementById('notasClinicas').value = '';
+    }
   }
 
   function analisarCaso() {
@@ -424,32 +439,138 @@
     const btn = document.getElementById('analyzeBtn');
     btn.disabled = true;
 
-    // Aguarda um instante para garantir que o loading renderize antes do fetch começar
-    setTimeout(() => {
-      fetch(N8N_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paciente_id: pacienteAtual.id,
-          sessao_id: sessaoAtual.id,
-          data_sessao: sessaoAtual.data_sessao,
-          transcricao_sessao: transcricao,
-          notas_clinicas: notasClinicas,
-          data_analise: new Date().toISOString()
+    // Dupla requestAnimationFrame força o navegador a pintar o loading
+    // antes de iniciarmos o fetch (mais confiável que setTimeout)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
+        try {
+          await salvarComHistorico(transcricao, notasClinicas);
+        } catch (err) {
+          console.warn('Não foi possível salvar histórico de edição:', err);
+        }
+
+        fetch(N8N_WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paciente_id: pacienteAtual.id,
+            sessao_id: sessaoAtual.id,
+            data_sessao: sessaoAtual.data_sessao,
+            transcricao_sessao: transcricao,
+            notas_clinicas: notasClinicas,
+            data_analise: new Date().toISOString()
+          })
         })
-      })
-      .then(res => res.json())
-      .then(data => exibirResultados(data))
-      .catch(err => {
-        console.error('Erro:', err);
-        mostrarErro('Erro ao analisar caso. Tente novamente.');
-      })
-      .finally(() => {
-        btn.disabled = false;
+        .then(res => res.json())
+        .then(data => exibirResultados(data))
+        .catch(err => {
+          console.error('Erro:', err);
+          mostrarErro('Erro ao analisar caso. Tente novamente.');
+        })
+        .finally(() => {
+          btn.disabled = false;
+        });
       });
-    }, 50);
+    });
   }
 
+  // Antes de sobrescrever transcrição/notas, salva a versão anterior no histórico
+  async function salvarComHistorico(novaTranscricao, novasNotas) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}&select=transcricao_sessao,notas_clinicas`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    const rows = await res.json();
+    const atual = rows[0] || {};
+
+    const registros = [];
+    if (atual.transcricao_sessao && atual.transcricao_sessao !== novaTranscricao) {
+      registros.push({ sessao_id: sessaoAtual.id, campo: 'transcricao_sessao', conteudo_anterior: atual.transcricao_sessao });
+    }
+    if (atual.notas_clinicas && atual.notas_clinicas !== novasNotas) {
+      registros.push({ sessao_id: sessaoAtual.id, campo: 'notas_clinicas', conteudo_anterior: atual.notas_clinicas });
+    }
+
+    if (registros.length > 0) {
+      await fetch(`${SUPABASE_URL}/rest/v1/sessao_notas_historico`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify(registros)
+      });
+    }
+
+    // Atualiza os valores atuais na sessão (histórico já preservou o anterior)
+    await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ transcricao_sessao: novaTranscricao, notas_clinicas: novasNotas })
+    });
+  }
+
+  // Carrega transcrição/notas já salvas para a sessão selecionada
+  async function carregarConteudoSessao(sessaoId) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoId}&select=transcricao_sessao,notas_clinicas`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      });
+      const rows = await res.json();
+      const row = rows[0] || {};
+      document.getElementById('transcricao').value = row.transcricao_sessao || '';
+      document.getElementById('notasClinicas').value = row.notas_clinicas || '';
+    } catch (err) {
+      console.error('Erro ao carregar conteúdo da sessão:', err);
+    }
+  }
+
+  // Abre painel com histórico de edições da sessão atual
+  async function verHistorico() {
+    if (!sessaoAtual) {
+      alert('Selecione uma sessão primeiro.');
+      return;
+    }
+
+    const painel = document.getElementById('historicoPainel');
+    const lista = document.getElementById('historicoLista');
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sessao_notas_historico?sessao_id=eq.${sessaoAtual.id}&order=editado_em.desc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      });
+      const historico = await res.json();
+
+      if (!historico.length) {
+        lista.innerHTML = '<p style="color:var(--ink-soft); font-size:12.5px;">Nenhuma edição anterior registrada para esta sessão.</p>';
+      } else {
+        lista.innerHTML = historico.map(h => {
+          const data = new Date(h.editado_em);
+          const dataFmt = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const campoLabel = h.campo === 'transcricao_sessao' ? 'Transcrição de sessão' : 'Notas clínicas';
+          const preview = (h.conteudo_anterior || '').substring(0, 300);
+          const truncado = (h.conteudo_anterior || '').length > 300 ? '…' : '';
+          return `
+            <div style="border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:10px; background:var(--bg);">
+              <div style="font-size:12px; font-weight:600; color:var(--mocha); margin-bottom:4px;">${campoLabel} — editado em ${dataFmt}</div>
+              <div style="font-size:12px; color:var(--ink-soft); white-space:pre-wrap;">${preview}${truncado}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      painel.style.display = painel.style.display === 'none' ? 'block' : 'none';
+    } catch (err) {
+      console.error('Erro ao carregar histórico:', err);
+      lista.innerHTML = '<p style="color:#C62828; font-size:12.5px;">Erro ao carregar histórico.</p>';
+      painel.style.display = 'block';
+    }
+  }
   function mostrarCarregando() {
     const container = document.getElementById('resultsContainer');
     const startTime = Date.now();
