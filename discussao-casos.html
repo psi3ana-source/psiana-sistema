@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discussão de Casos · PsiAna</title>
+<style>
+  :root{
+    --bg:#FAF6F5; --card:#fff; --line:#EDE4E3;
+    --mocha:#785D56; --mocha-deep:#5A453F; --rose:#C89F9D; --rose-soft:#F0E8E7;
+    --ink:#2C2C2C; --ink-soft:#999;
+    --ok:#2E7D32; --ok-bg:#E8F5E9; --alerta:#C62828; --alerta-bg:#FFEBEE; --aviso:#F57F17; --aviso-bg:#FFF8E1;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Segoe UI', Arial, sans-serif; background:var(--bg); color:var(--ink); }
+
+  .shell{ display:flex; min-height:100vh; }
+
+  /* --- Sidebar --- */
+  .sidebar{
+    width:224px; background:#fff; border-right:1px solid var(--line);
+    padding:22px 14px; display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
+  }
+  .sidebar-logo{ display:flex; justify-content:center; padding:0 0 20px; }
+  .sidebar-logo img{ width:150px; height:150px; object-fit:contain; }
+  .nav-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; padding:16px 10px 6px; }
+  .nav-label:first-of-type{ padding-top:4px; }
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:8px;
+    color:var(--ink); font-size:13.5px; cursor:pointer; text-decoration:none;
+  }
+  .nav-item svg{ width:17px; height:17px; color:var(--mocha); flex-shrink:0; }
+  .nav-item:hover{ background:var(--rose-soft); }
+  .nav-item.active{ background:var(--mocha); color:#fff; }
+  .nav-item.active svg{ color:#fff; }
+
+  /* --- Main --- */
+  .main{ flex:1; padding:32px 40px; max-width:1240px; }
+  .topo{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+  .topo h1{ font-size:21px; margin:0; color:var(--ink); font-weight:400; }
+  .topo .data{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+
+  .perfil-saudacao{ display:flex; align-items:center; gap:14px; }
+  .avatar-grande{
+    width:54px; height:54px; border-radius:50%; background:var(--rose-soft); color:var(--mocha);
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; flex-shrink:0;
+  }
+  .crp-linha{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .crp-texto{ font-size:11.5px; color:var(--ink-soft); }
+  .btn-config{
+    width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:#fff;
+    color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .btn-config:hover{ color:var(--mocha); border-color:var(--rose); }
+  .btn-config svg{ width:13px; height:13px; }
+
+  .btn-sair{
+    display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha);
+    background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px;
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; font-weight:500; flex-shrink:0;
+  }
+  .btn-sair:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-sair svg{ width:15px; height:15px; }
+
+  /* --- Paciente Selector --- */
+  .paciente-selector{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px 20px; margin-bottom:16px; display:flex; gap:16px; align-items:center;
+  }
+  .paciente-selector label{ font-size:13px; font-weight:600; color:var(--ink); flex-shrink:0; }
+  .paciente-selector select{
+    flex:1; padding:9px 12px; border:1px solid var(--line); border-radius:8px;
+    font-family:inherit; font-size:13px; color:var(--ink); background:#fff;
+    cursor:pointer;
+  }
+  .paciente-selector select:focus{ outline:none; border-color:var(--mocha); }
+
+  /* --- Inputs Panel --- */
+  .inputs-panel{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:20px; margin-bottom:16px;
+  }
+  .inputs-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;
+  }
+  .input-group{ display:flex; flex-direction:column; }
+  .input-label{ font-size:13px; font-weight:600; color:var(--ink); margin-bottom:8px; }
+  .input-hint{ font-size:11px; color:var(--ink-soft); margin-top:4px; }
+
+  textarea{
+    width:100%; min-height:260px; padding:12px; border:1px solid var(--line); border-radius:8px;
+    font-family:inherit; font-size:13px; color:var(--ink); background:var(--bg);
+    resize:vertical;
+  }
+  textarea:focus{ outline:none; border-color:var(--mocha); }
+
+  .button-group{ display:flex; gap:10px; }
+  .btn-primary{
+    font-size:13px; font-weight:600; color:#fff; white-space:nowrap;
+    background:var(--mocha); border:none; border-radius:8px; padding:9px 18px;
+    cursor:pointer; font-family:inherit;
+  }
+  .btn-primary:hover:not(:disabled){ background:var(--mocha-deep); }
+  .btn-primary:disabled{ opacity:0.6; cursor:not-allowed; }
+
+  .btn-secondary{
+    font-size:13px; font-weight:500; color:var(--mocha); white-space:nowrap;
+    background:#fff; border:1px solid var(--line); border-radius:8px; padding:9px 18px;
+    cursor:pointer; font-family:inherit;
+  }
+  .btn-secondary:hover{ background:var(--rose-soft); border-color:var(--rose); }
+
+  /* --- Results Cards --- */
+  .cards-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; margin-top:16px; }
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:20px; display:flex; flex-direction:column;
+  }
+  .card-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .card-head .icon{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .card-head .icon svg{ width:17px; height:17px; }
+  .card-head h2{ font-size:14px; margin:0; color:var(--ink); font-weight:600; }
+
+  .ic-soap{ background:#E8F5E9; color:#2E7D32; }
+  .ic-conceituacao{ background:#F0E8E7; color:#785D56; }
+  .ic-intervencoes{ background:#FFF8E1; color:#F57F17; }
+  .ic-evolucao{ background:#E1F0F5; color:#0288A8; }
+
+  .card-content{
+    font-size:13px; line-height:1.7; color:var(--ink); white-space:pre-wrap;
+    word-break:break-word; max-height:460px; overflow-y:auto;
+  }
+
+  .card-badge{
+    display:inline-block; padding:5px 12px; border-radius:8px; font-size:11px; font-weight:600;
+    margin-top:12px; background:var(--ok-bg); color:var(--ok); width:fit-content;
+  }
+
+  /* --- Loading --- */
+  .loading-state{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:12px; padding:48px 20px; text-align:center;
+  }
+  .spinner{
+    width:30px; height:30px; border:2px solid var(--line); border-top-color:var(--mocha);
+    border-radius:50%; animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loading-text{ font-size:13px; color:var(--ink-soft); }
+  .loading-time{ font-size:11px; color:var(--ink-soft); margin-top:4px; }
+
+  .empty-state{ text-align:center; padding:40px 20px; color:var(--ink-soft); }
+
+  @media (max-width: 980px){
+    .cards-grid{ grid-template-columns:1fr; }
+    .inputs-grid{ grid-template-columns:1fr; }
+  }
+  @media (max-width: 720px){
+    .sidebar{ display:none; }
+    .main{ padding:24px 18px; }
+    .cards-grid{ grid-template-columns:1fr; }
+    .topo{ flex-direction:column; }
+    .perfil-saudacao{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="selo.png" alt="PsiAna" onerror="this.onerror=null; this.src='icone_selo.png';">
+    </div>
+
+    <div class="nav-label">Rotinas</div>
+    <a class="nav-item" href="visao-geral.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+      Início
+    </a>
+    <a class="nav-item" href="pacientes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
+      Pacientes
+    </a>
+    <a class="nav-item" href="agenda.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
+      Agenda
+    </a>
+    <a class="nav-item" href="solicitacoes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v11H8.5L4 19.5v-15Z"/><path d="M8 9h8M8 12.3h5"/></svg>
+      Solicitações
+    </a>
+
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="financeiro.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h14a3 3 0 0 1 3 3v7a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5v-10Z"/><path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h9"/><circle cx="16.5" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
+      Financeiro
+    </a>
+    <a class="nav-item" href="relatorios.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12V3.5Z"/><path d="M15.5 3.9A8.5 8.5 0 0 1 20.1 8.5H15.5V3.9Z"/></svg>
+      Relatórios
+    </a>
+
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item" href="psicoeducacao.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5c2.5-1.3 5-1.3 7.5 0v14c-2.5-1.3-5-1.3-7.5 0v-14Z"/><path d="M19.5 5.5c-2.5-1.3-5-1.3-7.5 0v14c2.5-1.3 5-1.3 7.5 0v-14Z"/></svg>
+      Psicoeducação
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6M8 6.5h8l-1.3 4.3 3.3 6.7a1.5 1.5 0 0 1-1.35 2.15H7.35A1.5 1.5 0 0 1 6 17.5l3.3-6.7L8 6.5Z"/></svg>
+      Testes
+    </a>
+    <a class="nav-item" href="atividades.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>
+      Atividades
+    </a>
+    <a class="nav-item" href="apoio.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5"/><circle cx="12" cy="15.7" r="0.6" fill="currentColor" stroke="none"/></svg>
+      Apoio
+    </a>
+
+    <div class="nav-label">Clínica Avançada</div>
+    <a class="nav-item active" href="discussao-casos.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5h11v7H8l-3 3v-3H3v-7Z"/><path d="M11 10.5h10v6h-3v3l-3-3h-4v-6Z"/></svg>
+      Discussão de Casos
+    </a>
+    <a class="nav-item" href="supervisao.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+      Supervisão
+    </a>
+    <a class="nav-item" href="aprimoramento-clinico.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.4 3.1L16.5 7l-3.1 1.4L12 11.5l-1.4-3.1L7.5 7l3.1-.9L12 3Z"/><path d="M5.5 14l.8 1.8L8 16.5l-1.7.8-.8 1.8-.8-1.8L3 16.5l1.7-.7.8-1.8Z"/><path d="M17.5 13.5l.9 2 2 .9-2 .9-.9 2-.9-2-2-.9 2-.9.9-2Z"/></svg>
+      Aprimoramento Clínico
+    </a>
+  </div>
+
+  <!-- ===== CONTEÚDO ===== -->
+  <div class="main">
+    <div class="topo">
+      <div class="perfil-saudacao">
+        <div class="avatar-grande">AC</div>
+        <div>
+          <h1 id="saudacao">Bom dia, Ana</h1>
+          <div class="data" id="dataHoje">Sábado, 04 de julho</div>
+          <div class="crp-linha">
+            <span class="crp-texto">CRP 12/28631</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-sair" onclick="sair()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Sair
+      </button>
+    </div>
+
+    <h2 style="font-size:16px; font-weight:600; color:var(--ink); margin:16px 0 4px;">Discussão de casos</h2>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;">Análise focada no paciente: conceituação, dinâmica do caso, padrões e formação TCC/TFC/DBT.</p>
+
+    <!-- PACIENTE SELECTOR -->
+    <div class="paciente-selector">
+      <label for="paciente-select">Paciente:</label>
+      <select id="paciente-select" onchange="selecionarPaciente()">
+        <option value="">-- Escolha um paciente --</option>
+      </select>
+    </div>
+
+    <!-- SESSÃO SELECTOR -->
+    <div class="paciente-selector" id="sessao-selector-wrap" style="display:none;">
+      <label for="sessao-select">Sessão:</label>
+      <select id="sessao-select" onchange="selecionarSessao()">
+        <option value="">-- Escolha uma sessão --</option>
+      </select>
+    </div>
+
+    <!-- INPUTS PANEL -->
+    <div class="inputs-panel">
+      <div class="inputs-grid">
+        <div class="input-group">
+          <label class="input-label">Transcrição de sessão</label>
+          <textarea id="transcricao" placeholder="Cola aqui a transcrição completa da sessão"></textarea>
+          <div class="input-hint">Máx. caracteres: ilimitado</div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Notas clínicas</label>
+          <textarea id="notasClinicas" placeholder="Observações clínicas: comportamentos, afeto, dinâmica observada, padrões"></textarea>
+          <div class="input-hint">Máx. caracteres: ilimitado</div>
+        </div>
+      </div>
+      <div class="button-group">
+        <button class="btn-primary" id="analyzeBtn" onclick="analisarCaso()">Analisar caso</button>
+        <button class="btn-secondary" onclick="limparNotas()">Limpar tudo</button>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="resultsContainer"></div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var agora = new Date();
+    var hora = agora.getHours();
+    var saudacao = hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite');
+    document.getElementById('saudacao').textContent = saudacao + ', Ana';
+
+    var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
+  })();
+
+  function sair(){
+    sessionStorage.removeItem('psiana_admin_logado');
+    window.location.href = 'login-psicologa.html';
+  }
+
+  const N8N_WEBHOOK = 'https://psi3ana.app.n8n.cloud/webhook/discussao-casos';
+  let pacientes = [];
+  let pacienteAtual = null;
+  let sessoes = [];
+  let sessaoAtual = null;
+
+  window.addEventListener('load', () => {
+    carregarPacientes();
+  });
+
+  async function carregarPacientes() {
+    try {
+      const res = await fetch('https://gjzzbnkhipfsbmpxbzur.supabase.co/rest/v1/pacientes?select=id,nome_completo,status&status=eq.ativo&order=nome_completo', {
+        headers: {
+          'apikey': window.SUPABASE_KEY || '',
+          'Authorization': 'Bearer ' + (window.SUPABASE_KEY || '')
+        }
+      });
+      pacientes = await res.json();
+
+      const select = document.getElementById('paciente-select');
+      pacientes.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.id;
+        option.textContent = p.nome_completo;
+        select.appendChild(option);
+      });
+    } catch (err) {
+      console.error('Erro ao carregar pacientes:', err);
+    }
+  }
+
+  function selecionarPaciente() {
+    const select = document.getElementById('paciente-select');
+    pacienteAtual = pacientes.find(p => p.id == select.value) || null;
+    sessaoAtual = null;
+    document.getElementById('resultsContainer').innerHTML = '';
+
+    const sessaoWrap = document.getElementById('sessao-selector-wrap');
+    const sessaoSelect = document.getElementById('sessao-select');
+    sessaoSelect.innerHTML = '<option value="">-- Escolha uma sessão --</option>';
+
+    if (pacienteAtual) {
+      sessaoWrap.style.display = 'flex';
+      carregarSessoes(pacienteAtual.id);
+    } else {
+      sessaoWrap.style.display = 'none';
+    }
+  }
+
+  async function carregarSessoes(pacienteId) {
+    try {
+      const res = await fetch(`https://gjzzbnkhipfsbmpxbzur.supabase.co/rest/v1/sessoes?select=id,data_sessao,horario_inicio,tipo_atendimento,prontuario_status&paciente_id=eq.${pacienteId}&status=eq.realizada&order=data_sessao.desc`, {
+        headers: {
+          'apikey': window.SUPABASE_KEY || '',
+          'Authorization': 'Bearer ' + (window.SUPABASE_KEY || '')
+        }
+      });
+      sessoes = await res.json();
+
+      const select = document.getElementById('sessao-select');
+      sessoes.forEach(s => {
+        const option = document.createElement('option');
+        option.value = s.id;
+        const data = new Date(s.data_sessao).toLocaleDateString('pt-BR');
+        const status = s.prontuario_status === 'finalizado' ? ' ✓' : '';
+        option.textContent = `${data} — ${s.tipo_atendimento || 'Sessão'}${status}`;
+        select.appendChild(option);
+      });
+    } catch (err) {
+      console.error('Erro ao carregar sessões:', err);
+    }
+  }
+
+  function selecionarSessao() {
+    const select = document.getElementById('sessao-select');
+    sessaoAtual = sessoes.find(s => s.id == select.value) || null;
+    document.getElementById('resultsContainer').innerHTML = '';
+  }
+
+  function analisarCaso() {
+    if (!pacienteAtual) {
+      alert('Por favor, selecione um paciente.');
+      return;
+    }
+
+    if (!sessaoAtual) {
+      alert('Por favor, selecione uma sessão.');
+      return;
+    }
+
+    const transcricao = document.getElementById('transcricao').value.trim();
+    const notasClinicas = document.getElementById('notasClinicas').value.trim();
+
+    if (!transcricao && !notasClinicas) {
+      alert('Por favor, preencha pelo menos um dos campos.');
+      return;
+    }
+
+    mostrarCarregando();
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+
+    fetch(N8N_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paciente_id: pacienteAtual.id,
+        paciente_nome: pacienteAtual.nome_completo,
+        sessao_id: sessaoAtual.id,
+        data_sessao: sessaoAtual.data_sessao,
+        transcricao_sessao: transcricao,
+        notas_clinicas: notasClinicas,
+        data_analise: new Date().toISOString()
+      })
+    })
+    .then(res => res.json())
+    .then(data => exibirResultados(data))
+    .catch(err => {
+      console.error('Erro:', err);
+      mostrarErro('Erro ao analisar caso. Tente novamente.');
+    })
+    .finally(() => {
+      btn.disabled = false;
+    });
+  }
+
+  function mostrarCarregando() {
+    const container = document.getElementById('resultsContainer');
+    const startTime = Date.now();
+
+    container.innerHTML = `
+      <div class="card">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <div class="loading-text">Gerando análise com IA...</div>
+          <div class="loading-time" id="loadingTime">Estimado: 30-45 segundos</div>
+        </div>
+      </div>
+    `;
+
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const timeEl = document.getElementById('loadingTime');
+      if (timeEl) {
+        timeEl.textContent = `Tempo decorrido: ${elapsed}s`;
+      } else {
+        clearInterval(timer);
+      }
+    }, 500);
+  }
+
+  function exibirResultados(data) {
+    const container = document.getElementById('resultsContainer');
+
+    const soap = data.soap || {};
+    const conceituacao = data.conceituacao_caso || 'Conceituação não disponível';
+    const intervencoes = data.intervencoes || 'Intervenções não disponíveis';
+    const evolucao = data.evolucao || 'Evolução não disponível';
+
+    container.innerHTML = `
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-head">
+            <div class="icon ic-soap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h14v10H9l-3.5 3.5v-3.5H4v-10Z"/></svg></div>
+            <h2>SOAP estruturado</h2>
+          </div>
+          <div class="card-content"><strong>Subjetivo:</strong>
+${soap.subjetivo || '(vazio)'}
+
+<strong>Objetivo:</strong>
+${soap.objetivo || '(vazio)'}
+
+<strong>Análise:</strong>
+${soap.analise || '(vazio)'}
+
+<strong>Plano:</strong>
+${soap.plano || '(vazio)'}</div>
+          <span class="card-badge">✓ Salvo no prontuário</span>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="icon ic-conceituacao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg></div>
+            <h2>Conceituação de caso</h2>
+          </div>
+          <div class="card-content">${conceituacao}</div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="icon ic-intervencoes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg></div>
+            <h2>Intervenções recomendadas</h2>
+          </div>
+          <div class="card-content">${intervencoes}</div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="icon ic-evolucao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/></svg></div>
+            <h2>Evolução & alertas</h2>
+          </div>
+          <div class="card-content">${evolucao}</div>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  function mostrarErro(message) {
+    const container = document.getElementById('resultsContainer');
+    container.innerHTML = `
+      <div class="card">
+        <div class="empty-state">
+          <p style="color:#C62828; font-weight:600;">⚠️ ${message}</p>
+          <p>Verifique sua conexão e tente novamente.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function limparNotas() {
+    if (confirm('Limpar transcrição e notas clínicas?')) {
+      document.getElementById('transcricao').value = '';
+      document.getElementById('notasClinicas').value = '';
+      document.getElementById('resultsContainer').innerHTML = '';
+      document.getElementById('transcricao').focus();
+    }
+  }
+</script>
+
+</body>
+</html>
