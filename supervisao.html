@@ -177,6 +177,45 @@
 
   .divisor{ border:none; border-top:1px solid var(--line); margin:32px 0; }
 
+  /* --- Chat --- */
+  .chat-panel{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:0; margin-bottom:16px; display:flex; flex-direction:column;
+  }
+  .chat-mensagens{
+    max-height:480px; min-height:180px; overflow-y:auto; padding:20px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .chat-empty{ text-align:center; color:var(--ink-soft); font-size:12.5px; padding:24px 0; }
+  .chat-bolha{
+    max-width:78%; padding:12px 14px; border-radius:12px; font-size:13px; line-height:1.6;
+  }
+  .chat-bolha.user{
+    align-self:flex-end; background:var(--mocha); color:#fff; border-bottom-right-radius:4px;
+  }
+  .chat-bolha.assistant{
+    align-self:flex-start; background:var(--bg); color:var(--ink); border:1px solid var(--line); border-bottom-left-radius:4px;
+  }
+  .chat-bolha p{ margin:0 0 8px; }
+  .chat-bolha p:last-child{ margin-bottom:0; }
+  .chat-bolha.user strong{ color:#fff; }
+  .chat-bolha.assistant strong{ color:var(--mocha-deep); }
+  .chat-bolha ul, .chat-bolha ol{ margin:0 0 8px; padding-left:18px; }
+  .chat-input-row{
+    display:flex; gap:10px; padding:14px 20px; border-top:1px solid var(--line); align-items:flex-end;
+  }
+  .chat-input-row textarea{
+    flex:1; min-height:44px; max-height:160px; padding:10px 12px; resize:vertical;
+  }
+  .chat-typing{ display:flex; gap:4px; align-self:flex-start; padding:12px 14px; }
+  .chat-typing span{
+    width:6px; height:6px; border-radius:50%; background:var(--ink-soft);
+    animation:typingBounce 1.2s infinite ease-in-out;
+  }
+  .chat-typing span:nth-child(2){ animation-delay:0.2s; }
+  .chat-typing span:nth-child(3){ animation-delay:0.4s; }
+  @keyframes typingBounce{ 0%,60%,100%{ transform:translateY(0); opacity:0.4; } 30%{ transform:translateY(-4px); opacity:1; } }
+
   @media (max-width: 980px){
     .cards-grid{ grid-template-columns:1fr; }
     .inputs-grid{ grid-template-columns:1fr; }
@@ -279,9 +318,9 @@
       </button>
     </div>
 
-    <!-- ===================== SEÇÃO 1: POR SESSÃO ===================== -->
+    <!-- ===================== SEÇÃO 1: POR SESSÃO (CHAT) ===================== -->
     <h2 class="secao-titulo">Supervisão por sessão</h2>
-    <p class="secao-sub">Avaliação da sua condução em uma sessão específica: aliança terapêutica, aderência à técnica planejada, pontos fortes e a desenvolver.</p>
+    <p class="secao-sub">Converse com a IA sobre a condução desta sessão: dúvidas, dificuldades, o que passou despercebido. A conversa fica salva.</p>
 
     <!-- PACIENTE SELECTOR -->
     <div class="paciente-selector">
@@ -299,27 +338,25 @@
       </select>
     </div>
 
-    <!-- INPUTS PANEL -->
+    <!-- CONTEXTO (somente leitura) -->
     <div class="inputs-panel" id="inputsPanel" style="display:none;">
-      <div class="inputs-grid">
-        <div class="input-group">
-          <label class="input-label">Transcrição / notas já registradas</label>
-          <div class="preview-readonly" id="previewRegistro">Nenhum registro encontrado para esta sessão em Discussão de Casos.</div>
-          <div class="input-hint">Somente leitura — registrado na aba Discussão de Casos</div>
-        </div>
-        <div class="input-group">
-          <label class="input-label">Sua reflexão sobre a condução desta sessão</label>
-          <textarea id="reflexaoSessao" placeholder="Como você sentiu que conduziu a sessão? O que funcionou, o que foi difícil, dúvidas sobre a técnica usada, etc."></textarea>
-          <div class="input-hint">Máx. caracteres: ilimitado</div>
-        </div>
-      </div>
-      <div class="button-group">
-        <button class="btn-primary" id="analyzeSessaoBtn" onclick="analisarSupervisaoSessao()">Analisar sessão</button>
-        <button class="btn-secondary" onclick="limparReflexao()">Limpar</button>
+      <div class="input-group">
+        <label class="input-label">Transcrição / notas / intervenção já registradas</label>
+        <div class="preview-readonly" id="previewRegistro">Nenhum registro encontrado para esta sessão em Discussão de Casos.</div>
+        <div class="input-hint">Somente leitura — registrado na aba Discussão de Casos</div>
       </div>
     </div>
 
-    <div id="resultsSessaoContainer"></div>
+    <!-- CHAT -->
+    <div class="chat-panel" id="chatPanel" style="display:none;">
+      <div class="chat-mensagens" id="chatMensagens">
+        <div class="chat-empty" id="chatEmpty">Escreva abaixo para começar a conversa sobre esta sessão.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="Escreva sua dúvida, dificuldade ou reflexão sobre esta sessão..." rows="2"></textarea>
+        <button class="btn-primary" id="chatSendBtn" onclick="enviarMensagemChat()">Enviar</button>
+      </div>
+    </div>
 
     <hr class="divisor">
 
@@ -355,7 +392,7 @@
     window.location.href = 'login-psicologa.html';
   }
 
-  const N8N_WEBHOOK_SESSAO = 'https://psi3ana.app.n8n.cloud/webhook/supervisao-sessao';
+  const N8N_WEBHOOK_CHAT = 'https://psi3ana.app.n8n.cloud/webhook/supervisao-chat';
   const N8N_WEBHOOK_PADRAO = 'https://psi3ana.app.n8n.cloud/webhook/supervisao-padrao';
   const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
@@ -364,7 +401,6 @@
   let pacienteAtual = null;
   let sessoes = [];
   let sessaoAtual = null;
-  let resultadoSessaoAtual = null;
   let resultadoPadraoAtual = null;
 
   window.addEventListener('load', () => { carregarPacientes(); });
@@ -390,8 +426,8 @@
   function selecionarPaciente() {
     const select = document.getElementById('paciente-select');
     pacienteAtual = pacientes.find(p => p.id == select.value) || null;
-    document.getElementById('resultsSessaoContainer').innerHTML = '';
     document.getElementById('inputsPanel').style.display = 'none';
+    document.getElementById('chatPanel').style.display = 'none';
 
     const sessaoWrap = document.getElementById('sessao-selector-wrap');
     const sessaoSelect = document.getElementById('sessao-select');
@@ -425,20 +461,24 @@
     }
   }
 
+  let conversaAtual = null; // { id, mensagens: [] }
+
   async function selecionarSessao() {
     const select = document.getElementById('sessao-select');
     sessaoAtual = sessoes.find(s => s.id == select.value) || null;
-    document.getElementById('resultsSessaoContainer').innerHTML = '';
+    conversaAtual = null;
 
     if (!sessaoAtual) {
       document.getElementById('inputsPanel').style.display = 'none';
+      document.getElementById('chatPanel').style.display = 'none';
       return;
     }
 
     document.getElementById('inputsPanel').style.display = 'block';
+    document.getElementById('chatPanel').style.display = 'flex';
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}&select=transcricao_sessao,notas_clinicas,soap_analise,intervencoes,reflexao_supervisao,supervisao_alianca,supervisao_aderencia,supervisao_pontos_fortes,supervisao_pontos_desenvolver,supervisao_sugestoes_proxima`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}&select=transcricao_sessao,notas_clinicas,intervencoes`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
       const rows = await res.json();
@@ -450,29 +490,11 @@
       if (row.notas_clinicas) partes.push('NOTAS CLÍNICAS:\n' + row.notas_clinicas);
       if (row.intervencoes) partes.push('INTERVENÇÃO RECOMENDADA (Discussão de Casos):\n' + row.intervencoes);
       preview.textContent = partes.length ? partes.join('\n\n') : 'Nenhum registro encontrado para esta sessão em Discussão de Casos.';
-
-      document.getElementById('reflexaoSessao').value = row.reflexao_supervisao || '';
-
-      const temAnalise = row.supervisao_alianca || row.supervisao_aderencia || row.supervisao_pontos_fortes || row.supervisao_pontos_desenvolver;
-      if (temAnalise) {
-        exibirResultadosSessao({
-          alianca_terapeutica: row.supervisao_alianca,
-          aderencia_tecnica: row.supervisao_aderencia,
-          pontos_fortes: row.supervisao_pontos_fortes,
-          pontos_desenvolver: row.supervisao_pontos_desenvolver,
-          sugestoes_proxima_sessao: row.supervisao_sugestoes_proxima
-        });
-      }
     } catch (err) {
       console.error('Erro ao carregar dados da sessão:', err);
     }
-  }
 
-  function limparReflexao() {
-    if (confirm('Limpar sua reflexão sobre esta sessão?')) {
-      document.getElementById('reflexaoSessao').value = '';
-      document.getElementById('resultsSessaoContainer').innerHTML = '';
-    }
+    await carregarConversa();
   }
 
   // Escapa texto para inserir com segurança dentro de <textarea>
@@ -509,39 +531,113 @@
     return blocosHtml.join('');
   }
 
-  function analisarSupervisaoSessao() {
-    if (!pacienteAtual || !sessaoAtual) {
-      alert('Selecione um paciente e uma sessão.');
+  // Busca (ou cria) a conversa de supervisão desta sessão e carrega as mensagens
+  async function carregarConversa() {
+    try {
+      const resConv = await fetch(`${SUPABASE_URL}/rest/v1/supervisao_conversas?sessao_id=eq.${sessaoAtual.id}&select=id`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      });
+      const convs = await resConv.json();
+      let conversaId = convs[0] ? convs[0].id : null;
+
+      let mensagens = [];
+      if (conversaId) {
+        const resMsg = await fetch(`${SUPABASE_URL}/rest/v1/supervisao_mensagens?conversa_id=eq.${conversaId}&order=criado_em.asc`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        });
+        mensagens = await resMsg.json();
+      }
+
+      conversaAtual = { id: conversaId, mensagens };
+      renderizarChat();
+    } catch (err) {
+      console.error('Erro ao carregar conversa:', err);
+    }
+  }
+
+  function renderizarChat() {
+    const container = document.getElementById('chatMensagens');
+    if (!conversaAtual || conversaAtual.mensagens.length === 0) {
+      container.innerHTML = '<div class="chat-empty" id="chatEmpty">Escreva abaixo para começar a conversa sobre esta sessão.</div>';
       return;
     }
-    const reflexao = document.getElementById('reflexaoSessao').value.trim();
-
-    mostrarCarregando('resultsSessaoContainer');
-    const btn = document.getElementById('analyzeSessaoBtn');
-    btn.disabled = true;
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        fetch(N8N_WEBHOOK_SESSAO, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            paciente_id: pacienteAtual.id,
-            sessao_id: sessaoAtual.id,
-            data_sessao: sessaoAtual.data_sessao,
-            reflexao_supervisao: reflexao
-          })
-        })
-        .then(res => res.json())
-        .then(data => exibirResultadosSessao(data))
-        .catch(err => {
-          console.error('Erro:', err);
-          mostrarErro('resultsSessaoContainer', 'Erro ao analisar sessão. Tente novamente.');
-        })
-        .finally(() => { btn.disabled = false; });
-      });
-    });
+    container.innerHTML = conversaAtual.mensagens.map(m => `
+      <div class="chat-bolha ${m.role}">${m.role === 'user' ? escapeHtmlSimples(m.conteudo) : formatarTexto(m.conteudo)}</div>
+    `).join('');
+    container.scrollTop = container.scrollHeight;
   }
+
+  function escapeHtmlSimples(texto) {
+    return String(texto || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+  }
+
+  async function enviarMensagemChat() {
+    if (!sessaoAtual) {
+      alert('Selecione um paciente e uma sessão primeiro.');
+      return;
+    }
+    const input = document.getElementById('chatInput');
+    const texto = input.value.trim();
+    if (!texto) return;
+
+    const btn = document.getElementById('chatSendBtn');
+    btn.disabled = true;
+    input.disabled = true;
+
+    // Mostra a mensagem do usuário na hora, mais indicador de "digitando"
+    if (!conversaAtual) conversaAtual = { id: null, mensagens: [] };
+    conversaAtual.mensagens.push({ role: 'user', conteudo: texto });
+    renderizarChat();
+    input.value = '';
+
+    const container = document.getElementById('chatMensagens');
+    container.insertAdjacentHTML('beforeend', '<div class="chat-typing" id="chatTyping"><span></span><span></span><span></span></div>');
+    container.scrollTop = container.scrollHeight;
+
+    try {
+      const res = await fetch(N8N_WEBHOOK_CHAT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paciente_id: pacienteAtual.id,
+          sessao_id: sessaoAtual.id,
+          conversa_id: conversaAtual.id,
+          mensagem: texto
+        })
+      });
+      const data = await res.json();
+
+      conversaAtual.id = data.conversa_id || conversaAtual.id;
+      conversaAtual.mensagens.push({ role: 'assistant', conteudo: data.resposta || '(sem resposta)' });
+
+      const typingEl = document.getElementById('chatTyping');
+      if (typingEl) typingEl.remove();
+      renderizarChat();
+    } catch (err) {
+      console.error('Erro no chat:', err);
+      const typingEl = document.getElementById('chatTyping');
+      if (typingEl) typingEl.remove();
+      conversaAtual.mensagens.push({ role: 'assistant', conteudo: '⚠️ Erro ao processar sua mensagem. Tente novamente.' });
+      renderizarChat();
+    } finally {
+      btn.disabled = false;
+      input.disabled = false;
+      input.focus();
+    }
+  }
+
+  // Enviar com Enter (Shift+Enter quebra linha)
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          enviarMensagemChat();
+        }
+      });
+    }
+  });
 
   function analisarPadraoGeral() {
     mostrarCarregando('resultsPadraoContainer');
@@ -596,114 +692,6 @@
         </div>
       </div>
     `;
-  }
-
-  // ===== RESULTADOS: SESSÃO =====
-  function exibirResultadosSessao(data) {
-    resultadoSessaoAtual = {
-      alianca_terapeutica: data.alianca_terapeutica || '',
-      aderencia_tecnica: data.aderencia_tecnica || '',
-      pontos_fortes: data.pontos_fortes || '',
-      pontos_desenvolver: data.pontos_desenvolver || '',
-      sugestoes_proxima_sessao: data.sugestoes_proxima_sessao || ''
-    };
-    const container = document.getElementById('resultsSessaoContainer');
-    container.innerHTML = `
-      <div class="cards-grid">
-        <div class="card">
-          <div class="card-head">
-            <div class="icon ic-alianca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-            <h2>Aliança terapêutica</h2>
-            <button class="btn-editar" onclick="editarCampoSessao('alianca_terapeutica')">✎ Editar</button>
-          </div>
-          <div class="card-content" id="conteudo-sessao-alianca_terapeutica">${formatarTexto(resultadoSessaoAtual.alianca_terapeutica)}</div>
-          <span class="card-badge">✓ Salvo</span>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <div class="icon ic-aderencia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-            <h2>Aderência à técnica planejada</h2>
-            <button class="btn-editar" onclick="editarCampoSessao('aderencia_tecnica')">✎ Editar</button>
-          </div>
-          <div class="card-content" id="conteudo-sessao-aderencia_tecnica">${formatarTexto(resultadoSessaoAtual.aderencia_tecnica)}</div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <div class="icon ic-forte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg></div>
-            <h2>Pontos fortes</h2>
-            <button class="btn-editar" onclick="editarCampoSessao('pontos_fortes')">✎ Editar</button>
-          </div>
-          <div class="card-content" id="conteudo-sessao-pontos_fortes">${formatarTexto(resultadoSessaoAtual.pontos_fortes)}</div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <div class="icon ic-desenvolver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/></svg></div>
-            <h2>Pontos a desenvolver</h2>
-            <button class="btn-editar" onclick="editarCampoSessao('pontos_desenvolver')">✎ Editar</button>
-          </div>
-          <div class="card-content" id="conteudo-sessao-pontos_desenvolver">${formatarTexto(resultadoSessaoAtual.pontos_desenvolver)}</div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <div class="icon ic-recomendacao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></div>
-            <h2>Sugestões e técnicas para a próxima sessão</h2>
-            <button class="btn-editar" onclick="editarCampoSessao('sugestoes_proxima_sessao')">✎ Editar</button>
-          </div>
-          <div class="card-content" id="conteudo-sessao-sugestoes_proxima_sessao">${formatarTexto(resultadoSessaoAtual.sugestoes_proxima_sessao)}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  function editarCampoSessao(campo) {
-    const el = document.getElementById(`conteudo-sessao-${campo}`);
-    const valorAtual = resultadoSessaoAtual[campo] || '';
-    el.innerHTML = `
-      <textarea class="edit-textarea" id="edit-sessao-${campo}">${escapeParaTextarea(valorAtual)}</textarea>
-      <div class="edit-actions">
-        <button class="btn-salvar-edicao" onclick="salvarEdicaoSessao('${campo}')">Salvar</button>
-        <button class="btn-cancelar-edicao" onclick="cancelarEdicaoSessao('${campo}')">Cancelar</button>
-      </div>
-    `;
-  }
-
-  function cancelarEdicaoSessao(campo) {
-    document.getElementById(`conteudo-sessao-${campo}`).innerHTML = formatarTexto(resultadoSessaoAtual[campo]);
-  }
-
-  const CAMPO_DB_SESSAO = {
-    alianca_terapeutica: 'supervisao_alianca',
-    aderencia_tecnica: 'supervisao_aderencia',
-    pontos_fortes: 'supervisao_pontos_fortes',
-    pontos_desenvolver: 'supervisao_pontos_desenvolver',
-    sugestoes_proxima_sessao: 'supervisao_sugestoes_proxima'
-  };
-
-  async function salvarEdicaoSessao(campo) {
-    const novoValor = document.getElementById(`edit-sessao-${campo}`).value.trim();
-    const valorAnterior = resultadoSessaoAtual[campo] || '';
-    if (novoValor === valorAnterior) { cancelarEdicaoSessao(campo); return; }
-
-    try {
-      const colunaDb = CAMPO_DB_SESSAO[campo];
-      if (valorAnterior) {
-        await fetch(`${SUPABASE_URL}/rest/v1/sessao_notas_historico`, {
-          method: 'POST',
-          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-          body: JSON.stringify([{ sessao_id: sessaoAtual.id, campo: colunaDb, conteudo_anterior: valorAnterior }])
-        });
-      }
-      await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}`, {
-        method: 'PATCH',
-        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [colunaDb]: novoValor })
-      });
-      resultadoSessaoAtual[campo] = novoValor;
-      document.getElementById(`conteudo-sessao-${campo}`).innerHTML = formatarTexto(novoValor);
-    } catch (err) {
-      console.error('Erro ao salvar edição:', err);
-      alert('Erro ao salvar. Tente novamente.');
-    }
   }
 
   // ===== RESULTADOS: PADRÃO GERAL =====
