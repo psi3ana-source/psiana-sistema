@@ -112,7 +112,7 @@
   .btn-secondary:hover{ background:var(--rose-soft); border-color:var(--rose); }
 
   /* --- Results Cards --- */
-  .cards-grid{ display:grid; grid-template-columns:1fr; gap:16px; margin-top:16px; }
+  .cards-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(380px, 1fr)); gap:16px; margin-top:16px; }
   .card{
     background:var(--card); border:1px solid var(--line); border-radius:14px;
     padding:20px; display:flex; flex-direction:column;
@@ -131,7 +131,7 @@
     font-size:13px; line-height:1.65; color:var(--ink);
     word-break:break-word; overflow-wrap:anywhere;
   }
-  .card-content p{ margin:0 0 10px; }
+  .card-content p{ margin:0 0 12px; }
   .card-content p:last-child{ margin-bottom:0; }
   .card-content ul, .card-content ol{ margin:0 0 10px; padding-left:20px; }
   .card-content li{ margin-bottom:4px; }
