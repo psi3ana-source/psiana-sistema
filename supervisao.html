@@ -438,7 +438,7 @@
     document.getElementById('inputsPanel').style.display = 'block';
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}&select=transcricao_sessao,notas_clinicas,soap_analise,intervencoes,reflexao_supervisao,supervisao_alianca,supervisao_aderencia,supervisao_pontos_fortes,supervisao_pontos_desenvolver`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}&select=transcricao_sessao,notas_clinicas,soap_analise,intervencoes,reflexao_supervisao,supervisao_alianca,supervisao_aderencia,supervisao_pontos_fortes,supervisao_pontos_desenvolver,supervisao_sugestoes_proxima`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
       const rows = await res.json();
@@ -459,7 +459,8 @@
           alianca_terapeutica: row.supervisao_alianca,
           aderencia_tecnica: row.supervisao_aderencia,
           pontos_fortes: row.supervisao_pontos_fortes,
-          pontos_desenvolver: row.supervisao_pontos_desenvolver
+          pontos_desenvolver: row.supervisao_pontos_desenvolver,
+          sugestoes_proxima_sessao: row.supervisao_sugestoes_proxima
         });
       }
     } catch (err) {
@@ -603,7 +604,8 @@
       alianca_terapeutica: data.alianca_terapeutica || '',
       aderencia_tecnica: data.aderencia_tecnica || '',
       pontos_fortes: data.pontos_fortes || '',
-      pontos_desenvolver: data.pontos_desenvolver || ''
+      pontos_desenvolver: data.pontos_desenvolver || '',
+      sugestoes_proxima_sessao: data.sugestoes_proxima_sessao || ''
     };
     const container = document.getElementById('resultsSessaoContainer');
     container.innerHTML = `
@@ -641,6 +643,14 @@
           </div>
           <div class="card-content" id="conteudo-sessao-pontos_desenvolver">${formatarTexto(resultadoSessaoAtual.pontos_desenvolver)}</div>
         </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="icon ic-recomendacao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></div>
+            <h2>Sugestões e técnicas para a próxima sessão</h2>
+            <button class="btn-editar" onclick="editarCampoSessao('sugestoes_proxima_sessao')">✎ Editar</button>
+          </div>
+          <div class="card-content" id="conteudo-sessao-sugestoes_proxima_sessao">${formatarTexto(resultadoSessaoAtual.sugestoes_proxima_sessao)}</div>
+        </div>
       </div>
     `;
   }
@@ -665,7 +675,8 @@
     alianca_terapeutica: 'supervisao_alianca',
     aderencia_tecnica: 'supervisao_aderencia',
     pontos_fortes: 'supervisao_pontos_fortes',
-    pontos_desenvolver: 'supervisao_pontos_desenvolver'
+    pontos_desenvolver: 'supervisao_pontos_desenvolver',
+    sugestoes_proxima_sessao: 'supervisao_sugestoes_proxima'
   };
 
   async function salvarEdicaoSessao(campo) {
@@ -700,7 +711,8 @@
     resultadoPadraoAtual = {
       padroes_forca: data.padroes_forca || '',
       padroes_melhorar: data.padroes_melhorar || '',
-      recomendacoes: data.recomendacoes || ''
+      recomendacoes: data.recomendacoes || '',
+      tecnicas_desenvolvimento: data.tecnicas_desenvolvimento || ''
     };
     const container = document.getElementById('resultsPadraoContainer');
     container.innerHTML = `
@@ -728,6 +740,14 @@
             <button class="btn-editar" onclick="editarCampoPadrao('recomendacoes')">✎ Editar</button>
           </div>
           <div class="card-content" id="conteudo-padrao-recomendacoes">${formatarTexto(resultadoPadraoAtual.recomendacoes)}</div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="icon ic-forte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg></div>
+            <h2>Técnicas para próximas sessões</h2>
+            <button class="btn-editar" onclick="editarCampoPadrao('tecnicas_desenvolvimento')">✎ Editar</button>
+          </div>
+          <div class="card-content" id="conteudo-padrao-tecnicas_desenvolvimento">${formatarTexto(resultadoPadraoAtual.tecnicas_desenvolvimento)}</div>
         </div>
       </div>
     `;
