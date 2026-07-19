@@ -55,6 +55,14 @@
   .btn-config:hover{ color:var(--mocha); border-color:var(--rose); }
   .btn-config svg{ width:13px; height:13px; }
 
+  .btn-voltar{
+    display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha);
+    background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px;
+    cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; font-weight:500; flex-shrink:0;
+  }
+  .btn-voltar:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-voltar svg{ width:15px; height:15px; }
+
   .btn-sair{
     display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha);
     background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px;
@@ -265,9 +273,16 @@
           <div class="data" id="dataHoje">Sábado, 04 de julho</div>
           <div class="crp-linha">
             <span class="crp-texto">CRP 12/28631</span>
+            <button class="btn-config" title="Configurações" onclick="window.location.href='configuracoes.html'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
+            </button>
           </div>
         </div>
       </div>
+      <button class="btn-voltar" onclick="history.length > 1 ? history.back() : window.location.href='visao-geral.html'" style="margin-right:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>
+        Voltar
+      </button>
       <button class="btn-sair" onclick="sair()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
         Sair
@@ -335,6 +350,14 @@
     var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
     document.getElementById('dataHoje').textContent = dias[agora.getDay()] + ', ' + agora.getDate() + ' de ' + meses[agora.getMonth()];
   })();
+
+  function voltar(){
+    if (document.referrer && document.referrer.indexOf(window.location.hostname) !== -1) {
+      window.history.back();
+    } else {
+      window.location.href = 'visao-geral.html';
+    }
+  }
 
   function sair(){
     sessionStorage.removeItem('psiana_admin_logado');
