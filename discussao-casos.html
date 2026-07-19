@@ -118,6 +118,21 @@
     padding:20px; display:flex; flex-direction:column;
   }
   .card-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .card-head h2{ flex:1; }
+  .btn-editar{
+    font-size:11px; font-weight:600; color:var(--mocha); background:none;
+    border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer;
+  }
+  .btn-editar:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .edit-textarea{
+    width:100%; min-height:120px; padding:10px; border:1px solid var(--mocha); border-radius:8px;
+    font-family:inherit; font-size:12.5px; color:var(--ink); background:var(--bg); resize:vertical;
+  }
+  .edit-actions{ display:flex; gap:8px; margin-top:8px; }
+  .edit-actions button{ font-size:12px; padding:6px 14px; border-radius:6px; border:none; cursor:pointer; font-family:inherit; }
+  .btn-salvar-edicao{ background:var(--mocha); color:#fff; }
+  .btn-salvar-edicao:hover{ background:var(--mocha-deep); }
+  .btn-cancelar-edicao{ background:var(--rose-soft); color:var(--mocha); }
   .card-head .icon{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .card-head .icon svg{ width:17px; height:17px; }
   .card-head h2{ font-size:14px; margin:0; color:var(--ink); font-weight:600; }
@@ -301,7 +316,6 @@
       <div id="historicoPainel" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--line);">
         <div style="font-size:13px; font-weight:600; color:var(--ink); margin-bottom:10px;">Histórico de edições desta sessão</div>
         <div id="historicoLista"></div>
-      </div>
       </div>
     </div>
 
@@ -598,6 +612,14 @@
   }
 
   // Converte markdown simples (negrito, listas, títulos, quebras de linha) em HTML legível
+  // Escapa texto para inserir com segurança dentro de <textarea>...</textarea>
+  function escapeParaTextarea(texto) {
+    return String(texto || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   function formatarTexto(texto) {
     if (!texto) return '(vazio)';
 
@@ -655,59 +677,212 @@
     return blocosHtml.join('');
   }
 
+  let resultadoAtual = null; // guarda os dados brutos (não formatados) da última análise
+
   function exibirResultados(data) {
     const container = document.getElementById('resultsContainer');
 
-    const soap = data.soap || {};
-    const conceituacao = data.conceituacao_caso || 'Conceituação não disponível';
-    const intervencoes = data.intervencoes || 'Intervenções não disponíveis';
-    const evolucao = data.evolucao || 'Evolução não disponível';
+    resultadoAtual = {
+      soap: data.soap || {},
+      conceituacao_caso: data.conceituacao_caso || '',
+      intervencoes: data.intervencoes || '',
+      evolucao: data.evolucao || ''
+    };
 
     container.innerHTML = `
       <div class="cards-grid">
-        <div class="card">
+        <div class="card" data-campo="soap">
           <div class="card-head">
             <div class="icon ic-soap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h14v10H9l-3.5 3.5v-3.5H4v-10Z"/></svg></div>
             <h2>SOAP estruturado</h2>
+            <button class="btn-editar" onclick="editarSoap()">✎ Editar</button>
           </div>
-          <div class="card-content">
+          <div class="card-content" id="conteudo-soap">
             <p><strong>Subjetivo</strong></p>
-            ${formatarTexto(soap.subjetivo)}
+            ${formatarTexto(resultadoAtual.soap.subjetivo)}
             <p><strong>Objetivo</strong></p>
-            ${formatarTexto(soap.objetivo)}
+            ${formatarTexto(resultadoAtual.soap.objetivo)}
             <p><strong>Análise</strong></p>
-            ${formatarTexto(soap.analise)}
+            ${formatarTexto(resultadoAtual.soap.analise)}
             <p><strong>Plano</strong></p>
-            ${formatarTexto(soap.plano)}
+            ${formatarTexto(resultadoAtual.soap.plano)}
           </div>
           <span class="card-badge">✓ Salvo no prontuário</span>
         </div>
 
-        <div class="card">
+        <div class="card" data-campo="conceituacao_caso">
           <div class="card-head">
             <div class="icon ic-conceituacao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg></div>
             <h2>Conceituação de caso</h2>
+            <button class="btn-editar" onclick="editarCampo('conceituacao_caso')">✎ Editar</button>
           </div>
-          <div class="card-content">${formatarTexto(conceituacao)}</div>
+          <div class="card-content" id="conteudo-conceituacao_caso">${formatarTexto(resultadoAtual.conceituacao_caso)}</div>
         </div>
 
-        <div class="card">
+        <div class="card" data-campo="intervencoes">
           <div class="card-head">
             <div class="icon ic-intervencoes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg></div>
             <h2>Intervenções recomendadas</h2>
+            <button class="btn-editar" onclick="editarCampo('intervencoes')">✎ Editar</button>
           </div>
-          <div class="card-content">${formatarTexto(intervencoes)}</div>
+          <div class="card-content" id="conteudo-intervencoes">${formatarTexto(resultadoAtual.intervencoes)}</div>
         </div>
 
-        <div class="card">
+        <div class="card" data-campo="evolucao">
           <div class="card-head">
             <div class="icon ic-evolucao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/></svg></div>
             <h2>Evolução & alertas</h2>
+            <button class="btn-editar" onclick="editarCampo('evolucao')">✎ Editar</button>
           </div>
-          <div class="card-content">${formatarTexto(evolucao)}</div>
+          <div class="card-content" id="conteudo-evolucao">${formatarTexto(resultadoAtual.evolucao)}</div>
         </div>
       </div>
     `;
+  }
+
+  // Edição dos campos simples (conceituacao_caso, intervencoes, evolucao)
+  function editarCampo(campo) {
+    const el = document.getElementById(`conteudo-${campo}`);
+    const valorAtual = resultadoAtual[campo] || '';
+
+    el.innerHTML = `
+      <textarea class="edit-textarea" id="edit-${campo}">${escapeParaTextarea(valorAtual)}</textarea>
+      <div class="edit-actions">
+        <button class="btn-salvar-edicao" onclick="salvarEdicaoCampo('${campo}')">Salvar</button>
+        <button class="btn-cancelar-edicao" onclick="cancelarEdicao('${campo}')">Cancelar</button>
+      </div>
+    `;
+  }
+
+  function cancelarEdicao(campo) {
+    const el = document.getElementById(`conteudo-${campo}`);
+    el.innerHTML = formatarTexto(resultadoAtual[campo]);
+  }
+
+  async function salvarEdicaoCampo(campo) {
+    const novoValor = document.getElementById(`edit-${campo}`).value.trim();
+    const valorAnterior = resultadoAtual[campo] || '';
+
+    if (novoValor === valorAnterior) {
+      cancelarEdicao(campo);
+      return;
+    }
+
+    try {
+      // Salva versão anterior no histórico
+      if (valorAnterior) {
+        await fetch(`${SUPABASE_URL}/rest/v1/sessao_notas_historico`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json', Prefer: 'return=minimal'
+          },
+          body: JSON.stringify([{ sessao_id: sessaoAtual.id, campo: campo, conteudo_anterior: valorAnterior }])
+        });
+      }
+
+      // Salva novo valor na sessão
+      await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ [campo]: novoValor })
+      });
+
+      resultadoAtual[campo] = novoValor;
+      document.getElementById(`conteudo-${campo}`).innerHTML = formatarTexto(novoValor);
+    } catch (err) {
+      console.error('Erro ao salvar edição:', err);
+      alert('Erro ao salvar. Tente novamente.');
+    }
+  }
+
+  // Edição do SOAP (4 subcampos de uma vez)
+  function editarSoap() {
+    const el = document.getElementById('conteudo-soap');
+    const s = resultadoAtual.soap || {};
+
+    el.innerHTML = `
+      <p><strong>Subjetivo</strong></p>
+      <textarea class="edit-textarea" id="edit-soap-subjetivo" style="min-height:80px;">${escapeParaTextarea(s.subjetivo)}</textarea>
+      <p><strong>Objetivo</strong></p>
+      <textarea class="edit-textarea" id="edit-soap-objetivo" style="min-height:80px;">${escapeParaTextarea(s.objetivo)}</textarea>
+      <p><strong>Análise</strong></p>
+      <textarea class="edit-textarea" id="edit-soap-analise" style="min-height:80px;">${escapeParaTextarea(s.analise)}</textarea>
+      <p><strong>Plano</strong></p>
+      <textarea class="edit-textarea" id="edit-soap-plano" style="min-height:80px;">${escapeParaTextarea(s.plano)}</textarea>
+      <div class="edit-actions">
+        <button class="btn-salvar-edicao" onclick="salvarEdicaoSoap()">Salvar</button>
+        <button class="btn-cancelar-edicao" onclick="cancelarEdicaoSoap()">Cancelar</button>
+      </div>
+    `;
+  }
+
+  function cancelarEdicaoSoap() {
+    const el = document.getElementById('conteudo-soap');
+    const s = resultadoAtual.soap || {};
+    el.innerHTML = `
+      <p><strong>Subjetivo</strong></p>
+      ${formatarTexto(s.subjetivo)}
+      <p><strong>Objetivo</strong></p>
+      ${formatarTexto(s.objetivo)}
+      <p><strong>Análise</strong></p>
+      ${formatarTexto(s.analise)}
+      <p><strong>Plano</strong></p>
+      ${formatarTexto(s.plano)}
+    `;
+  }
+
+  async function salvarEdicaoSoap() {
+    const novo = {
+      subjetivo: document.getElementById('edit-soap-subjetivo').value.trim(),
+      objetivo: document.getElementById('edit-soap-objetivo').value.trim(),
+      analise: document.getElementById('edit-soap-analise').value.trim(),
+      plano: document.getElementById('edit-soap-plano').value.trim()
+    };
+    const anterior = resultadoAtual.soap || {};
+
+    try {
+      const registros = [];
+      ['subjetivo', 'objetivo', 'analise', 'plano'].forEach(campo => {
+        if (anterior[campo] && anterior[campo] !== novo[campo]) {
+          registros.push({ sessao_id: sessaoAtual.id, campo: 'soap_' + campo, conteudo_anterior: anterior[campo] });
+        }
+      });
+
+      if (registros.length > 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/sessao_notas_historico`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json', Prefer: 'return=minimal'
+          },
+          body: JSON.stringify(registros)
+        });
+      }
+
+      await fetch(`${SUPABASE_URL}/rest/v1/sessoes?id=eq.${sessaoAtual.id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          soap_subjetivo: novo.subjetivo,
+          soap_objetivo: novo.objetivo,
+          soap_analise: novo.analise,
+          soap_plano: novo.plano
+        })
+      });
+
+      resultadoAtual.soap = novo;
+      cancelarEdicaoSoap();
+    } catch (err) {
+      console.error('Erro ao salvar SOAP:', err);
+      alert('Erro ao salvar. Tente novamente.');
+    }
   }
 
   function mostrarErro(message) {
