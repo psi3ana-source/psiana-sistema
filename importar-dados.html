@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importar Dados · PsiAna</title>
+<style>
+  :root{
+    --bg:#FAF6F5; --card:#fff; --line:#EDE4E3;
+    --mocha:#785D56; --mocha-deep:#5A453F; --rose:#C89F9D; --rose-soft:#F0E8E7;
+    --ink:#2C2C2C; --ink-soft:#999;
+    --ok:#2E7D32; --ok-bg:#E8F5E9; --alerta:#C62828; --alerta-bg:#FFEBEE; --aviso:#F57F17; --aviso-bg:#FFF8E1;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Segoe UI', Arial, sans-serif; background:var(--bg); color:var(--ink); }
+  .shell{ display:flex; min-height:100vh; }
+
+  /* --- Sidebar (padrão do sistema) --- */
+  .sidebar{ width:224px; background:#fff; border-right:1px solid var(--line); padding:22px 14px; display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto; }
+  .sidebar-logo{ display:flex; justify-content:center; padding:0 0 20px; }
+  .sidebar-logo img{ width:150px; height:150px; object-fit:contain; }
+  .nav-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; padding:16px 10px 6px; }
+  .nav-label:first-of-type{ padding-top:4px; }
+  .nav-item{ display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:8px; color:var(--ink); font-size:13.5px; cursor:pointer; text-decoration:none; }
+  .nav-item svg{ width:17px; height:17px; color:var(--mocha); flex-shrink:0; }
+  .nav-item:hover{ background:var(--rose-soft); }
+  .nav-item.active{ background:var(--mocha); color:#fff; }
+  .nav-item.active svg{ color:#fff; }
+
+  /* --- Main --- */
+  .main{ flex:1; padding:32px 40px; max-width:1240px; }
+  .topo{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+  .perfil-saudacao{ display:flex; align-items:center; gap:14px; }
+  .avatar-grande{ width:54px; height:54px; border-radius:50%; background:var(--rose-soft); color:var(--mocha); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; flex-shrink:0; }
+  .topo h1{ font-size:21px; margin:0; color:var(--ink); font-weight:400; }
+  .crp-linha{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  
+  .caminho-nav{ font-size:11px; color:var(--ink-soft); margin-top:5px; }
+  .caminho-nav a{ color:var(--ink-soft); text-decoration:none; }
+  .caminho-nav a:hover{ color:var(--mocha); }
+.crp-texto{ font-size:11.5px; color:var(--ink-soft); }
+  .btn-config{ width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .btn-config:hover{ color:var(--mocha); border-color:var(--rose); }
+  .btn-config svg{ width:13px; height:13px; }
+  .btn-sair{ display:flex; align-items:center; gap:7px; font-size:13px; color:var(--mocha); background:#fff; border:1px solid var(--line); border-radius:20px; padding:9px 18px; cursor:pointer; font-family:'Segoe UI', Arial, sans-serif; font-weight:500; flex-shrink:0; }
+  .btn-sair:hover{ background:var(--rose-soft); border-color:var(--rose); }
+  .btn-sair svg{ width:15px; height:15px; }
+
+  .breadcrumb{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
+  .breadcrumb a{ color:var(--ink-soft); text-decoration:none; }
+  .breadcrumb a:hover{ color:var(--mocha); }
+  .page-titulo{ font-size:20px; margin:0 0 4px; color:var(--ink); font-weight:600; }
+  .page-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px; }
+
+  .aviso-privacidade{
+    display:flex; align-items:flex-start; gap:10px; background:var(--ok-bg); color:#1B5E20;
+    border-radius:10px; padding:12px 16px; font-size:12.5px; margin-bottom:22px; line-height:1.5;
+  }
+  .aviso-privacidade svg{ width:17px; height:17px; flex-shrink:0; margin-top:1px; }
+
+  .drop-zone{
+    border:2px dashed var(--rose); border-radius:14px; background:#fff; padding:36px 20px;
+    text-align:center; cursor:pointer; margin-bottom:24px; transition:background .15s;
+  }
+  .drop-zone:hover, .drop-zone.dragover{ background:var(--rose-soft); }
+  .drop-zone svg{ width:30px; height:30px; color:var(--mocha); margin-bottom:8px; }
+  .drop-zone .titulo{ font-size:14px; font-weight:600; color:var(--mocha-deep); margin-bottom:4px; }
+  .drop-zone .sub{ font-size:12px; color:var(--ink-soft); }
+  #fileInput{ display:none; }
+
+  .fila{ display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+  .fila-item{ display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px 14px; font-size:12.5px; }
+  .fila-item .nome-arquivo{ flex:1; color:var(--ink); }
+  .badge{ font-size:10.5px; padding:3px 9px; border-radius:20px; font-weight:600; white-space:nowrap; }
+  .badge.processando{ background:var(--aviso-bg); color:var(--aviso); }
+  .badge.ok{ background:var(--ok-bg); color:var(--ok); }
+  .badge.parcial{ background:var(--aviso-bg); color:#8A5A0F; }
+  .badge.erro{ background:var(--alerta-bg); color:var(--alerta); }
+
+  .card-revisao{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:18px; }
+  .card-revisao-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:10px; }
+  .card-revisao-head h3{ font-size:15px; margin:0; color:var(--mocha-deep); }
+  .card-revisao-meta{ font-size:11.5px; color:var(--ink-soft); margin-bottom:14px; }
+  .fonte-tag{ font-size:10.5px; padding:2px 8px; border-radius:8px; background:var(--rose-soft); color:var(--mocha-deep); font-weight:600; }
+
+  .secao-titulo{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:16px 0 8px; }
+  .campos-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px 14px; }
+  .campos-grid.full .campo{ grid-column:1 / -1; }
+  .campo{ display:flex; flex-direction:column; gap:4px; }
+  .campo label{ font-size:11px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; }
+  .campo input, .campo textarea{
+    font-size:13px; padding:8px 10px; border-radius:8px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-family:'Segoe UI', Arial, sans-serif; resize:vertical;
+  }
+  .campo input:focus, .campo textarea:focus{ outline:none; border-color:var(--rose); }
+  .campo.nao-extraido input, .campo.nao-extraido textarea{ border-color:var(--aviso); background:var(--aviso-bg); }
+  .tag-nao-extraido{ font-size:9.5px; color:var(--aviso); font-weight:700; text-transform:uppercase; }
+
+  .card-revisao-acoes{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--bg); }
+  .btn-descartar{ font-size:13px; padding:9px 18px; border-radius:20px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; }
+  .btn-descartar:hover{ background:var(--alerta-bg); color:var(--alerta); border-color:var(--alerta); }
+  .btn-salvar-paciente{ font-size:13px; padding:9px 20px; border-radius:20px; border:none; background:var(--mocha); color:#fff; cursor:pointer; font-weight:600; }
+  .btn-salvar-paciente:hover{ background:var(--mocha-deep); }
+  .btn-salvar-paciente:disabled{ background:var(--ink-soft); cursor:not-allowed; }
+
+  .vazio{ text-align:center; padding:40px 0; color:var(--ink-soft); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="selo.png" alt="PsiAna" onerror="this.onerror=null; this.src='icone_selo.png';">
+    </div>
+
+    <div class="nav-label">Rotinas</div>
+    <a class="nav-item" href="visao-geral.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+      Início
+    </a>
+    <a class="nav-item" href="agenda.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>
+      Agenda
+    </a>
+    <a class="nav-item" href="solicitacoes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v11H8.5L4 19.5v-15Z"/><path d="M8 9h8M8 12.3h5"/></svg>
+      Solicitações
+    </a>
+
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="pacientes.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M4.5 20.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
+      Pacientes
+    </a>
+    <a class="nav-item" href="financeiro.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h14a3 3 0 0 1 3 3v7a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 17.5v-10Z"/><path d="M3 7.5V6a1.5 1.5 0 0 1 1.5-1.5h9"/><circle cx="16.5" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
+      Financeiro
+    </a>
+    <a class="nav-item" href="relatorios.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12V3.5Z"/><path d="M15.5 3.9A8.5 8.5 0 0 1 20.1 8.5H15.5V3.9Z"/></svg>
+      Relatórios
+    </a>
+    <a class="nav-item active" href="importar-dados.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19.5h16"/></svg>
+      Importar Dados
+    </a>
+
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item" href="psicoeducacao.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5c2.5-1.3 5-1.3 7.5 0v14c-2.5-1.3-5-1.3-7.5 0v-14Z"/><path d="M19.5 5.5c-2.5-1.3-5-1.3-7.5 0v14c2.5-1.3 5-1.3 7.5 0v-14Z"/></svg>
+      Psicoeducação
+    </a>
+    <a class="nav-item" href="atividades.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none"/></svg>
+      Atividades
+    </a>
+    <a class="nav-item" href="apoio.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5"/><circle cx="12" cy="15.7" r="0.6" fill="currentColor" stroke="none"/></svg>
+      Apoio
+    </a>
+
+    <div class="nav-label">Clínica Avançada</div>
+    <a class="nav-item" href="discussao-casos.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5h11v7H8l-3 3v-3H3v-7Z"/><path d="M11 10.5h10v6h-3v3l-3-3h-4v-6Z"/></svg>
+      Discussão de Casos
+    </a>
+    <a class="nav-item" href="supervisao.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+      Supervisão
+    </a>
+    <a class="nav-item" href="aprimoramento-clinico.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.4 3.1L16.5 7l-3.1 1.4L12 11.5l-1.4-3.1L7.5 7l3.1-.9L12 3Z"/><path d="M5.5 14l.8 1.8L8 16.5l-1.7.8-.8 1.8-.8-1.8L3 16.5l1.7-.7.8-1.8Z"/><path d="M17.5 13.5l.9 2 2 .9-2 .9-.9 2-.9-2-2-.9 2-.9.9-2Z"/></svg>
+      Aprimoramento Clínico
+    </a>
+  </div>
+
+  <!-- ===== CONTEÚDO ===== -->
+  <div class="main">
+    <div class="topo">
+      <div class="perfil-saudacao">
+        <div class="avatar-grande">AC</div>
+        <div>
+          <h1>Importar Dados</h1>
+          <div class="crp-linha">
+            <span class="crp-texto">CRP 12/28631</span>
+            <button class="btn-config" title="Configurações" onclick="window.location.href='#'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
+            </button>
+          </div>
+        <div class="caminho-nav"><a href="visao-geral.html">Início</a> / Importar Dados</div>
+          </div>
+      </div>
+      <button class="btn-sair" onclick="if(confirm('Sair do sistema?')) window.location.href='login-psicologa.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Sair
+      </button>
+    </div>
+
+    
+    <div class="page-titulo">Importação de anamneses</div>
+    <div class="page-sub">Extrai cadastro + anamnese de PDFs de anamnese já preenchidos. Evolução e financeiro continuam manuais por enquanto.</div>
+
+    <div class="aviso-privacidade">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/><path d="M9 12l2 2 4-4"/></svg>
+      <div><strong>Tudo roda localmente no seu navegador.</strong> Nenhum PDF ou texto extraído é enviado a IA/servidor externo — a extração usa leitura direta de campos de formulário (AcroForm) e reconhecimento de rótulos por texto, sem sair do seu computador. Só os dados que você confirmar na revisão abaixo vão para o Supabase.</div>
+    </div>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 9l5-5 5 5"/><path d="M4 19h16"/></svg>
+      <div class="titulo">Arraste os PDFs de anamnese aqui, ou clique para escolher</div>
+      <div class="sub">Aceita vários arquivos de uma vez · reconhece o formulário PDF editável e o formato tipo Google Forms</div>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf" multiple>
+
+    <div class="fila" id="fila"></div>
+
+    <div id="revisaoContainer">
+      <div class="vazio" id="vazioMsg">Nenhum PDF processado ainda.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- pdf-lib: leitura de campos AcroForm -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<!-- pdf.js: extração de texto (fallback formato Google Forms) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  const SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
+
+  // ===== Checagem de sessão (Supabase Auth) =====
+  function verificarSessao(){
+    var token = sessionStorage.getItem('psiana_access_token');
+    var expira = parseInt(sessionStorage.getItem('psiana_token_expira_em') || '0', 10);
+    if(!token || !expira || Date.now() > expira){
+      sessionStorage.clear();
+      window.location.href = 'login-psicologa.html';
+      return false;
+    }
+    return true;
+  }
+  const AUTH_TOKEN = sessionStorage.getItem('psiana_access_token') || SUPABASE_KEY;
+  if (!verificarSessao()) { throw new Error('Sessão expirada — redirecionando para login.'); }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  /* =========================================================
+     Colunas reais confirmadas no Supabase (pacientes / anamnese)
+     secao: 'pacientes' ou 'anamnese' | tipo: text/numeric/int/date/boolean
+     ========================================================= */
+
+  // ---- DICIONÁRIO 1: PDF editável PsiAna (AcroForm), campo->coluna real
+  const ACROFORM_TEXT_FIELDS = {
+    'Insira seu nome completo': { key:'nome_completo', label:'Nome completo', secao:'pacientes', tipo:'text' },
+    'text_3buut':  { key:'nome_social', label:'Nome social', secao:'pacientes', tipo:'text', ref:true },
+    'text_8rrew':  { key:'idade', label:'Idade', secao:'pacientes', tipo:'text', ref:true },
+    'text_7uqqb':  { key:'cpf', label:'CPF', secao:'pacientes', tipo:'text' },
+    'text_4dnkq':  { key:'orientacao_sexual', label:'Orientação sexual', secao:'pacientes', tipo:'text' },
+    'text_9infa':  { key:'data_nascimento', label:'Data de nascimento', secao:'pacientes', tipo:'date' },
+    'text_51lbsu': { key:'quantidade_filhoss', label:'Quantos filhos', secao:'pacientes', tipo:'int' },
+    'text_5fov':   { key:'endereco', label:'Endereço', secao:'pacientes', tipo:'text' },
+    'text_10zzvw': { key:'cep', label:'CEP', secao:'pacientes', tipo:'text' },
+    'text_11lkwd': { key:'cidade_estado_ref', label:'Cidade/Estado (dividir manualmente)', secao:'pacientes', tipo:'text', ref:true },
+    'text_12zdcv': { key:'whatsapp_ddd', label:'WhatsApp (DDD)', secao:'pacientes', tipo:'text', ref:true },
+    'text_13wgce': { key:'whatsapp_numero', label:'WhatsApp (número)', secao:'pacientes', tipo:'text', ref:true },
+    'text_6jxwk':  { key:'email', label:'E-mail', secao:'pacientes', tipo:'text' },
+    'text_14zxtx': { key:'emergencia1_nome', label:'Contato emergência 1 - nome', secao:'pacientes', tipo:'text' },
+    'text_17eqxs': { key:'emergencia2_nome', label:'Contato emergência 2 - nome', secao:'pacientes', tipo:'text' },
+    'text_15ddbs': { key:'emergencia1_telefone', label:'Contato emergência 1 - telefone', secao:'pacientes', tipo:'text' },
+    'text_18fzjy': { key:'emergencia2_telefone', label:'Contato emergência 2 - telefone', secao:'pacientes', tipo:'text' },
+    'text_16ontl': { key:'emergencia1_parentesco', label:'Contato emergência 1 - vínculo', secao:'pacientes', tipo:'text' },
+    'text_19vbfx': { key:'emergencia2_parentesco', label:'Contato emergência 2 - vínculo', secao:'pacientes', tipo:'text' },
+    'text_39ftou': { key:'escolaridade', label:'Escolaridade', secao:'pacientes', tipo:'text' },
+    'text_38bkbq': { key:'profissao', label:'Ocupação atual', secao:'pacientes', tipo:'text' },
+    'text_37yfsu': { key:'renda_mensal', label:'Renda mensal', secao:'pacientes', tipo:'numeric' },
+    'textarea_20wagw': { key:'com_quem_cresceu', label:'Com quem cresceu', secao:'anamnese', tipo:'text' },
+    'textarea_21ecnb': { key:'relacao_figuras_cuidadoras', label:'Relação com figuras cuidadoras', secao:'anamnese', tipo:'text' },
+    'textarea_22sdid': { key:'relacao_familia_atual', label:'Relação com família de origem hoje', secao:'anamnese', tipo:'text' },
+    'textarea_23mlnm': { key:'historico_familiar_detalhes', label:'Histórico familiar - detalhe', secao:'anamnese', tipo:'text' },
+    'textarea_24slev': { key:'satisfacao_trabalho_estudos', label:'Satisfação com rotina de trabalho/estudos', secao:'anamnese', tipo:'text' },
+    'textarea_25grhc': { key:'lida_com_prazos', label:'Como lida com prazos/cobranças', secao:'anamnese', tipo:'text' },
+    'textarea_26txax': { key:'quem_compoem_rede', label:'Quem compõe a rede de apoio', secao:'anamnese', tipo:'text' },
+    'textarea_27hiqx': { key:'condicao_saude_atual', label:'Condição de saúde atual', secao:'anamnese', tipo:'text' },
+    'textarea_28jjvn': { key:'medicacoes_nome', label:'Nome do medicamento e dosagem', secao:'anamnese', tipo:'text', combineInto:'medicacoes' },
+    'textarea_29rdpm': { key:'medicacoes_motivo', label:'Motivo do medicamento', secao:'anamnese', tipo:'text', combineInto:'medicacoes' },
+    'textarea_30lvnx': { key:'diagnosticos_anteriores', label:'Diagnóstico médico/psiquiátrico prévio', secao:'anamnese', tipo:'text' },
+    'textarea_31hfjy': { key:'sono_alimentacao_energia', label:'Sono, alimentação e energia', secao:'anamnese', tipo:'text' },
+    'textarea_32luio': { key:'experiencia_terapia_anterior', label:'Experiência de terapia anterior', secao:'anamnese', tipo:'text' },
+    'textarea_33pper': { key:'o_que_trouxe_aqui', label:'O que trouxe até aqui', secao:'anamnese', tipo:'text', combineInto:'o_que_esta_dificil' },
+    'textarea_34afvb': { key:'o_que_esta_dificil', label:'O que está difícil de lidar', secao:'anamnese', tipo:'text' },
+    'textarea_35nptr': { key:'expectativas', label:'O que espera da psicoterapia', secao:'anamnese', tipo:'text' },
+    'textarea_36rfuc': { key:'observacoes_clinicas', label:'Comentário/observação final', secao:'anamnese', tipo:'text' },
+  };
+  const ACROFORM_CHECKBOX_GROUPS = [
+    { key:'genero', label:'Gênero', secao:'pacientes', tipo:'text', opts:[['checkbox_40ambp','Feminino'],['checkbox_41fony','Masculino'],['checkbox_42yhte','Não-binário'],['checkbox_43hkop','Prefere não dizer']] },
+    { key:'estado_civil', label:'Estado civil', secao:'pacientes', tipo:'text', opts:[['checkbox_45oixy','Solteiro(a)'],['checkbox_46oqxz','Casado(a)'],['checkbox_47nkce','Divorciado(a)'],['checkbox_48snt','Outros']] },
+    { key:'tem_filhos', label:'Tem filhos', secao:'pacientes', tipo:'boolean', opts:[['checkbox_49trim','Sim'],['checkbox_50sclr','Não']] },
+    { key:'historico_familiar_transtornos', label:'Histórico familiar transtornos/violência/abuso', secao:'anamnese', tipo:'text', opts:[['checkbox_52ttxp','Sim'],['checkbox_53qvrh','Não'],['checkbox_54rrpl','Prefiro não comentar agora']] },
+    { key:'rede_apoio', label:'Possui rede de apoio', secao:'anamnese', tipo:'boolean', opts:[['checkbox_55gjrn','Sim'],['checkbox_56ezot','Não']] },
+    { key:'uso_medicacao_ref', label:'Faz uso de medicação (referência)', secao:'anamnese', tipo:'text', ref:true, opts:[['checkbox_57jfwr','Sim'],['checkbox_58oula','Não']] },
+    { key:'fez_terapia_antes_ref', label:'Já fez psicoterapia antes (referência)', secao:'anamnese', tipo:'text', ref:true, opts:[['checkbox_59fqpt','Sim'],['checkbox_60ozpo','Não']] },
+    { key:'disposta_implicar', label:'Disposta(o) a se implicar no processo', secao:'anamnese', tipo:'boolean', opts:[['checkbox_61ufrj','Sim'],['checkbox_62hyte','Não'],['checkbox_63ppvx','Não sei ainda']] },
+  ];
+
+  // ---- DICIONÁRIO 2: formato texto tipo Google Forms ("Ana Caroline")
+  const TEXTO_LABELS = [
+    ['Nome completo','nome_completo','pacientes','text'],
+    ['Idade','idade','pacientes','text'],
+    ['CPF','cpf','pacientes','text'],
+    ['Gênero','genero','pacientes','text'],
+    ['Orientação sexual','orientacao_sexual','pacientes','text'],
+    ['Data de nascimento','data_nascimento','pacientes','date'],
+    ['Estado civil','estado_civil','pacientes','text'],
+    ['Filhos','tem_filhos','pacientes','boolean'],
+    ['Quantos filhos','quantidade_filhoss','pacientes','int'],
+    ['Endereço','endereco','pacientes','text'],
+    ['WhatsApp','whatsapp','pacientes','text'],
+    ['Você autoriza receber mensagens de confirmações dos nossos encontros pelo WhatsApp?','consentimento_whatsapp','pacientes','boolean'],
+    ['E-mail','email','pacientes','text'],
+    ['Escolaridade','escolaridade','pacientes','text'],
+    ['Ocupação Atual','profissao','pacientes','text'],
+    ['Renda mensal','renda_mensal','pacientes','numeric'],
+    ['Contato de emergência 1','emergencia1_nome','pacientes','text', true],
+    ['Contato de emergência 2','emergencia2_nome','pacientes','text', true],
+    ['Com quem você cresceu?','com_quem_cresceu','anamnese','text'],
+    ['Como era a sua relação com as figuras cuidadoras?','relacao_figuras_cuidadoras','anamnese','text'],
+    ['Atualmente, como está a sua relação com a família de origem?','relacao_familia_atual','anamnese','text'],
+    ['Há histórico familiar de transtornos mentais, violência ou abuso?','historico_familiar_transtornos','anamnese','text'],
+    ['Está satisfeita(o) com sua rotina de trabalho/estudos?','satisfacao_trabalho_estudos','anamnese','text'],
+    ['Como lida com prazos, cobranças e produtividade?','lida_com_prazos','anamnese','text'],
+    ['Possui rede de apoio ou vínculos afetivos próximos?','rede_apoio','anamnese','boolean'],
+    ['Quem compõe essa rede?','quem_compoem_rede','anamnese','text'],
+    ['Possui alguma condição de saúde atual?','condicao_saude_atual','anamnese','text'],
+    ['Faz uso de alguma medicação ou suplementação?','uso_medicacao_ref','anamnese','text', true],
+    ['Qual o nome do medicamento e a dosagem? Por qual razão está tomando medicamento?','medicacoes','anamnese','text'],
+    ['Já teve algum diagnóstico médico ou psiquiátrico relevante?','diagnosticos_anteriores','anamnese','text'],
+    ['Como está seu sono, alimentação e nível de energia?','sono_alimentacao_energia','anamnese','text'],
+    ['Por qual canal você me encontrou?','como_conheceu','anamnese','text'],
+    ['O que está difícil de lidar nesse momento?','o_que_esta_dificil','anamnese','text'],
+    ['Já fez terapia antes?','fez_terapia_antes_ref','anamnese','text', true],
+    ['Me conte, brevemente, como foi essa experiência e por qual motivo você parou.','experiencia_terapia_anterior','anamnese','text'],
+    ['O que você espera do meu cuidado?','expectativas','anamnese','text'],
+    ['Está disposta(o) a se implicar no processo?','disposta_implicar','anamnese','boolean'],
+    ['Algum comentário ou observação importante que eu deva saber sobre você ou sua história?','observacoes_clinicas','anamnese','text'],
+  ];
+
+  let pacientesExtraidos = []; // { arquivo, fonte, campos:{key:{value,label,secao,tipo,ref,extraido}} }
+
+  document.getElementById('fileInput').addEventListener('change', e => handleFiles(e.target.files));
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  async function handleFiles(fileList){
+    const files = Array.from(fileList).filter(f => f.type === 'application/pdf');
+    for (const file of files) {
+      const filaEl = addFilaItem(file.name);
+      try {
+        const buf = await file.arrayBuffer();
+        const resultado = await processarPDF(buf.slice(0));
+        if (resultado.fonte === 'nao-reconhecido') {
+          setFilaStatus(filaEl, 'erro', 'não reconhecido');
+        } else {
+          const naoExtraidos = Object.values(resultado.campos).filter(c => !c.extraido).length;
+          setFilaStatus(filaEl, naoExtraidos === 0 ? 'ok' : 'parcial',
+            naoExtraidos === 0 ? 'extraído completo' : naoExtraidos + ' campo(s) p/ revisar');
+          resultado.arquivo = file.name;
+          pacientesExtraidos.push(resultado);
+          renderRevisao();
+        }
+      } catch (err) {
+        console.error(err);
+        setFilaStatus(filaEl, 'erro', 'falha ao ler PDF');
+      }
+    }
+  }
+
+  function addFilaItem(nome){
+    const el = document.createElement('div');
+    el.className = 'fila-item';
+    el.innerHTML = `<span class="nome-arquivo">${nome}</span><span class="badge processando">processando…</span>`;
+    document.getElementById('fila').appendChild(el);
+    return el.querySelector('.badge');
+  }
+  function setFilaStatus(badgeEl, classe, texto){
+    badgeEl.className = 'badge ' + classe;
+    badgeEl.textContent = texto;
+  }
+
+  async function processarPDF(arrayBuffer){
+    try {
+      const { PDFDocument } = PDFLib;
+      const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption:true });
+      const form = pdfDoc.getForm();
+      const fields = form.getFields();
+      const nomesConhecidos = fields.filter(f => ACROFORM_TEXT_FIELDS[f.getName()] ||
+        ACROFORM_CHECKBOX_GROUPS.some(g => g.opts.some(o => o[0] === f.getName())));
+      if (fields.length > 0 && nomesConhecidos.length >= 5) {
+        return extrairAcroForm(form);
+      }
+    } catch (e) {
+      console.warn('Não é AcroForm reconhecido, tentando texto:', e.message);
+    }
+    const texto = await extrairTextoPDF(arrayBuffer);
+    if (texto && texto.trim().length > 50) {
+      return extrairPorRotulo(texto);
+    }
+    return { fonte:'nao-reconhecido', campos:{} };
+  }
+
+  function novoCampo(label, secao, tipo, ref){
+    return { label, secao, tipo, ref: !!ref, value:'', combineInto:null, extraido:false };
+  }
+
+  function extrairAcroForm(form){
+    const campos = {};
+    const combinados = {}; // combineInto target -> [valores]
+    for (const [fieldName, meta] of Object.entries(ACROFORM_TEXT_FIELDS)) {
+      let valor = '';
+      try {
+        const tf = form.getTextField(fieldName);
+        valor = (tf.getText() || '').trim();
+      } catch(e) {}
+      if (meta.combineInto) {
+        if (valor) (combinados[meta.combineInto] = combinados[meta.combineInto] || []).push(valor);
+        continue; // não vira campo próprio na revisão, só alimenta o campo combinado
+      }
+      campos[meta.key] = { label:meta.label, secao:meta.secao, tipo:meta.tipo, ref:!!meta.ref, value:valor, extraido: valor.length > 0 };
+    }
+    for (const grupo of ACROFORM_CHECKBOX_GROUPS) {
+      let valorMarcado = '';
+      for (const [fieldName, optLabel] of grupo.opts) {
+        try { if (form.getCheckBox(fieldName).isChecked()) { valorMarcado = optLabel; break; } } catch(e) {}
+      }
+      campos[grupo.key] = { label:grupo.label, secao:grupo.secao, tipo:grupo.tipo, ref:!!grupo.ref, value:valorMarcado, extraido: valorMarcado.length > 0 };
+    }
+    // aplica combinações (ex: medicações nome+motivo, o_que_trouxe+o_que_esta_dificil)
+    for (const [destKey, valores] of Object.entries(combinados)) {
+      const existente = campos[destKey] ? campos[destKey].value : '';
+      const junto = [existente, ...valores].filter(Boolean).join(' | ');
+      if (campos[destKey]) { campos[destKey].value = junto; campos[destKey].extraido = junto.length > 0; }
+    }
+    return { fonte:'PDF editável PsiAna (AcroForm)', campos };
+  }
+
+  async function extrairTextoPDF(arrayBuffer){
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let texto = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      texto += content.items.map(it => it.str).join(' ') + '\n';
+    }
+    return texto;
+  }
+
+  function extrairPorRotulo(texto){
+    const ocorrencias = [];
+    for (const [rotulo, key, secao, tipo] of TEXTO_LABELS) {
+      const idx = texto.indexOf(rotulo);
+      if (idx !== -1) ocorrencias.push({ idx, fim: idx + rotulo.length, rotulo, key, secao, tipo });
+    }
+    ocorrencias.sort((a,b) => a.idx - b.idx);
+    const campos = {};
+    for (const [rotulo, key, secao, tipo, ref] of TEXTO_LABELS) {
+      campos[key] = { label: rotulo.replace(/\?$/,''), secao, tipo, ref: !!ref, value:'', extraido:false };
+    }
+    for (let i = 0; i < ocorrencias.length; i++) {
+      const atual = ocorrencias[i];
+      const proximo = ocorrencias[i+1];
+      const fimValor = proximo ? proximo.idx : texto.length;
+      let valor = texto.slice(atual.fim, fimValor).trim().replace(/\s{2,}/g,' ');
+      campos[atual.key].value = valor;
+      campos[atual.key].extraido = valor.length > 0;
+    }
+    return { fonte:'Formato texto (tipo Google Forms)', campos };
+  }
+
+  function renderRevisao(){
+    const container = document.getElementById('revisaoContainer');
+    document.getElementById('vazioMsg').style.display = pacientesExtraidos.length ? 'none' : 'block';
+    container.querySelectorAll('.card-revisao').forEach(el => el.remove());
+
+    pacientesExtraidos.forEach((p, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card-revisao';
+      const nome = p.campos.nome_completo ? p.campos.nome_completo.value : '';
+      const naoExtraidosCount = Object.values(p.campos).filter(c => !c.extraido).length;
+
+      const camposCadastro = Object.entries(p.campos).filter(([,c]) => c.secao === 'pacientes');
+      const camposAnamnese = Object.entries(p.campos).filter(([,c]) => c.secao === 'anamnese');
+
+      card.innerHTML = `
+        <div class="card-revisao-head">
+          <h3>${nome || '(sem nome extraído)'}</h3>
+          <span class="fonte-tag">${p.fonte}</span>
+        </div>
+        <div class="card-revisao-meta">${p.arquivo} · ${naoExtraidosCount === 0 ? 'todos os campos extraídos' : naoExtraidosCount + ' campo(s) precisam de revisão manual (destacados)'}</div>
+
+        <div class="secao-titulo">Cadastro (tabela pacientes)</div>
+        <div class="campos-grid" data-idx="${idx}" data-grupo="pacientes">
+          ${camposCadastro.map(([key,c]) => campoHTML(idx, key, c)).join('')}
+        </div>
+
+        <div class="secao-titulo">Anamnese (tabela anamnese)</div>
+        <div class="campos-grid full" data-idx="${idx}" data-grupo="anamnese">
+          ${camposAnamnese.map(([key,c]) => campoHTML(idx, key, c)).join('')}
+        </div>
+
+        <div class="card-revisao-acoes">
+          <button class="btn-descartar" onclick="descartarPaciente(${idx})">Descartar</button>
+          <button class="btn-salvar-paciente" id="btnSalvar${idx}" onclick="salvarPaciente(${idx})">Confirmar e salvar</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function campoHTML(idx, key, c){
+    const isTextarea = (c.value || '').length > 60 || c.value.includes('\n');
+    const cls = c.extraido ? 'campo' : 'campo nao-extraido';
+    const tag = c.ref ? '<span class="tag-nao-extraido" title="Campo de referência — não tem coluna própria confirmada, não é gravado automaticamente">ref</span>' : '';
+    const naoTag = c.extraido ? '' : '<span class="tag-nao-extraido">revisar</span>';
+    if (isTextarea) {
+      return `<div class="${cls}"><label>${c.label} ${tag}${naoTag}</label>
+        <textarea rows="3" data-idx="${idx}" data-key="${key}" onchange="atualizarCampo(this)">${escapeHtml(c.value)}</textarea></div>`;
+    }
+    return `<div class="${cls}"><label>${c.label} ${tag}${naoTag}</label>
+      <input type="text" value="${escapeHtml(c.value)}" data-idx="${idx}" data-key="${key}" onchange="atualizarCampo(this)"></div>`;
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+  function atualizarCampo(el){
+    const idx = +el.dataset.idx, key = el.dataset.key;
+    pacientesExtraidos[idx].campos[key].value = el.value;
+    pacientesExtraidos[idx].campos[key].extraido = el.value.trim().length > 0;
+  }
+
+  function descartarPaciente(idx){
+    if (!confirm('Descartar esta importação? Nada será salvo.')) return;
+    pacientesExtraidos.splice(idx,1);
+    renderRevisao();
+  }
+
+  // ---- Conversões de tipo pra bater com o schema real ----
+  function paraBooleano(v){
+    if (!v) return null;
+    const s = v.trim().toLowerCase();
+    if (s === 'sim') return true;
+    if (s === 'não' || s === 'nao') return false;
+    return null; // "Não sei ainda", "Prefiro não comentar" etc: sem valor booleano claro
+  }
+  function paraNumero(v){
+    if (!v) return null;
+    const limpo = v.replace(/[^\d,.-]/g,'').replace(/\.(?=\d{3},)/g,'').replace(',','.');
+    const n = parseFloat(limpo);
+    return isNaN(n) ? null : n;
+  }
+  function paraInteiro(v){
+    if (!v) return null;
+    const n = parseInt(v.replace(/\D/g,''), 10);
+    return isNaN(n) ? null : n;
+  }
+  function paraDataISO(v){
+    if (!v) return null;
+    const m = v.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+    if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v.trim())) return v.trim();
+    return null;
+  }
+  function converter(tipo, valor){
+    switch(tipo){
+      case 'boolean': return paraBooleano(valor);
+      case 'numeric': return paraNumero(valor);
+      case 'int': return paraInteiro(valor);
+      case 'date': return paraDataISO(valor);
+      default: return valor || null;
+    }
+  }
+
+  async function salvarPaciente(idx){
+    const p = pacientesExtraidos[idx];
+    const c = p.campos;
+    const btn = document.getElementById('btnSalvar' + idx);
+    btn.disabled = true; btn.textContent = 'Salvando…';
+
+    const whatsapp = (c.whatsapp && c.whatsapp.value) ||
+      [c.whatsapp_ddd && c.whatsapp_ddd.value, c.whatsapp_numero && c.whatsapp_numero.value].filter(Boolean).join(' ');
+
+    const payloadPaciente = { status:'ativo' };
+    for (const [key, campo] of Object.entries(c)) {
+      if (campo.secao !== 'pacientes' || campo.ref) continue;
+      payloadPaciente[key] = converter(campo.tipo, campo.value);
+    }
+    if (whatsapp) payloadPaciente.whatsapp = whatsapp;
+
+    const payloadAnamnese = { paciente_id:null, data_preenchimento: new Date().toISOString().slice(0,10) };
+    for (const [key, campo] of Object.entries(c)) {
+      if (campo.secao !== 'anamnese' || campo.ref) continue;
+      payloadAnamnese[key] = converter(campo.tipo, campo.value);
+    }
+
+    try {
+      const resPac = await fetch(SUPABASE_URL + '/rest/v1/pacientes', {
+        method:'POST',
+        headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+AUTH_TOKEN, 'Content-Type':'application/json', Prefer:'return=representation' },
+        body: JSON.stringify(payloadPaciente)
+      });
+      if (!resPac.ok) throw new Error('Erro ao criar paciente: ' + await resPac.text());
+      const pacCriado = (await resPac.json())[0];
+      payloadAnamnese.paciente_id = pacCriado.id;
+
+      const resAna = await fetch(SUPABASE_URL + '/rest/v1/anamnese', {
+        method:'POST',
+        headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+AUTH_TOKEN, 'Content-Type':'application/json', Prefer:'return=representation' },
+        body: JSON.stringify(payloadAnamnese)
+      });
+      if (!resAna.ok) throw new Error('Paciente criado, mas erro ao salvar anamnese: ' + await resAna.text());
+
+      btn.textContent = 'Salvo ✓';
+      btn.style.background = 'var(--ok)';
+      setTimeout(() => { pacientesExtraidos.splice(idx,1); renderRevisao(); }, 900);
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao salvar: ' + err.message);
+      btn.disabled = false; btn.textContent = 'Confirmar e salvar';
+    }
+  }
+</script>
+</body>
+</html>
