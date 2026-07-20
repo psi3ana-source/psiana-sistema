@@ -585,6 +585,10 @@
     }
   }
 
+  function sessaoExpirou(textoErro){
+    return /jwt expired|pgrst303|invalid.*token|jwt.*invalid/i.test(textoErro || '');
+  }
+
   async function salvarPaciente(idx){
     const p = pacientesExtraidos[idx];
     const c = p.campos;
@@ -629,6 +633,11 @@
       setTimeout(() => { pacientesExtraidos.splice(idx,1); renderRevisao(); }, 900);
     } catch (err) {
       console.error(err);
+      if (sessaoExpirou(err.message)) {
+        alert('Sua sessão expirou. Você vai ser levada de volta pro login — infelizmente essa revisão não fica salva, você vai precisar subir o PDF de novo depois de entrar.');
+        window.location.href = 'login-psicologa.html';
+        return;
+      }
       alert('Erro ao salvar: ' + err.message);
       btn.disabled = false; btn.textContent = 'Confirmar e salvar';
     }
