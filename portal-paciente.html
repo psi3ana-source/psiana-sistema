@@ -511,18 +511,6 @@
   }
   .filtro-select:focus{ outline:none; border-color: var(--rose); }
 
-  .filtro-grade{
-    display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
-  }
-  .filtro-campo{ display:flex; flex-direction:column; gap: 5px; }
-  .filtro-campo-label{ font-size: 11px; color: var(--ink-soft); }
-  .filtro-select-grade{
-    font-size: 12.5px; padding: 9px 10px;
-    border: 1px solid var(--line); border-radius: 10px; background:#FEFCFB;
-    color: var(--ink); font-family:'Segoe UI', Arial, sans-serif;
-  }
-  .filtro-select-grade:focus{ outline:none; border-color: var(--rose); }
-
   /* --- Documentos --- */
   .doc-lista{ display:flex; flex-direction:column; gap: 10px; }
   .doc-item{
@@ -561,16 +549,6 @@
     font-size: 12.5px; color: var(--mocha-deep); margin-bottom: 16px;
   }
   .limite-box .limite-num{ font-weight: 600; }
-
-  .novo-horario-slots{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-  .slot-horario{
-    font-size:12.5px; padding:8px 14px; border-radius:20px; border:1px solid var(--line);
-    background:#FEFCFB; color:var(--ink); cursor:pointer; font-family:'Segoe UI', Arial, sans-serif;
-  }
-  .slot-horario:hover{ background:var(--rose-soft); border-color:var(--rose); }
-  .slot-horario.selecionado{ background:var(--mocha); border-color:var(--mocha); color:#fff; }
-  .hint-horario{ font-size:11px; color:var(--ink-soft); font-style:italic; display:block; margin-top:8px; }
-
   .taxa-aviso{
     display:none; background:#FFF1E0; border: 1px solid #F5DDB8; border-radius: 12px;
     padding: 12px 14px; margin-bottom: 16px;
@@ -647,7 +625,7 @@
   /* --- Desktop: área autenticada aproveita mais espaço --- */
   @media (min-width: 860px){
     body{ padding: 56px 24px; align-items: flex-start; }
-    #view-app.shell.active{
+    #view-app.shell{
       max-width: 1280px; width: 94%; margin: 0 auto;
       display:grid; grid-template-columns: 230px 1fr;
       grid-template-areas: "topbar topbar" "tabs content";
@@ -692,7 +670,7 @@
           <input type="password" id="login-senha" placeholder="Digite sua senha" autocomplete="current-password">
           <span class="toggle-eye" onclick="toggleEye('login-senha', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
         </div>
-        <button class="btn" id="btn-login-portal" onclick="fazerLoginPortal()">Entrar</button>
+        <button class="btn" onclick="fazerLogin()">Entrar</button>
       </form>
 
       <p class="foot-link">Primeiro acesso? <a onclick="goTo('primeiro-acesso')">Criar minha senha</a></p>
@@ -769,24 +747,6 @@
             <div class="t">Terça-feira, 10h00</div>
             <div class="s">Atendimento online · link disponível no dia</div>
           </div>
-        </div>
-        <button class="btn" style="margin-top:14px;" onclick="abrirAvisoGravacao()">Entrar na sessão</button>
-      </div>
-
-      <!-- Modal de aviso antes de abrir o Meet -->
-      <div class="modal-overlay" id="modal-gravacao">
-        <div class="modal-card">
-          <div class="modal-head">
-            <h2>Antes de entrar</h2>
-          </div>
-          <p style="font-size:13.5px; color:var(--ink); line-height:1.6; margin:0 0 16px;">
-            Esta sessão poderá ser gravada em áudio, conforme sua autorização de cadastro, exclusivamente para fins de transcrição clínica. A gravação é descartada assim que a evolução da sessão é registrada no seu prontuário.
-          </p>
-          <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:0 0 18px;">
-            Se você não quiser que esta sessão específica seja gravada, avise sua psicóloga no início do encontro — isso não afeta o atendimento.
-          </p>
-          <button class="btn" onclick="continuarParaMeet()">Entendi, continuar</button>
-          <button class="btn ghost" style="margin-top:8px;" onclick="fecharAvisoGravacao()">Cancelar</button>
         </div>
       </div>
 
@@ -1082,40 +1042,42 @@
 
       <div class="panel">
         <h2>Histórico de pagamentos</h2>
-        <div class="filtro-grade">
-          <div class="filtro-campo">
-            <label class="filtro-campo-label">Data</label>
-            <select class="filtro-select-grade" id="select-periodo" onchange="setFiltroSelect('periodo', this.value)">
-              <option value="">Tudo</option>
-              <option value="2026-06">Junho/2026</option>
-              <option value="2026-05">Maio/2026</option>
-              <option value="2026-04">Abril/2026</option>
-            </select>
-          </div>
-          <div class="filtro-campo">
-            <label class="filtro-campo-label">Status</label>
-            <select class="filtro-select-grade" id="select-status" onchange="setFiltroSelect('status', this.value)">
-              <option value="">Todos</option>
-              <option value="pago">Pago</option>
-              <option value="pendente">Pendente</option>
-            </select>
-          </div>
-          <div class="filtro-campo">
-            <label class="filtro-campo-label">Forma</label>
-            <select class="filtro-select-grade" id="select-forma" onchange="setFiltroSelect('forma', this.value)">
-              <option value="">Todas</option>
-              <option value="Pix">Pix</option>
-              <option value="Cartão">Cartão</option>
-            </select>
-          </div>
-          <div class="filtro-campo">
-            <label class="filtro-campo-label">Recibo</label>
-            <select class="filtro-select-grade" id="select-recibo" onchange="setFiltroSelect('recibo', this.value)">
-              <option value="">Todos</option>
-              <option value="emitido">Emitido</option>
-              <option value="pendente">Pendente</option>
-            </select>
-          </div>
+        <div class="filtro-linha">
+          <span class="chip-group-label">Data</span>
+          <button class="chip active" id="chip-periodo" onclick="setFiltroChip('periodo')">Tudo</button>
+          <select class="filtro-select" id="select-periodo" onchange="setFiltroSelect('periodo', this.value)">
+            <option value="">Escolher mês…</option>
+            <option value="2026-06">Junho/2026</option>
+            <option value="2026-05">Maio/2026</option>
+            <option value="2026-04">Abril/2026</option>
+          </select>
+        </div>
+        <div class="filtro-linha">
+          <span class="chip-group-label">Status</span>
+          <button class="chip active" id="chip-status" onclick="setFiltroChip('status')">Todos</button>
+          <select class="filtro-select" id="select-status" onchange="setFiltroSelect('status', this.value)">
+            <option value="">Escolher status…</option>
+            <option value="pago">Pago</option>
+            <option value="pendente">Pendente</option>
+          </select>
+        </div>
+        <div class="filtro-linha">
+          <span class="chip-group-label">Forma</span>
+          <button class="chip active" id="chip-forma" onclick="setFiltroChip('forma')">Todas</button>
+          <select class="filtro-select" id="select-forma" onchange="setFiltroSelect('forma', this.value)">
+            <option value="">Escolher forma…</option>
+            <option value="Pix">Pix</option>
+            <option value="Cartão">Cartão</option>
+          </select>
+        </div>
+        <div class="filtro-linha">
+          <span class="chip-group-label">Recibo</span>
+          <button class="chip active" id="chip-recibo" onclick="setFiltroChip('recibo')">Todos</button>
+          <select class="filtro-select" id="select-recibo" onchange="setFiltroSelect('recibo', this.value)">
+            <option value="">Escolher recibo…</option>
+            <option value="emitido">Emitido</option>
+            <option value="pendente">Pendente</option>
+          </select>
         </div>
         <div id="lista-pagamentos"></div>
       </div>
@@ -1198,12 +1160,6 @@
               <option value="remarcar">Remarcar</option>
               <option value="cancelar">Cancelar</option>
             </select>
-          </div>
-          <div class="field" id="novo-horario-box" style="display:none;">
-            <label for="novo-horario-data">Nova data</label>
-            <input type="date" id="novo-horario-data" onchange="buscarHorariosDisponiveis()">
-            <div id="novo-horario-slots" class="novo-horario-slots"></div>
-            <span class="hint-horario">A remarcação continua sujeita à sua aprovação, mesmo após escolher um horário.</span>
           </div>
           <div class="limite-box" id="limite-box"></div>
           <div class="field">
@@ -1289,9 +1245,6 @@
   </div>
 
 <script>
-  var SUPABASE_URL = 'https://gjzzbnkhipfsbmpxbzur.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_IqQnG0EiFqTapqq7xyw6Lw_HsJkA2CK';
-
   var fakePaciente = { nome: "Camila", cpf: "123.456.789-00", plano: "integral", tipoContratacao: "avulso" };
 
   var LIMITES_PLANO = {
@@ -1357,8 +1310,20 @@
     return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
   }
 
+  function setFiltroChip(grupo){
+    filtroPagamento[grupo] = 'todos';
+    document.getElementById('chip-' + grupo).classList.add('active');
+    document.getElementById('select-' + grupo).value = '';
+    renderPagamentos();
+  }
+
   function setFiltroSelect(grupo, valor){
-    filtroPagamento[grupo] = valor === '' ? 'todos' : valor;
+    if(valor === ''){
+      setFiltroChip(grupo);
+      return;
+    }
+    filtroPagamento[grupo] = valor;
+    document.getElementById('chip-' + grupo).classList.remove('active');
     renderPagamentos();
   }
 
@@ -1386,7 +1351,11 @@
     e.target.value = v;
   });
 
+  // ===== Configuração =====
   var N8N_WEBHOOK_PORTAL_LOGIN = 'https://psi3ana.app.n8n.cloud/webhook/portal-login';
+  var N8N_WEBHOOK_PORTAL_CRIAR_SENHA = 'https://psi3ana.app.n8n.cloud/webhook/portal-criar-senha';
+
+  var paciente = { nome: "", id: null }; // preenchido de verdade após o login
 
   async function sha256(texto){
     var encoder = new TextEncoder();
@@ -1396,20 +1365,22 @@
     return hashArray.map(function(b){ return b.toString(16).padStart(2, '0'); }).join('');
   }
 
-  async function fazerLoginPortal(){
+  async function fazerLogin(){
     var cpfLimpo = document.getElementById('login-cpf').value.replace(/\D/g, '');
-    var senha = document.getElementById('login-senha').value.trim();
+    var senha = document.getElementById('login-senha').value;
     var errBox = document.getElementById('login-error');
-    var btn = document.getElementById('btn-login-portal');
+    var btn = document.querySelector('#view-login .btn');
+
+    errBox.classList.remove('show');
 
     if(cpfLimpo.length !== 11 || !senha){
       errBox.textContent = 'Preencha CPF e senha para continuar.';
       errBox.classList.add('show');
       return;
     }
-    errBox.classList.remove('show');
+
     btn.disabled = true;
-    btn.textContent = 'Entrando…';
+    btn.textContent = 'Verificando…';
 
     try{
       var senhaHash = await sha256(senha);
@@ -1420,13 +1391,12 @@
       });
       var dados = await resposta.json();
 
-      var sucesso = dados && (dados.sucesso === true || dados.success === true);
-      if(sucesso){
-        var pacienteId = dados.paciente_id || dados.id || (dados.paciente && dados.paciente.id) || null;
-        var nome = dados.nome || dados.nome_completo || (dados.paciente && (dados.paciente.nome_completo || dados.paciente.nome)) || '';
+      if(dados && dados.sucesso && dados.paciente){
         sessionStorage.setItem('psiana_portal_logado', 'true');
-        sessionStorage.setItem('psiana_portal_nome', nome || fakePaciente.nome);
-        if(pacienteId) sessionStorage.setItem('psiana_portal_paciente_id', pacienteId);
+        sessionStorage.setItem('psiana_portal_paciente_id', dados.paciente.id);
+        sessionStorage.setItem('psiana_portal_nome', dados.paciente.nome);
+        paciente.id = dados.paciente.id;
+        paciente.nome = dados.paciente.nome;
         entrarNoApp();
       } else {
         errBox.textContent = 'CPF ou senha incorretos.';
@@ -1453,14 +1423,14 @@
     el.classList.toggle('err', false);
   }
 
-  var N8N_WEBHOOK_CRIAR_SENHA = 'https://psi3ana.app.n8n.cloud/webhook/portal-criar-senha';
-  var TOKEN_PRIMEIRO_ACESSO = new URLSearchParams(window.location.search).get('token');
-
   async function criarSenha(){
     var nova = document.getElementById('nova-senha').value;
     var confirma = document.getElementById('confirma-senha').value;
     var errBox = document.getElementById('senha-error');
     var valido = nova.length >= 8 && /\d/.test(nova) && /[^A-Za-z0-9]/.test(nova);
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('token');
+
     if(!valido){
       errBox.textContent = 'A senha precisa ter 8+ caracteres, um número e um caractere especial.';
       errBox.classList.add('show');
@@ -1471,34 +1441,33 @@
       errBox.classList.add('show');
       return;
     }
-    errBox.classList.remove('show');
-
-    if(!TOKEN_PRIMEIRO_ACESSO){
-      errBox.textContent = 'Link inválido ou expirado. Peça um novo convite.';
+    if(!token){
+      errBox.textContent = 'Link inválido ou expirado. Peça um novo link de acesso.';
       errBox.classList.add('show');
       return;
     }
+    errBox.classList.remove('show');
 
     try{
       var senhaHash = await sha256(nova);
-      var resposta = await fetch(N8N_WEBHOOK_CRIAR_SENHA, {
+      var resposta = await fetch(N8N_WEBHOOK_PORTAL_CRIAR_SENHA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: TOKEN_PRIMEIRO_ACESSO, senha_hash: senhaHash })
+        body: JSON.stringify({ token: token, senha_hash: senhaHash })
       });
       var dados = await resposta.json();
-      var sucesso = dados && (dados.sucesso === true || dados.success === true);
-      if(!sucesso){
-        errBox.textContent = 'Não foi possível criar sua senha. O link pode ter expirado.';
+
+      if(dados && dados.sucesso && dados.paciente){
+        sessionStorage.setItem('psiana_portal_logado', 'true');
+        sessionStorage.setItem('psiana_portal_paciente_id', dados.paciente.id);
+        sessionStorage.setItem('psiana_portal_nome', dados.paciente.nome);
+        paciente.id = dados.paciente.id;
+        paciente.nome = dados.paciente.nome;
+        entrarNoApp();
+      } else {
+        errBox.textContent = 'Link inválido ou expirado. Peça um novo link de acesso.';
         errBox.classList.add('show');
-        return;
       }
-      var pacienteId = dados.paciente_id || dados.id || (dados.paciente && dados.paciente.id) || null;
-      var nome = dados.nome || dados.nome_completo || (dados.paciente && (dados.paciente.nome_completo || dados.paciente.nome)) || '';
-      sessionStorage.setItem('psiana_portal_logado', 'true');
-      sessionStorage.setItem('psiana_portal_nome', nome || fakePaciente.nome);
-      if(pacienteId) sessionStorage.setItem('psiana_portal_paciente_id', pacienteId);
-      entrarNoApp();
     } catch(e){
       errBox.textContent = 'Não foi possível conectar ao servidor. Tente novamente.';
       errBox.classList.add('show');
@@ -1506,8 +1475,7 @@
   }
 
   function entrarNoApp(){
-    var nomeCompletoSalvo = sessionStorage.getItem('psiana_portal_nome') || fakePaciente.nome;
-    document.getElementById('nome-paciente').textContent = nomeCompletoSalvo.trim().split(' ')[0];
+    document.getElementById('nome-paciente').textContent = sessionStorage.getItem('psiana_portal_nome') || paciente.nome;
     verificarAvaliacaoPendente();
     renderTarefasPreview();
     renderSessoes();
@@ -1519,8 +1487,7 @@
   }
 
   function fazerLogout(){
-    sessionStorage.removeItem('psiana_portal_logado');
-    sessionStorage.removeItem('psiana_portal_nome');
+    sessionStorage.clear();
     goTo('login');
   }
 
@@ -1673,53 +1640,24 @@
     return new Date(parseInt(pd[2]), parseInt(pd[1]) - 1, parseInt(pd[0]), parseInt(ph[0]), parseInt(ph[1]));
   }
 
-  async function popularSelectSessoes(){
+  function popularSelectSessoes(){
+    var agora = new Date(2026, 6, 3, 9, 0); // referência de "agora" para a demonstração
+    var limiteMinimo = new Date(agora.getTime() + 12 * 60 * 60 * 1000);
+    var opcoes = fakeSessoes.filter(function(s){
+      if(s.status !== 'agendada') return false;
+      var dt = parseDataHora(s.data, s.hora);
+      if(dt.getMonth() !== agora.getMonth() || dt.getFullYear() !== agora.getFullYear()) return false;
+      if(dt < limiteMinimo) return false;
+      return true;
+    });
     var select = document.getElementById('ajuste-sessao');
-    var pacienteId = sessionStorage.getItem('psiana_portal_paciente_id');
-
-    if(!pacienteId){
-      // Sem login real — mantém a lista fake, só pra visualização/demo
-      var agora = new Date(2026, 6, 3, 9, 0);
-      var limiteMinimo = new Date(agora.getTime() + 12 * 60 * 60 * 1000);
-      var opcoes = fakeSessoes.filter(function(s){
-        if(s.status !== 'agendada') return false;
-        var dt = parseDataHora(s.data, s.hora);
-        if(dt.getMonth() !== agora.getMonth() || dt.getFullYear() !== agora.getFullYear()) return false;
-        if(dt < limiteMinimo) return false;
-        return true;
-      });
-      if(opcoes.length === 0){
-        select.innerHTML = '<option value="">Nenhuma sessão disponível para ajuste</option>';
-        return;
-      }
-      select.innerHTML = opcoes.map(function(s){
-        return '<option value="' + s.data + '">Encontro ' + s.encontro + ' · ' + s.data + ' · ' + s.hora.replace(':', 'h') + '</option>';
-      }).join('');
+    if(opcoes.length === 0){
+      select.innerHTML = '<option value="">Nenhuma sessão disponível para ajuste</option>';
       return;
     }
-
-    try{
-      var agoraISO = new Date().toISOString();
-      var r = await fetch(
-        SUPABASE_URL + '/rest/v1/sessoes?paciente_id=eq.' + pacienteId +
-        '&status=in.(agendada,confirmada)&horario_inicio=gte.' + agoraISO +
-        '&select=id,data_sessao,horario_inicio&order=horario_inicio.asc',
-        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
-      );
-      var sessoesReais = await r.json();
-      if(!Array.isArray(sessoesReais) || sessoesReais.length === 0){
-        select.innerHTML = '<option value="">Nenhuma sessão disponível para ajuste</option>';
-        return;
-      }
-      select.innerHTML = sessoesReais.map(function(s){
-        var dt = new Date(s.horario_inicio);
-        var dataFmt = s.data_sessao.split('-').reverse().join('/');
-        var horaFmt = String(dt.getHours()).padStart(2,'0') + 'h' + String(dt.getMinutes()).padStart(2,'0');
-        return '<option value="' + s.id + '">Sessão · ' + dataFmt + ' · ' + horaFmt + '</option>';
-      }).join('');
-    } catch(e){
-      select.innerHTML = '<option value="">Não foi possível carregar suas sessões</option>';
-    }
+    select.innerHTML = opcoes.map(function(s){
+      return '<option value="' + s.data + '">Encontro ' + s.encontro + ' · ' + s.data + ' · ' + s.hora.replace(':', 'h') + '</option>';
+    }).join('');
   }
 
   function atualizarLimiteAjuste(){
@@ -1727,19 +1665,6 @@
     var aviso = document.getElementById('taxa-aviso');
     var btn = document.getElementById('btn-enviar-ajuste');
     var limiteBox = document.getElementById('limite-box');
-    var novoHorarioBox = document.getElementById('novo-horario-box');
-
-    novoHorarioBox.style.display = (acao === 'remarcar') ? 'block' : 'none';
-    if(acao === 'remarcar'){
-      var amanha = new Date();
-      amanha.setDate(amanha.getDate() + 1);
-      document.getElementById('novo-horario-data').min = amanha.toISOString().split('T')[0];
-    }
-    if(acao !== 'remarcar'){
-      document.getElementById('novo-horario-data').value = '';
-      document.getElementById('novo-horario-slots').innerHTML = '';
-      horarioEscolhido = null;
-    }
 
     if(acao === ''){
       limiteBox.innerHTML = '';
@@ -1792,59 +1717,6 @@
     gerarQrPix(valor);
   }
 
-  var horarioEscolhido = null;
-
-  async function buscarHorariosDisponiveis(){
-    var dataEscolhida = document.getElementById('novo-horario-data').value;
-    var wrap = document.getElementById('novo-horario-slots');
-    horarioEscolhido = null;
-    if(!dataEscolhida){ wrap.innerHTML = ''; return; }
-
-    wrap.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);">Buscando horários…</span>';
-
-    // JS getDay(): 0=domingo, 1=segunda ... 6=sábado — mesma numeração usada na coluna dia_semana
-    var diaSemana = new Date(dataEscolhida + 'T12:00:00').getDay();
-
-    try{
-      var [rDisp, rSes] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/disponibilidade?dia_semana=eq.' + diaSemana + '&disponivel=eq.true&select=horario_inicio,horario_fim&order=horario_inicio.asc', {
-          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/sessoes?data_sessao=eq.' + dataEscolhida + '&status=not.eq.cancelada&select=horario_inicio', {
-          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
-        })
-      ]);
-      var slotsBase = await rDisp.json();
-      var sessoesData = await rSes.json();
-
-      var horasOcupadas = sessoesData.map(function(s){
-        return new Date(s.horario_inicio).toISOString().substring(11,16);
-      });
-
-      var livres = slotsBase.filter(function(s){
-        return horasOcupadas.indexOf(s.horario_inicio.substring(0,5)) === -1;
-      });
-
-      if(livres.length === 0){
-        wrap.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);">Nenhum horário livre nesse dia. Tente outra data.</span>';
-        return;
-      }
-
-      wrap.innerHTML = livres.map(function(s){
-        var hIni = s.horario_inicio.substring(0,5);
-        return '<button type="button" class="slot-horario" data-hora="' + hIni + '" onclick="escolherHorario(this, \'' + hIni + '\')">' + hIni + '</button>';
-      }).join('');
-    } catch(e){
-      wrap.innerHTML = '<span style="font-size:12px;color:var(--alerta);">Não foi possível buscar os horários agora.</span>';
-    }
-  }
-
-  function escolherHorario(botao, hora){
-    document.querySelectorAll('.slot-horario').forEach(function(b){ b.classList.remove('selecionado'); });
-    botao.classList.add('selecionado');
-    horarioEscolhido = { data: document.getElementById('novo-horario-data').value, hora: hora };
-  }
-
   function mostrarFormSolicitacao(){
     document.getElementById('painel-nova-solicitacao').classList.remove('hidden');
     document.getElementById('btn-nova-solicitacao').classList.add('hidden');
@@ -1855,62 +1727,23 @@
     document.getElementById('btn-nova-solicitacao').classList.remove('hidden');
   }
 
-  async function enviarSolicitacao(tipo){
-    if(tipo === 'ajuste'){
-      var acaoCheck = document.getElementById('ajuste-acao').value;
-      if(acaoCheck === 'remarcar' && !horarioEscolhido){
-        alert('Escolha um novo horário disponível antes de enviar.');
-        return;
-      }
-    }
-    var pacienteId = sessionStorage.getItem('psiana_portal_paciente_id');
+  function enviarSolicitacao(tipo){
     var item = { tipo: tipo, data: '03/07/2026', status: 'aguardando' };
-    var payloadReal = { paciente_id: pacienteId ? parseInt(pacienteId) : null, tipo: tipo, status: 'pendente' };
-
     if(tipo === 'ajuste'){
       var acao = document.getElementById('ajuste-acao').value;
       var sessaoSelect = document.getElementById('ajuste-sessao');
       var sessaoTexto = sessaoSelect.options[sessaoSelect.selectedIndex] ? sessaoSelect.options[sessaoSelect.selectedIndex].text : '';
-      var sessaoIdReal = sessaoSelect.value ? parseInt(sessaoSelect.value) : null;
       item.titulo = (acao === 'cancelar' ? 'Cancelamento' : 'Remarcação') + ' · ' + sessaoTexto;
-      payloadReal.acao = acao;
-      payloadReal.sessao_id = sessaoIdReal;
-      payloadReal.justificativa = document.getElementById('ajuste-justificativa').value + ' (sessão de referência: ' + sessaoTexto + ')';
-      if(acao === 'remarcar' && horarioEscolhido){
-        var dataFmt = horarioEscolhido.data.split('-').reverse().join('/');
-        item.titulo += ' → novo horário sugerido: ' + dataFmt + ' às ' + horarioEscolhido.hora;
-        payloadReal.nova_data = horarioEscolhido.data;
-        payloadReal.novo_horario = horarioEscolhido.hora + ':00';
-      }
       var chaveUso = acao === 'cancelar' ? 'cancelamento' : 'remarcacao';
       usoMes[chaveUso]++;
     } else if(tipo === 'financeiro'){
       item.titulo = document.getElementById('fin-assunto').value;
-      payloadReal.assunto = document.getElementById('fin-assunto').value;
-      payloadReal.mensagem = document.getElementById('fin-mensagem').value;
     } else {
       item.titulo = document.getElementById('doc-tipo').value;
-      payloadReal.assunto = document.getElementById('doc-tipo').value;
-      payloadReal.mensagem = document.getElementById('doc-mensagem').value;
     }
     fakeSolicitacoes.unshift(item);
     renderSolicitacoes();
     esconderFormSolicitacao();
-
-    if(pacienteId){
-      try{
-        await fetch(SUPABASE_URL + '/rest/v1/solicitacoes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY
-          },
-          body: JSON.stringify(payloadReal)
-        });
-      } catch(e){
-        console.warn('Não foi possível registrar a solicitação no servidor.', e);
-      }
-    }
 
     if(tipo === 'ajuste'){
       document.getElementById('ajuste-justificativa').value = '';
@@ -1954,9 +1787,9 @@
   }
 
   var fakeTarefas = [
-    { id: 't1', text: 'Praticar respiração antes de dormir (3x)', categoria: 'Respiração e regulação', done: true },
-    { id: 't2', text: 'Registrar 1 situação em que disse "não"', categoria: 'Posicionamento e limites', done: false },
-    { id: 't3', text: 'Preencher o RPD de uma situação da semana', categoria: 'RPD', done: false }
+    { id: 't1', text: 'Praticar respiração antes de dormir (3x)', done: true },
+    { id: 't2', text: 'Registrar 1 situação em que disse "não"', done: false },
+    { id: 't3', text: 'Preencher o RPD de uma situação da semana', done: false }
   ];
   var fakeTarefasHistorico = [
     { semana: '23/06 – 29/06', concluidas: 3, total: 3 },
@@ -1992,21 +1825,6 @@
     var t = fakeTarefas.find(function(x){ return x.id === id; });
     t.done = !t.done;
     renderTarefasFull();
-  }
-
-  var LINK_MEET_FAKE = 'https://meet.google.com/exemplo-fake-link';
-
-  function abrirAvisoGravacao(){
-    document.getElementById('modal-gravacao').classList.add('open');
-  }
-
-  function fecharAvisoGravacao(){
-    document.getElementById('modal-gravacao').classList.remove('open');
-  }
-
-  function continuarParaMeet(){
-    fecharAvisoGravacao();
-    window.open(LINK_MEET_FAKE, '_blank');
   }
 
   function abrirTarefas(){
