@@ -40,6 +40,7 @@
 
 <div class="header">
   <button class="btn-voltar" id="btn-voltar">← Voltar</button>
+  <button class="btn-voltar" id="btn-sair-cad" style="margin-left:8px;">Sair</button>
   <h1 id="page-title">Editar paciente</h1>
 </div>
 
@@ -62,6 +63,7 @@ const PACIENTE_ID = params.get('id');
 
 const VOLTAR_CADASTRO = PACIENTE_ID ? `ficha-paciente_1.html?id=${PACIENTE_ID}` : 'pacientes.html';
 document.getElementById('btn-voltar').onclick = () => window.location.href = VOLTAR_CADASTRO;
+document.getElementById('btn-sair-cad').onclick = () => { sessionStorage.removeItem('psiana_admin_logado'); window.location.href = 'login-psicologa.html'; };
 document.getElementById('btn-cancelar').onclick = () => window.location.href = VOLTAR_CADASTRO;
 
 function toast(msg, tipo) {
