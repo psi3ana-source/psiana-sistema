@@ -46,7 +46,11 @@
     display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; flex-shrink:0;
   }
   .crp-linha{ display:flex; align-items:center; gap:8px; margin-top:6px; }
-  .crp-texto{ font-size:11.5px; color:var(--ink-soft); }
+  
+  .caminho-nav{ font-size:11px; color:var(--ink-soft); margin-top:5px; }
+  .caminho-nav a{ color:var(--ink-soft); text-decoration:none; }
+  .caminho-nav a:hover{ color:var(--mocha); }
+.crp-texto{ font-size:11.5px; color:var(--ink-soft); }
   .btn-config{
     width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:#fff;
     color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
@@ -288,7 +292,8 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.6Z"/></svg>
             </button>
           </div>
-        </div>
+        <div class="caminho-nav"><a href="visao-geral.html">Início</a> / Pacientes</div>
+          </div>
       </div>
       <button class="btn-sair" onclick="sair()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
@@ -296,7 +301,7 @@
       </button>
     </div>
 
-    <div class="breadcrumb"><a href="visao-geral.html">Início</a> / Pacientes</div>
+    
     <div class="pac-cabecalho">
       <div>
         <h2 class="page-titulo">Pacientes</h2>
