@@ -242,7 +242,31 @@
     }
     return true;
   }
-  const AUTH_TOKEN = sessionStorage.getItem('psiana_access_token') || SUPABASE_KEY;
+  function tokenAtual(){ return sessionStorage.getItem('psiana_access_token') || SUPABASE_KEY; }
+
+  // Renova o token de acesso usando o refresh token, se estiver perto de vencer ou já vencido.
+  // Só falha (retorna false) se nem o refresh token servir mais — aí sim a sessão morreu de vez.
+  async function garantirTokenValido(){
+    var expira = parseInt(sessionStorage.getItem('psiana_token_expira_em') || '0', 10);
+    if (Date.now() < expira - 60000) return true; // ainda tem margem, não precisa renovar
+    var refreshToken = sessionStorage.getItem('psiana_refresh_token');
+    if (!refreshToken) return false;
+    try {
+      var res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+      var dados = await res.json();
+      if (res.ok && dados.access_token) {
+        sessionStorage.setItem('psiana_access_token', dados.access_token);
+        sessionStorage.setItem('psiana_refresh_token', dados.refresh_token || refreshToken);
+        sessionStorage.setItem('psiana_token_expira_em', String(Date.now() + (dados.expires_in || 3600) * 1000));
+        return true;
+      }
+    } catch (e) { /* segue pro return false abaixo */ }
+    return false;
+  }
   if (!verificarSessao()) { throw new Error('Sessão expirada — redirecionando para login.'); }
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -593,7 +617,15 @@
     const p = pacientesExtraidos[idx];
     const c = p.campos;
     const btn = document.getElementById('btnSalvar' + idx);
-    btn.disabled = true; btn.textContent = 'Salvando…';
+    btn.disabled = true; btn.textContent = 'Verificando sessão…';
+
+    const sessaoOk = await garantirTokenValido();
+    if (!sessaoOk) {
+      alert('Sua sessão expirou e não foi possível renovar automaticamente. Você vai ser levada de volta pro login — infelizmente essa revisão não fica salva, você vai precisar subir o PDF de novo depois de entrar.');
+      window.location.href = 'login-psicologa.html';
+      return;
+    }
+    btn.textContent = 'Salvando…';
 
     const whatsapp = (c.whatsapp && c.whatsapp.value) ||
       [c.whatsapp_ddd && c.whatsapp_ddd.value, c.whatsapp_numero && c.whatsapp_numero.value].filter(Boolean).join(' ');
@@ -614,7 +646,7 @@
     try {
       const resPac = await fetch(SUPABASE_URL + '/rest/v1/pacientes', {
         method:'POST',
-        headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+AUTH_TOKEN, 'Content-Type':'application/json', Prefer:'return=representation' },
+        headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+tokenAtual(), 'Content-Type':'application/json', Prefer:'return=representation' },
         body: JSON.stringify(payloadPaciente)
       });
       if (!resPac.ok) throw new Error('Erro ao criar paciente: ' + await resPac.text());
@@ -623,7 +655,7 @@
 
       const resAna = await fetch(SUPABASE_URL + '/rest/v1/anamnese', {
         method:'POST',
-        headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+AUTH_TOKEN, 'Content-Type':'application/json', Prefer:'return=representation' },
+        headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+tokenAtual(), 'Content-Type':'application/json', Prefer:'return=representation' },
         body: JSON.stringify(payloadAnamnese)
       });
       if (!resAna.ok) throw new Error('Paciente criado, mas erro ao salvar anamnese: ' + await resAna.text());
